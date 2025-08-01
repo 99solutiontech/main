@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import LanguageSelector from '@/components/LanguageSelector';
-import { Gem, Star, LogOut, Settings, TrendingUp, DollarSign, Calculator, Calendar } from 'lucide-react';
+import { Gem, LogOut, Settings, TrendingUp, DollarSign, Calculator, Calendar, BarChart3, Users } from 'lucide-react';
 import FundOverview from '@/components/trading/FundOverview';
 import TradeRecorder from '@/components/trading/TradeRecorder';
 import LotCalculator from '@/components/trading/LotCalculator';
@@ -18,6 +18,10 @@ import TradingHistory from '@/components/trading/TradingHistory';
 import FundManagement from '@/components/trading/FundManagement';
 import TradingCalendar from '@/components/trading/TradingCalendar';
 import CapitalGrowthChart from '@/components/trading/CapitalGrowthChart';
+import FundTransactionHistory from '@/components/trading/FundTransactionHistory';
+import SubUserManager from '@/components/trading/SubUserManager';
+import MonthlyGrowthChart from '@/components/trading/MonthlyGrowthChart';
+import FundSettings from '@/components/trading/FundSettings';
 import { User, Session } from '@supabase/supabase-js';
 
 interface Profile {
@@ -53,6 +57,7 @@ const Dashboard = () => {
   const [fundData, setFundData] = useState<FundData | null>(null);
   const [currentMode, setCurrentMode] = useState<'diamond' | 'gold'>('diamond');
   const [loading, setLoading] = useState(true);
+  const [selectedSubUser, setSelectedSubUser] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -239,7 +244,7 @@ const Dashboard = () => {
                     </SelectItem>
                     <SelectItem value="gold">
                       <div className="flex items-center gap-2">
-                        <Star className="h-4 w-4" />
+                        <Gem className="h-4 w-4 text-yellow-500" />
                         {t('goldMode')}
                       </div>
                     </SelectItem>
@@ -302,7 +307,7 @@ const Dashboard = () => {
             
             <div className="space-y-8">
               <Tabs defaultValue="record" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-6">
                   <TabsTrigger value="record" className="text-xs">
                     <TrendingUp className="h-4 w-4" />
                   </TabsTrigger>
@@ -312,18 +317,30 @@ const Dashboard = () => {
                   <TabsTrigger value="funds" className="text-xs">
                     <DollarSign className="h-4 w-4" />
                   </TabsTrigger>
+                  <TabsTrigger value="subusers" className="text-xs">
+                    <Users className="h-4 w-4" />
+                  </TabsTrigger>
+                  <TabsTrigger value="monthly" className="text-xs">
+                    <BarChart3 className="h-4 w-4" />
+                  </TabsTrigger>
                   <TabsTrigger value="calendar" className="text-xs">
                     <Calendar className="h-4 w-4" />
                   </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="record">
-                  <TradeRecorder 
-                    userId={user.id} 
-                    mode={currentMode} 
-                    fundData={fundData}
-                    onUpdate={() => loadFundData(user.id, currentMode)}
-                  />
+                  <div className="grid grid-cols-1 gap-6">
+                    <TradeRecorder 
+                      userId={user.id} 
+                      mode={currentMode} 
+                      fundData={fundData}
+                      onUpdate={() => loadFundData(user.id, currentMode)}
+                    />
+                    <FundSettings 
+                      fundData={fundData}
+                      onUpdate={() => loadFundData(user.id, currentMode)}
+                    />
+                  </div>
                 </TabsContent>
                 
                 <TabsContent value="calculator">
@@ -336,6 +353,19 @@ const Dashboard = () => {
                     fundData={fundData}
                     onUpdate={() => loadFundData(user.id, currentMode)}
                   />
+                </TabsContent>
+                
+                <TabsContent value="subusers">
+                  <SubUserManager 
+                    userId={user.id}
+                    currentMode={currentMode}
+                    selectedSubUser={null}
+                    onSubUserSelect={(subUser) => setSelectedSubUser(subUser?.id || null)}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="monthly">
+                  <MonthlyGrowthChart userId={user.id} mode={currentMode} />
                 </TabsContent>
                 
                 <TabsContent value="calendar">
@@ -354,7 +384,10 @@ const Dashboard = () => {
                 </TabsContent>
               </Tabs>
               
-              <TradingHistory userId={user.id} mode={currentMode} />
+              <div className="grid grid-cols-1 gap-6">
+                <TradingHistory userId={user.id} mode={currentMode} />
+                <FundTransactionHistory userId={user.id} mode={currentMode} />
+              </div>
             </div>
           </div>
         )}
