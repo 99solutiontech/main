@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSelector from '@/components/LanguageSelector';
 import { Gem, Star } from 'lucide-react';
 
 interface SignUpForm {
@@ -26,6 +28,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const signUpForm = useForm<SignUpForm>();
   const signInForm = useForm<SignInForm>();
@@ -58,12 +61,12 @@ const Auth = () => {
       if (error) throw error;
 
       toast({
-        title: "Success!",
-        description: "Please check your email to confirm your account.",
+        title: t('success'),
+        description: t('checkEmail'),
       });
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t('error'),
         description: error.message,
         variant: "destructive",
       });
@@ -85,7 +88,7 @@ const Auth = () => {
       navigate('/');
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t('error'),
         description: error.message,
         variant: "destructive",
       });
@@ -97,31 +100,34 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
+        <div className="absolute top-4 right-4">
+          <LanguageSelector />
+        </div>
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Gem className="h-8 w-8 text-primary" />
             <Star className="h-8 w-8 text-accent" />
           </div>
           <h1 className="text-3xl font-bold">Moneyx v8.2</h1>
-          <p className="text-muted-foreground">Professional Trading Management System</p>
+          <p className="text-muted-foreground">{t('tradingSystem')}</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Welcome</CardTitle>
-            <CardDescription>Sign in to your account or create a new one</CardDescription>
+            <CardTitle>{t('welcome')}</CardTitle>
+            <CardDescription>{t('signInToAccount')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signin">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="signin">{t('signin')}</TabsTrigger>
+                <TabsTrigger value="signup">{t('signup')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="signin" className="space-y-4">
                 <form onSubmit={signInForm.handleSubmit(handleSignIn)} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
+                    <Label htmlFor="signin-email">{t('email')}</Label>
                     <Input
                       id="signin-email"
                       type="email"
@@ -130,16 +136,16 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
+                    <Label htmlFor="signin-password">{t('password')}</Label>
                     <Input
                       id="signin-password"
                       type="password"
                       {...signInForm.register('password', { required: true })}
-                      placeholder="Your password"
+                      placeholder={t('password')}
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Signing in...' : 'Sign In'}
+                    {loading ? t('signingIn') : t('signInButton')}
                   </Button>
                 </form>
               </TabsContent>
@@ -147,7 +153,7 @@ const Auth = () => {
               <TabsContent value="signup" className="space-y-4">
                 <form onSubmit={signUpForm.handleSubmit(handleSignUp)} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">{t('email')}</Label>
                     <Input
                       id="signup-email"
                       type="email"
@@ -156,32 +162,32 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-password">{t('password')}</Label>
                     <Input
                       id="signup-password"
                       type="password"
                       {...signUpForm.register('password', { required: true })}
-                      placeholder="Create a password"
+                      placeholder={t('password')}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="full-name">Full Name</Label>
+                    <Label htmlFor="full-name">{t('fullName')}</Label>
                     <Input
                       id="full-name"
                       {...signUpForm.register('full_name', { required: true })}
-                      placeholder="John Doe"
+                      placeholder={t('fullName')}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="trader-name">Trader Name</Label>
+                    <Label htmlFor="trader-name">{t('traderName')}</Label>
                     <Input
                       id="trader-name"
                       {...signUpForm.register('trader_name', { required: true })}
-                      placeholder="Trader01"
+                      placeholder={t('traderName')}
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Creating account...' : 'Create Account'}
+                    {loading ? t('creatingAccount') : t('createAccount')}
                   </Button>
                 </form>
               </TabsContent>

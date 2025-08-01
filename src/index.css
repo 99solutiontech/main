@@ -92,6 +92,52 @@ All colors MUST be HSL.
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  /* Diamond Mode Theme - Silver and Black */
+  .theme-diamond {
+    --background: 0 0% 8%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 0 0% 75%;
+    --primary-foreground: 0 0% 10%;
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 90%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 20%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 0% 75%;
+  }
+
+  /* Gold Mode Theme - Gold and Black */
+  .theme-gold {
+    --background: 0 0% 8%;
+    --foreground: 45 100% 95%;
+    --card: 0 0% 12%;
+    --card-foreground: 45 100% 95%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 45 100% 95%;
+    --primary: 45 100% 65%;
+    --primary-foreground: 0 0% 10%;
+    --secondary: 45 15% 20%;
+    --secondary-foreground: 45 100% 90%;
+    --muted: 45 15% 16%;
+    --muted-foreground: 45 50% 65%;
+    --accent: 45 80% 25%;
+    --accent-foreground: 45 100% 95%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 45 30% 20%;
+    --input: 45 30% 20%;
+    --ring: 45 100% 65%;
+  }
 }
 
 @layer base {

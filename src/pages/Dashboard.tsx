@@ -7,6 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import LanguageSelector from '@/components/LanguageSelector';
 import { Gem, Star, LogOut, Settings, TrendingUp, DollarSign, Calculator, Calendar } from 'lucide-react';
 import FundOverview from '@/components/trading/FundOverview';
 import TradeRecorder from '@/components/trading/TradeRecorder';
@@ -52,6 +55,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -99,7 +103,7 @@ const Dashboard = () => {
     } catch (error: any) {
       console.error('Error loading profile:', error);
       toast({
-        title: "Error",
+        title: t('error'),
         description: "Failed to load user profile",
         variant: "destructive",
       });
@@ -170,12 +174,12 @@ const Dashboard = () => {
       });
 
       toast({
-        title: "Success",
+        title: t('success'),
         description: "Fund initialized successfully",
       });
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t('error'),
         description: error.message,
         variant: "destructive",
       });
@@ -187,7 +191,7 @@ const Dashboard = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t('loading')}</p>
         </div>
       </div>
     );
@@ -198,56 +202,59 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Gem className="h-6 w-6 text-primary" />
-                <Star className="h-6 w-6 text-accent" />
+    <ThemeProvider tradingMode={currentMode} onModeChange={handleModeChange}>
+      <div className="min-h-screen bg-background">
+        <header className="border-b bg-card">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Gem className="h-6 w-6 text-primary" />
+                  <Star className="h-6 w-6 text-accent" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold">Moneyx v8.2</h1>
+                  <p className="text-sm text-muted-foreground">
+                    {t('welcome')}, {profile.trader_name}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold">Moneyx v8.2</h1>
-                <p className="text-sm text-muted-foreground">
-                  Welcome, {profile.trader_name}
-                </p>
+              
+              <div className="flex items-center gap-4">
+                <LanguageSelector />
+                
+                <Badge variant={currentMode === 'diamond' ? 'default' : 'secondary'}>
+                  {currentMode === 'diamond' ? t('diamondMode') : t('goldMode')}
+                </Badge>
+                
+                <Select value={currentMode} onValueChange={handleModeChange}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="diamond">
+                      <div className="flex items-center gap-2">
+                        <Gem className="h-4 w-4" />
+                        {t('diamondMode')}
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="gold">
+                      <div className="flex items-center gap-2">
+                        <Star className="h-4 w-4" />
+                        {t('goldMode')}
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Button variant="outline" size="sm" onClick={handleSignOut}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  {t('signOut')}
+                </Button>
               </div>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <Badge variant={currentMode === 'diamond' ? 'default' : 'secondary'}>
-                {currentMode === 'diamond' ? 'Diamond Mode' : 'Gold Mode'}
-              </Badge>
-              
-              <Select value={currentMode} onValueChange={handleModeChange}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="diamond">
-                    <div className="flex items-center gap-2">
-                      <Gem className="h-4 w-4" />
-                      Diamond
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="gold">
-                    <div className="flex items-center gap-2">
-                      <Star className="h-4 w-4" />
-                      Gold
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Button variant="outline" size="sm" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
       <main className="container mx-auto px-4 py-8">
         {!fundData ? (
@@ -354,6 +361,7 @@ const Dashboard = () => {
         )}
       </main>
     </div>
+    </ThemeProvider>
   );
 };
 
