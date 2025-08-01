@@ -63,32 +63,50 @@ const Dashboard = () => {
   const { t } = useLanguage();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (!session?.user) {
+          navigate('/auth');
+          return;
+        }
+        
+        await loadUserProfile(session.user.id);
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        if (mounted) {
+          navigate('/auth');
+        }
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      
       setSession(session);
       setUser(session?.user ?? null);
       
-      if (!session?.user) {
+      if (event === 'SIGNED_OUT' || !session?.user) {
         navigate('/auth');
-      } else {
-        // Use setTimeout to prevent auth callback recursion
-        setTimeout(() => {
-          loadUserProfile(session.user.id);
-        }, 0);
+      } else if (event === 'SIGNED_IN' && session?.user) {
+        await loadUserProfile(session.user.id);
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (!session?.user) {
-        navigate('/auth');
-      } else {
-        loadUserProfile(session.user.id);
-      }
-    });
+    initializeAuth();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const loadUserProfile = async (userId: string) => {
@@ -99,12 +117,15 @@ const Dashboard = () => {
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Profile query error:', error);
+        throw error;
+      }
       
       if (!data) {
-        // Profile doesn't exist, redirect to auth
-        console.log('No profile found for user, redirecting to auth');
-        navigate('/auth');
+        console.log('No profile found for user');
+        // Don't redirect here, let the useEffect handle it
+        setLoading(false);
         return;
       }
       
@@ -115,11 +136,14 @@ const Dashboard = () => {
         return;
       }
       
-      loadFundData(userId, currentMode);
+      await loadFundData(userId, currentMode);
     } catch (error: any) {
       console.error('Error loading profile:', error);
-      // If there's a network error, redirect to auth
-      navigate('/auth');
+      toast({
+        title: 'Connection Error',
+        description: 'Unable to connect to database. Please check your connection.',
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
