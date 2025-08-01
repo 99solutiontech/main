@@ -70,7 +70,10 @@ const Dashboard = () => {
       if (!session?.user) {
         navigate('/auth');
       } else {
-        loadUserProfile(session.user.id);
+        // Use setTimeout to prevent auth callback recursion
+        setTimeout(() => {
+          loadUserProfile(session.user.id);
+        }, 0);
       }
     });
 
@@ -94,10 +97,18 @@ const Dashboard = () => {
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      setProfile(data as any);
+      
+      if (!data) {
+        // Profile doesn't exist, redirect to auth
+        console.log('No profile found for user, redirecting to auth');
+        navigate('/auth');
+        return;
+      }
+      
+      setProfile(data);
       
       if (data?.role === 'super_admin') {
         navigate('/admin');
@@ -107,11 +118,8 @@ const Dashboard = () => {
       loadFundData(userId, currentMode);
     } catch (error: any) {
       console.error('Error loading profile:', error);
-      toast({
-        title: t('error'),
-        description: "Failed to load user profile",
-        variant: "destructive",
-      });
+      // If there's a network error, redirect to auth
+      navigate('/auth');
     } finally {
       setLoading(false);
     }
@@ -124,10 +132,11 @@ const Dashboard = () => {
         .select('*')
         .eq('user_id', userId)
         .eq('mode', mode)
+        .is('sub_user_name', null)
         .maybeSingle();
 
       if (error) throw error;
-      setFundData(data as any);
+      setFundData(data);
     } catch (error: any) {
       console.error('Error loading fund data:', error);
     }

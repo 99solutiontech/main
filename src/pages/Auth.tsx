@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageSelector from '@/components/LanguageSelector';
-import { Gem, Star } from 'lucide-react';
+import { Gem } from 'lucide-react';
 
 interface SignUpForm {
   email: string;
@@ -106,7 +106,6 @@ const Auth = () => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Gem className="h-8 w-8 text-primary" />
-            <Star className="h-8 w-8 text-accent" />
           </div>
           <h1 className="text-3xl font-bold">Moneyx v8.2</h1>
           <p className="text-muted-foreground">{t('tradingSystem')}</p>
