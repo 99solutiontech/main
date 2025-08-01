@@ -12,7 +12,14 @@ const Index = () => {
     const checkAuth = async () => {
       try {
         console.log('Checking authentication...');
-        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        // Try to get session with a timeout
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 10000)
+        );
+        
+        const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]) as any;
         
         if (error) {
           console.error('Session error:', error);
@@ -26,36 +33,14 @@ const Index = () => {
           return;
         }
 
-        console.log('Session found, checking profile...');
-        // Check if user has a profile
-        const { data: profile, error: profileError } = await (supabase as any)
-          .from('profiles')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error('Profile error:', profileError);
-          navigate('/auth');
-          return;
-        }
-
-        if (!profile) {
-          console.log('No profile found, redirecting to auth');
-          navigate('/auth');
-          return;
-        }
-
-        console.log('Profile found:', profile);
+        console.log('Session found, redirecting to dashboard');
+        // Skip profile check and go directly to dashboard
+        // The dashboard will handle profile loading
+        navigate('/dashboard');
         
-        // Check user role and redirect accordingly
-        if (profile.role === 'super_admin') {
-          navigate('/admin');
-        } else {
-          navigate('/dashboard');
-        }
       } catch (error) {
         console.error('Auth check error:', error);
+        // If there's any error, just go to auth
         navigate('/auth');
       } finally {
         setLoading(false);
