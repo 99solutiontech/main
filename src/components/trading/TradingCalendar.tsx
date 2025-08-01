@@ -1,0 +1,233 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+
+interface TradingRecord {
+  id: string;
+  type: string;
+  amount?: number;
+  trade_date?: string;
+  created_at: string;
+}
+
+interface TradingCalendarProps {
+  userId: string;
+  mode: 'diamond' | 'gold';
+}
+
+const TradingCalendar = ({ userId, mode }: TradingCalendarProps) => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [tradingData, setTradingData] = useState<TradingRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadTradingData();
+  }, [userId, mode, currentDate]);
+
+  const loadTradingData = async () => {
+    try {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const startDate = new Date(year, month, 1).toISOString();
+      const endDate = new Date(year, month + 1, 0).toISOString();
+
+      const { data, error } = await supabase
+        .from('trading_history')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('mode', mode)
+        .in('type', ['Win', 'Loss'])
+        .gte('created_at', startDate)
+        .lte('created_at', endDate);
+
+      if (error) throw error;
+      setTradingData(data || []);
+    } catch (error) {
+      console.error('Error loading trading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (date: Date) => {
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+    return firstDay === 0 ? 6 : firstDay - 1; // Convert Sunday=0 to Monday=0
+  };
+
+  const getTradeForDate = (day: number) => {
+    return tradingData.find(trade => {
+      const tradeDate = new Date(trade.trade_date || trade.created_at);
+      return tradeDate.getDate() === day &&
+             tradeDate.getMonth() === currentDate.getMonth() &&
+             tradeDate.getFullYear() === currentDate.getFullYear();
+    });
+  };
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentDate);
+    if (direction === 'prev') {
+      newDate.setMonth(newDate.getMonth() - 1);
+    } else {
+      newDate.setMonth(newDate.getMonth() + 1);
+    }
+    setCurrentDate(newDate);
+  };
+
+  const renderCalendarGrid = () => {
+    const daysInMonth = getDaysInMonth(currentDate);
+    const firstDay = getFirstDayOfMonth(currentDate);
+    const days = [];
+
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="aspect-square" />);
+    }
+
+    // Add cells for each day of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const trade = getTradeForDate(day);
+      const isWeekend = new Date(currentDate.getFullYear(), currentDate.getMonth(), day).getDay() % 6 === 0;
+      
+      days.push(
+        <div
+          key={day}
+          className={`
+            aspect-square border rounded-lg p-1 flex flex-col items-center justify-center text-xs relative
+            ${isWeekend ? 'bg-muted opacity-60' : 'bg-background'}
+            ${trade ? (trade.type === 'Win' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30') : ''}
+            hover:bg-muted transition-colors
+          `}
+        >
+          <span className="font-medium">{day}</span>
+          {trade && (
+            <div className={`
+              text-xs font-semibold mt-1
+              ${trade.type === 'Win' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}
+            `}>
+              {trade.amount !== undefined ? formatCurrency(Math.abs(trade.amount)) : trade.type}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return days;
+  };
+
+  const calculateMonthlyStats = () => {
+    const wins = tradingData.filter(t => t.type === 'Win');
+    const losses = tradingData.filter(t => t.type === 'Loss');
+    const totalWins = wins.reduce((sum, t) => sum + (t.amount || 0), 0);
+    const totalLosses = losses.reduce((sum, t) => sum + (t.amount || 0), 0);
+    const netPnL = totalWins + totalLosses;
+
+    return {
+      winCount: wins.length,
+      lossCount: losses.length,
+      totalWins,
+      totalLosses,
+      netPnL,
+      winRate: wins.length > 0 ? (wins.length / (wins.length + losses.length)) * 100 : 0
+    };
+  };
+
+  const stats = calculateMonthlyStats();
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Trading Calendar
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Calendar className="h-5 w-5" />
+          Trading Calendar
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Month Navigation */}
+        <div className="flex items-center justify-between">
+          <Button variant="outline" size="sm" onClick={() => navigateMonth('prev')}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <h3 className="text-lg font-semibold">
+            {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          </h3>
+          <Button variant="outline" size="sm" onClick={() => navigateMonth('next')}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Day Headers */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+            <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar Grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {renderCalendarGrid()}
+        </div>
+
+        {/* Monthly Summary */}
+        <div className="pt-4 border-t space-y-2">
+          <div className="text-sm font-medium">Monthly Summary</div>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="space-y-1">
+              <div className="flex justify-between">
+                <span>Wins:</span>
+                <span className="text-green-600 dark:text-green-400">{stats.winCount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Losses:</span>
+                <span className="text-red-600 dark:text-red-400">{stats.lossCount}</span>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="flex justify-between">
+                <span>Win Rate:</span>
+                <span>{stats.winRate.toFixed(1)}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Net P&L:</span>
+                <span className={stats.netPnL >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                  {formatCurrency(stats.netPnL)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default TradingCalendar;
