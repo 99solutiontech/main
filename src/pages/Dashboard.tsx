@@ -178,7 +178,7 @@ const Dashboard = () => {
       
       // Try to load fund data, but don't fail if it doesn't work
       try {
-        await loadFundData(userId, currentMode);
+        await loadFundData(userId, currentMode, selectedSubUser?.name);
       } catch (fundError) {
         console.error('Fund data loading failed:', fundError);
         // Continue without fund data
@@ -207,18 +207,24 @@ const Dashboard = () => {
     }
   };
 
-  const loadFundData = async (userId: string, mode: 'diamond' | 'gold') => {
+  const loadFundData = async (userId: string, mode: 'diamond' | 'gold', subUserName?: string) => {
     try {
-      const { data, error } = await (supabase as any)
+      const query = supabase
         .from('fund_data')
         .select('*')
         .eq('user_id', userId)
-        .eq('mode', mode)
-        .is('sub_user_name', null)
-        .maybeSingle();
+        .eq('mode', mode);
+      
+      if (subUserName) {
+        query.eq('sub_user_name', subUserName);
+      } else {
+        query.is('sub_user_name', null);
+      }
+
+      const { data, error } = await query.maybeSingle();
 
       if (error) throw error;
-      setFundData(data);
+      setFundData(data as FundData);
     } catch (error: any) {
       console.error('Error loading fund data:', error);
     }
@@ -227,7 +233,7 @@ const Dashboard = () => {
   const handleModeChange = (mode: 'diamond' | 'gold') => {
     setCurrentMode(mode);
     if (user) {
-      loadFundData(user.id, mode);
+      loadFundData(user.id, mode, selectedSubUser?.name);
     }
   };
 
@@ -248,6 +254,7 @@ const Dashboard = () => {
       reserve_fund: initialCapital * 0.6,
       profit_fund: 0,
       target_reserve_fund: initialCapital * 0.6,
+      sub_user_name: selectedSubUser?.name || null,
     };
 
     try {
@@ -360,17 +367,21 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4">
                 <LanguageSelector />
                 
-                {fundData && (
-                  <SubUserSelector 
-                    userId={user.id}
-                    currentMode={currentMode}
-                    selectedSubUser={selectedSubUser}
-                    onSubUserSelect={setSelectedSubUser}
-                  />
-                )}
+                <SubUserSelector 
+                  userId={user.id}
+                  currentMode={currentMode}
+                  selectedSubUser={selectedSubUser}
+                  onSubUserSelect={(subUser) => {
+                    setSelectedSubUser(subUser);
+                    setFundData(null); // Reset fund data when switching users
+                    if (user) {
+                      loadFundData(user.id, currentMode, subUser?.name);
+                    }
+                  }}
+                />
                 
                 <Badge variant={currentMode === 'diamond' ? 'default' : 'secondary'}>
                   {currentMode === 'diamond' ? t('diamondMode') : t('goldMode')}
@@ -447,12 +458,21 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
               <FundOverview fundData={fundData} />
-              <CapitalGrowthChart userId={user.id} mode={currentMode} />
+              <CapitalGrowthChart 
+                userId={user.id} 
+                mode={currentMode} 
+                subUserName={selectedSubUser?.name}
+              />
+              <MonthlyGrowthChart 
+                userId={user.id} 
+                mode={currentMode} 
+                subUserName={selectedSubUser?.name}
+              />
             </div>
             
             <div className="space-y-8">
               <Tabs defaultValue="record" className="w-full">
-                <TabsList className="grid w-full grid-cols-6">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="record" className="text-xs">
                     <TrendingUp className="h-4 w-4" />
                   </TabsTrigger>
@@ -461,12 +481,6 @@ const Dashboard = () => {
                   </TabsTrigger>
                   <TabsTrigger value="funds" className="text-xs">
                     <DollarSign className="h-4 w-4" />
-                  </TabsTrigger>
-                  <TabsTrigger value="subusers" className="text-xs">
-                    <Users className="h-4 w-4" />
-                  </TabsTrigger>
-                  <TabsTrigger value="monthly" className="text-xs">
-                    <BarChart3 className="h-4 w-4" />
                   </TabsTrigger>
                   <TabsTrigger value="calendar" className="text-xs">
                     <Calendar className="h-4 w-4" />
@@ -479,11 +493,12 @@ const Dashboard = () => {
                       userId={user.id} 
                       mode={currentMode} 
                       fundData={fundData}
-                      onUpdate={() => loadFundData(user.id, currentMode)}
+                      subUserName={selectedSubUser?.name}
+                      onUpdate={() => loadFundData(user.id, currentMode, selectedSubUser?.name)}
                     />
                     <FundSettings 
                       fundData={fundData}
-                      onUpdate={() => loadFundData(user.id, currentMode)}
+                      onUpdate={() => loadFundData(user.id, currentMode, selectedSubUser?.name)}
                     />
                   </div>
                 </TabsContent>
@@ -496,26 +511,18 @@ const Dashboard = () => {
                   <FundManagement 
                     userId={user.id}
                     fundData={fundData}
-                    onUpdate={() => loadFundData(user.id, currentMode)}
+                    subUserName={selectedSubUser?.name}
+                    onUpdate={() => loadFundData(user.id, currentMode, selectedSubUser?.name)}
                   />
-                </TabsContent>
-                
-                <TabsContent value="subusers">
-                  <SubUserManager 
-                    userId={user.id}
-                    currentMode={currentMode}
-                    selectedSubUser={selectedSubUser}
-                    onSubUserSelect={setSelectedSubUser}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="monthly">
-                  <MonthlyGrowthChart userId={user.id} mode={currentMode} />
                 </TabsContent>
                 
                 <TabsContent value="calendar">
                   {currentMode === 'gold' && (
-                    <TradingCalendar userId={user.id} mode={currentMode} />
+                    <TradingCalendar 
+                      userId={user.id} 
+                      mode={currentMode} 
+                      subUserName={selectedSubUser?.name}
+                    />
                   )}
                   {currentMode === 'diamond' && (
                     <Card>
@@ -530,8 +537,16 @@ const Dashboard = () => {
               </Tabs>
               
               <div className="grid grid-cols-1 gap-6">
-                <TradingHistory userId={user.id} mode={currentMode} />
-                <FundTransactionHistory userId={user.id} mode={currentMode} />
+                <TradingHistory 
+                  userId={user.id} 
+                  mode={currentMode} 
+                  subUserName={selectedSubUser?.name}
+                />
+                <FundTransactionHistory 
+                  userId={user.id} 
+                  mode={currentMode} 
+                  subUserName={selectedSubUser?.name}
+                />
               </div>
             </div>
           </div>

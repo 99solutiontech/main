@@ -35,24 +35,32 @@ interface TradingRecord {
 interface CapitalGrowthChartProps {
   userId: string;
   mode: 'diamond' | 'gold';
+  subUserName?: string;
 }
 
-const CapitalGrowthChart = ({ userId, mode }: CapitalGrowthChartProps) => {
+const CapitalGrowthChart = ({ userId, mode, subUserName }: CapitalGrowthChartProps) => {
   const [chartData, setChartData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadChartData();
-  }, [userId, mode]);
+  }, [userId, mode, subUserName]);
 
   const loadChartData = async () => {
     try {
-      const { data, error } = await (supabase as any)
+      const query = supabase
         .from('trading_history')
         .select('*')
         .eq('user_id', userId)
-        .eq('mode', mode)
-        .order('created_at', { ascending: true });
+        .eq('mode', mode);
+
+      if (subUserName) {
+        query.eq('sub_user_name', subUserName);
+      } else {
+        query.is('sub_user_name', null);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: true });
 
       if (error) throw error;
 

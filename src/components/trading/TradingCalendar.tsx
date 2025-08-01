@@ -15,16 +15,17 @@ interface TradingRecord {
 interface TradingCalendarProps {
   userId: string;
   mode: 'diamond' | 'gold';
+  subUserName?: string;
 }
 
-const TradingCalendar = ({ userId, mode }: TradingCalendarProps) => {
+const TradingCalendar = ({ userId, mode, subUserName }: TradingCalendarProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [tradingData, setTradingData] = useState<TradingRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadTradingData();
-  }, [userId, mode, currentDate]);
+  }, [userId, mode, currentDate, subUserName]);
 
   const loadTradingData = async () => {
     try {
@@ -33,7 +34,7 @@ const TradingCalendar = ({ userId, mode }: TradingCalendarProps) => {
       const startDate = new Date(year, month, 1).toISOString();
       const endDate = new Date(year, month + 1, 0).toISOString();
 
-      const { data, error } = await (supabase as any)
+      const query = supabase
         .from('trading_history')
         .select('*')
         .eq('user_id', userId)
@@ -41,6 +42,14 @@ const TradingCalendar = ({ userId, mode }: TradingCalendarProps) => {
         .in('type', ['Win', 'Loss'])
         .gte('created_at', startDate)
         .lte('created_at', endDate);
+
+      if (subUserName) {
+        query.eq('sub_user_name', subUserName);
+      } else {
+        query.is('sub_user_name', null);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setTradingData(data || []);

@@ -28,6 +28,7 @@ interface TradeRecorderProps {
   userId: string;
   mode: 'diamond' | 'gold';
   fundData: FundData;
+  subUserName?: string;
   onUpdate: () => void;
 }
 
@@ -40,7 +41,7 @@ interface GoldForm {
   end_balance: number;
 }
 
-const TradeRecorder = ({ userId, mode, fundData, onUpdate }: TradeRecorderProps) => {
+const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeRecorderProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   
@@ -112,7 +113,8 @@ const TradeRecorder = ({ userId, mode, fundData, onUpdate }: TradeRecorderProps)
           type: pnl >= 0 ? 'Win' : 'Loss',
           details: `Weekly trading result: ${formatCurrency(pnl)}`,
           amount: pnl,
-           end_balance: updatedFundData.total_capital,
+          end_balance: updatedFundData.total_capital,
+          sub_user_name: subUserName,
         });
 
       if (historyError) throw historyError;
@@ -194,6 +196,7 @@ const TradeRecorder = ({ userId, mode, fundData, onUpdate }: TradeRecorderProps)
           amount: pnl,
           end_balance: updatedFundData.total_capital,
           trade_date: data.trade_date,
+          sub_user_name: subUserName,
         });
 
       if (historyError) throw historyError;

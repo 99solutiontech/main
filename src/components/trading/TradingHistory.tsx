@@ -19,23 +19,32 @@ interface TradingRecord {
 interface TradingHistoryProps {
   userId: string;
   mode: 'diamond' | 'gold';
+  subUserName?: string;
 }
 
-const TradingHistory = ({ userId, mode }: TradingHistoryProps) => {
+const TradingHistory = ({ userId, mode, subUserName }: TradingHistoryProps) => {
   const [history, setHistory] = useState<TradingRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadHistory();
-  }, [userId, mode]);
+  }, [userId, mode, subUserName]);
 
   const loadHistory = async () => {
     try {
-      const { data, error } = await (supabase as any)
+      const query = supabase
         .from('trading_history')
         .select('*')
         .eq('user_id', userId)
-        .eq('mode', mode)
+        .eq('mode', mode);
+
+      if (subUserName) {
+        query.eq('sub_user_name', subUserName);
+      } else {
+        query.is('sub_user_name', null);
+      }
+
+      const { data, error } = await query
         .order('created_at', { ascending: false })
         .limit(10);
 

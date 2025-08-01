@@ -21,23 +21,32 @@ interface FundTransaction {
 interface FundTransactionHistoryProps {
   userId: string;
   mode: 'diamond' | 'gold';
+  subUserName?: string;
 }
 
-const FundTransactionHistory = ({ userId, mode }: FundTransactionHistoryProps) => {
+const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHistoryProps) => {
   const [transactions, setTransactions] = useState<FundTransaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadTransactions();
-  }, [userId, mode]);
+  }, [userId, mode, subUserName]);
 
   const loadTransactions = async () => {
     try {
-      const { data, error } = await (supabase as any)
+      const query = supabase
         .from('fund_transactions')
         .select('*')
         .eq('user_id', userId)
-        .eq('mode', mode)
+        .eq('mode', mode);
+
+      if (subUserName) {
+        query.eq('sub_user_name', subUserName);
+      } else {
+        query.is('sub_user_name', null);
+      }
+
+      const { data, error } = await query
         .order('created_at', { ascending: false })
         .limit(10);
 

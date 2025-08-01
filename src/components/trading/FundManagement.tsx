@@ -30,6 +30,7 @@ interface FundData {
 interface FundManagementProps {
   userId: string;
   fundData: FundData;
+  subUserName?: string;
   onUpdate: () => void;
 }
 
@@ -48,7 +49,7 @@ interface TransferForm {
   amount: number;
 }
 
-const FundManagement = ({ userId, fundData, onUpdate }: FundManagementProps) => {
+const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagementProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -90,7 +91,8 @@ const FundManagement = ({ userId, fundData, onUpdate }: FundManagementProps) => 
         amount: amount,
         balance_before: fundData.total_capital,
         balance_after: updatedFundData.total_capital,
-        description: `Deposited ${formatCurrency(amount)} (40% to Active, 60% to Reserve)`
+        description: `Deposited ${formatCurrency(amount)} (40% to Active, 60% to Reserve)`,
+        sub_user_name: subUserName,
       });
 
       if (historyError) throw historyError;
@@ -144,7 +146,8 @@ const FundManagement = ({ userId, fundData, onUpdate }: FundManagementProps) => 
         amount: amount,
         balance_before: fundData.total_capital,
         balance_after: updatedFundData.total_capital,
-        description: `Withdrew ${formatCurrency(amount)} from ${fromField.replace('_', ' ')}`
+        description: `Withdrew ${formatCurrency(amount)} from ${fromField.replace('_', ' ')}`,
+        sub_user_name: subUserName,
       });
 
       if (historyError) throw historyError;
@@ -204,7 +207,8 @@ const FundManagement = ({ userId, fundData, onUpdate }: FundManagementProps) => 
         amount: amount,
         balance_before: fundData.total_capital,
         balance_after: fundData.total_capital,
-        description: `Transferred ${formatCurrency(amount)} from ${fromField.replace('_', ' ')} to ${toField.replace('_', ' ')}`
+        description: `Transferred ${formatCurrency(amount)} from ${fromField.replace('_', ' ')} to ${toField.replace('_', ' ')}`,
+        sub_user_name: subUserName,
       });
 
       if (historyError) throw historyError;

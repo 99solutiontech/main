@@ -33,9 +33,10 @@ interface MonthlyData {
 interface MonthlyGrowthChartProps {
   userId: string;
   mode: 'diamond' | 'gold';
+  subUserName?: string;
 }
 
-const MonthlyGrowthChart = ({ userId, mode }: MonthlyGrowthChartProps) => {
+const MonthlyGrowthChart = ({ userId, mode, subUserName }: MonthlyGrowthChartProps) => {
   const [chartData, setChartData] = useState<any>(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [availableYears, setAvailableYears] = useState<string[]>([]);
@@ -43,17 +44,25 @@ const MonthlyGrowthChart = ({ userId, mode }: MonthlyGrowthChartProps) => {
 
   useEffect(() => {
     loadChartData();
-  }, [userId, mode, selectedYear]);
+  }, [userId, mode, selectedYear, subUserName]);
 
   const loadChartData = async () => {
     setLoading(true);
     try {
       // Get available years
-      const { data: yearsData, error: yearsError } = await (supabase as any)
+      const yearsQuery = supabase
         .from('trading_history')
         .select('created_at')
         .eq('user_id', userId)
         .eq('mode', mode);
+
+      if (subUserName) {
+        yearsQuery.eq('sub_user_name', subUserName);
+      } else {
+        yearsQuery.is('sub_user_name', null);
+      }
+
+      const { data: yearsData, error: yearsError } = await yearsQuery;
 
       if (yearsError) throw yearsError;
 
@@ -67,14 +76,21 @@ const MonthlyGrowthChart = ({ userId, mode }: MonthlyGrowthChartProps) => {
       const startDate = `${selectedYear}-01-01`;
       const endDate = `${selectedYear}-12-31`;
 
-      const { data, error } = await (supabase as any)
+      const dataQuery = supabase
         .from('trading_history')
         .select('*')
         .eq('user_id', userId)
         .eq('mode', mode)
         .gte('created_at', startDate)
-        .lte('created_at', endDate)
-        .order('created_at', { ascending: true });
+        .lte('created_at', endDate);
+
+      if (subUserName) {
+        dataQuery.eq('sub_user_name', subUserName);
+      } else {
+        dataQuery.is('sub_user_name', null);
+      }
+
+      const { data, error } = await dataQuery.order('created_at', { ascending: true });
 
       if (error) throw error;
 
