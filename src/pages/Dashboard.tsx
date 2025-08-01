@@ -22,6 +22,7 @@ import FundTransactionHistory from '@/components/trading/FundTransactionHistory'
 import SubUserManager from '@/components/trading/SubUserManager';
 import MonthlyGrowthChart from '@/components/trading/MonthlyGrowthChart';
 import FundSettings from '@/components/trading/FundSettings';
+import SubUserSelector from '@/components/SubUserSelector';
 import { User, Session } from '@supabase/supabase-js';
 
 interface Profile {
@@ -50,6 +51,18 @@ interface FundData {
   lot_base_lot: number;
 }
 
+interface SubUser {
+  id: string;
+  name: string;
+  mode: 'diamond' | 'gold';
+  initial_capital: number;
+  total_capital: number;
+  active_fund: number;
+  reserve_fund: number;
+  profit_fund: number;
+  created_at: string;
+}
+
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -57,7 +70,7 @@ const Dashboard = () => {
   const [fundData, setFundData] = useState<FundData | null>(null);
   const [currentMode, setCurrentMode] = useState<'diamond' | 'gold'>('diamond');
   const [loading, setLoading] = useState(true);
-  const [selectedSubUser, setSelectedSubUser] = useState<string | null>(null);
+  const [selectedSubUser, setSelectedSubUser] = useState<SubUser | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -350,6 +363,15 @@ const Dashboard = () => {
               <div className="flex items-center gap-4">
                 <LanguageSelector />
                 
+                {fundData && (
+                  <SubUserSelector 
+                    userId={user.id}
+                    currentMode={currentMode}
+                    selectedSubUser={selectedSubUser}
+                    onSubUserSelect={setSelectedSubUser}
+                  />
+                )}
+                
                 <Badge variant={currentMode === 'diamond' ? 'default' : 'secondary'}>
                   {currentMode === 'diamond' ? t('diamondMode') : t('goldMode')}
                 </Badge>
@@ -482,8 +504,8 @@ const Dashboard = () => {
                   <SubUserManager 
                     userId={user.id}
                     currentMode={currentMode}
-                    selectedSubUser={null}
-                    onSubUserSelect={(subUser) => setSelectedSubUser(subUser?.id || null)}
+                    selectedSubUser={selectedSubUser}
+                    onSubUserSelect={setSelectedSubUser}
                   />
                 </TabsContent>
                 
