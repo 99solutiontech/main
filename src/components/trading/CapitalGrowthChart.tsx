@@ -47,7 +47,7 @@ const CapitalGrowthChart = ({ userId, mode }: CapitalGrowthChartProps) => {
 
   const loadChartData = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('trading_history')
         .select('*')
         .eq('user_id', userId)
@@ -62,11 +62,11 @@ const CapitalGrowthChart = ({ userId, mode }: CapitalGrowthChartProps) => {
         return;
       }
 
-      const labels = data.map(record => 
+      const labels = data.map((record: any) => 
         new Date(record.created_at).toLocaleDateString('en-GB')
       );
       
-      const balances = data.map(record => record.end_balance);
+      const balances = data.map((record: any) => record.end_balance);
 
       setChartData({
         labels,

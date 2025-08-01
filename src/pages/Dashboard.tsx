@@ -81,14 +81,14 @@ const Dashboard = () => {
 
   const loadUserProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
 
       if (error) throw error;
-      setProfile(data);
+      setProfile(data as any);
       
       if (data?.role === 'super_admin') {
         navigate('/admin');
@@ -110,7 +110,7 @@ const Dashboard = () => {
 
   const loadFundData = async (userId: string, mode: 'diamond' | 'gold') => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('fund_data')
         .select('*')
         .eq('user_id', userId)
@@ -118,7 +118,7 @@ const Dashboard = () => {
         .maybeSingle();
 
       if (error) throw error;
-      setFundData(data);
+      setFundData(data as any);
     } catch (error: any) {
       console.error('Error loading fund data:', error);
     }
@@ -151,17 +151,17 @@ const Dashboard = () => {
     };
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('fund_data')
         .insert(newFundData)
         .select()
         .single();
 
       if (error) throw error;
-      setFundData(data);
+      setFundData(data as any);
 
       // Add initial history record
-      await supabase.from('trading_history').insert({
+      await (supabase as any).from('trading_history').insert({
         user_id: user.id,
         mode: currentMode,
         type: 'Initialize',

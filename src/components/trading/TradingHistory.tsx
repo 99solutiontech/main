@@ -31,7 +31,7 @@ const TradingHistory = ({ userId, mode }: TradingHistoryProps) => {
 
   const loadHistory = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('trading_history')
         .select('*')
         .eq('user_id', userId)

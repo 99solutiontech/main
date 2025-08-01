@@ -81,7 +81,7 @@ const TradeRecorder = ({ userId, mode, fundData, onUpdate }: TradeRecorderProps)
       }
 
       // Update fund data
-      const { error: fundError } = await supabase
+      const { error: fundError } = await (supabase as any)
         .from('fund_data')
         .update({
           total_capital: updatedFundData.total_capital,
@@ -94,7 +94,7 @@ const TradeRecorder = ({ userId, mode, fundData, onUpdate }: TradeRecorderProps)
       if (fundError) throw fundError;
 
       // Add history record
-      const { error: historyError } = await supabase
+      const { error: historyError } = await (supabase as any)
         .from('trading_history')
         .insert({
           user_id: userId,
@@ -150,7 +150,7 @@ const TradeRecorder = ({ userId, mode, fundData, onUpdate }: TradeRecorderProps)
       }
 
       // Update fund data
-      const { error: fundError } = await supabase
+      const { error: fundError } = await (supabase as any)
         .from('fund_data')
         .update({
           total_capital: updatedFundData.total_capital,
@@ -163,7 +163,7 @@ const TradeRecorder = ({ userId, mode, fundData, onUpdate }: TradeRecorderProps)
       if (fundError) throw fundError;
 
       // Add history record
-      const { error: historyError } = await supabase
+      const { error: historyError } = await (supabase as any)
         .from('trading_history')
         .insert({
           user_id: userId,

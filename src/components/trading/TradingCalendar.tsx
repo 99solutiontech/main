@@ -33,7 +33,7 @@ const TradingCalendar = ({ userId, mode }: TradingCalendarProps) => {
       const startDate = new Date(year, month, 1).toISOString();
       const endDate = new Date(year, month + 1, 0).toISOString();
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('trading_history')
         .select('*')
         .eq('user_id', userId)

@@ -75,23 +75,21 @@ const FundManagement = ({ userId, fundData, onUpdate }: FundManagementProps) => 
         target_reserve_fund: fundData.target_reserve_fund + toReserve,
       };
 
-      const { error: fundError } = await supabase
+      const { error: fundError } = await (supabase as any)
         .from('fund_data')
         .update(updatedFundData)
         .eq('id', fundData.id);
 
       if (fundError) throw fundError;
 
-      const { error: historyError } = await supabase
-        .from('trading_history')
-        .insert({
-          user_id: userId,
-          mode: fundData.mode,
-          type: 'Deposit',
-          details: `Deposit ${formatCurrency(amount)}`,
-          amount: amount,
-          end_balance: updatedFundData.total_capital,
-        });
+      const { error: historyError } = await (supabase as any).from('trading_history').insert({
+        user_id: userId,
+        mode: fundData.mode,
+        type: 'Deposit',
+        details: `Deposit ${formatCurrency(amount)}`,
+        amount: amount,
+        end_balance: updatedFundData.total_capital,
+      });
 
       if (historyError) throw historyError;
 
@@ -129,23 +127,21 @@ const FundManagement = ({ userId, fundData, onUpdate }: FundManagementProps) => 
         [fromField]: fundData[fromField] - amount,
       };
 
-      const { error: fundError } = await supabase
+      const { error: fundError } = await (supabase as any)
         .from('fund_data')
         .update(updatedFundData)
         .eq('id', fundData.id);
 
       if (fundError) throw fundError;
 
-      const { error: historyError } = await supabase
-        .from('trading_history')
-        .insert({
-          user_id: userId,
-          mode: fundData.mode,
-          type: 'Withdraw',
-          details: `Withdraw ${formatCurrency(amount)} from ${fromField.replace('_', ' ')}`,
-          amount: -amount,
-          end_balance: updatedFundData.total_capital,
-        });
+      const { error: historyError } = await (supabase as any).from('trading_history').insert({
+        user_id: userId,
+        mode: fundData.mode,
+        type: 'Withdraw',
+        details: `Withdraw ${formatCurrency(amount)} from ${fromField.replace('_', ' ')}`,
+        amount: -amount,
+        end_balance: updatedFundData.total_capital,
+      });
 
       if (historyError) throw historyError;
 
@@ -188,22 +184,20 @@ const FundManagement = ({ userId, fundData, onUpdate }: FundManagementProps) => 
         [toField]: fundData[toField] + amount,
       };
 
-      const { error: fundError } = await supabase
+      const { error: fundError } = await (supabase as any)
         .from('fund_data')
         .update(updatedFundData)
         .eq('id', fundData.id);
 
       if (fundError) throw fundError;
 
-      const { error: historyError } = await supabase
-        .from('trading_history')
-        .insert({
-          user_id: userId,
-          mode: fundData.mode,
-          type: 'Internal Transfer',
-          details: `Transfer ${formatCurrency(amount)} from ${fromField.replace('_', ' ')} to ${toField.replace('_', ' ')}`,
-          end_balance: fundData.total_capital,
-        });
+      const { error: historyError } = await (supabase as any).from('trading_history').insert({
+        user_id: userId,
+        mode: fundData.mode,
+        type: 'Internal Transfer',
+        details: `Transfer ${formatCurrency(amount)} from ${fromField.replace('_', ' ')} to ${toField.replace('_', ' ')}`,
+        end_balance: fundData.total_capital,
+      });
 
       if (historyError) throw historyError;
 

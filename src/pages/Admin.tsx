@@ -66,16 +66,16 @@ const Admin = () => {
 
   const loadUserProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
 
       if (error) throw error;
-      setProfile(data);
+      setProfile(data as any);
       
-      if (data?.role !== 'super_admin') {
+      if ((data as any)?.role !== 'super_admin') {
         navigate('/');
         return;
       }
@@ -95,13 +95,13 @@ const Admin = () => {
 
   const loadAllUsers = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setUsers(data || []);
+      setUsers((data as any) || []);
     } catch (error: any) {
       console.error('Error loading users:', error);
     }
@@ -110,14 +110,14 @@ const Admin = () => {
   const loadUserStats = async () => {
     try {
       // Get fund data for all users
-      const { data: fundData, error: fundError } = await supabase
+      const { data: fundData, error: fundError } = await (supabase as any)
         .from('fund_data')
         .select('user_id, mode, total_capital');
 
       if (fundError) throw fundError;
 
       // Get trading history count for all users
-      const { data: historyData, error: historyError } = await supabase
+      const { data: historyData, error: historyError } = await (supabase as any)
         .from('trading_history')
         .select('user_id, created_at')
         .order('created_at', { ascending: false });
@@ -140,7 +140,7 @@ const Admin = () => {
       });
 
       // Add fund data
-      fundData?.forEach(fund => {
+      fundData?.forEach((fund: any) => {
         const stats = statsMap.get(fund.user_id);
         if (stats) {
           if (fund.mode === 'diamond') {
@@ -155,7 +155,7 @@ const Admin = () => {
       const tradeCountMap = new Map<string, number>();
       const lastActiveMap = new Map<string, string>();
       
-      historyData?.forEach(trade => {
+      historyData?.forEach((trade: any) => {
         tradeCountMap.set(trade.user_id, (tradeCountMap.get(trade.user_id) || 0) + 1);
         if (!lastActiveMap.has(trade.user_id)) {
           lastActiveMap.set(trade.user_id, trade.created_at);
@@ -176,7 +176,7 @@ const Admin = () => {
 
   const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('profiles')
         .update({ is_active: !currentStatus })
         .eq('user_id', userId);
@@ -199,7 +199,7 @@ const Admin = () => {
 
   const updateUserRole = async (userId: string, newRole: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('profiles')
         .update({ role: newRole })
         .eq('user_id', userId);
