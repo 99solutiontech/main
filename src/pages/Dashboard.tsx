@@ -63,50 +63,44 @@ const Dashboard = () => {
   const { t } = useLanguage();
 
   useEffect(() => {
-    let mounted = true;
-
-    const initializeAuth = async () => {
+    const initializeDashboard = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Dashboard: Getting session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (!mounted) return;
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (!session?.user) {
+        if (error || !session?.user) {
+          console.log('Dashboard: No session, redirecting to auth');
           navigate('/auth');
           return;
         }
+
+        setSession(session);
+        setUser(session.user);
         
+        console.log('Dashboard: Loading profile for user:', session.user.id);
         await loadUserProfile(session.user.id);
       } catch (error) {
-        console.error('Auth initialization error:', error);
-        if (mounted) {
-          navigate('/auth');
-        }
+        console.error('Dashboard initialization error:', error);
+        navigate('/auth');
       }
     };
 
+    // Set up auth state listener for real-time updates
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-      
-      setSession(session);
-      setUser(session?.user ?? null);
+      console.log('Dashboard: Auth state changed:', event);
       
       if (event === 'SIGNED_OUT' || !session?.user) {
         navigate('/auth');
-      } else if (event === 'SIGNED_IN' && session?.user) {
-        await loadUserProfile(session.user.id);
+        return;
       }
+      
+      setSession(session);
+      setUser(session.user);
     });
 
-    initializeAuth();
+    initializeDashboard();
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const loadUserProfile = async (userId: string) => {
