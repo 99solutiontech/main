@@ -58,17 +58,11 @@ const TradeRecorder = ({ userId, mode, fundData, onUpdate }: TradeRecorderProps)
   const recordDiamondTrade = async (data: DiamondForm) => {
     setLoading(true);
     try {
-      const currentBalance = fundData.active_fund;
-      const newBalance = data.end_of_week_balance;
-      const pnl = newBalance - currentBalance;
-      
-      // Calculate new fund distribution
-      const totalCapitalChange = pnl;
-      const newTotalCapital = fundData.total_capital + totalCapitalChange;
+      const currentActiveFund = fundData.active_fund;
+      const newActiveFund = data.end_of_week_balance;
+      const pnl = newActiveFund - currentActiveFund;
       
       let updatedFundData = { ...fundData };
-      updatedFundData.total_capital = newTotalCapital;
-      updatedFundData.active_fund = newBalance;
       
       if (pnl > 0) {
         // Profit: distribute according to profit distribution settings
@@ -76,14 +70,25 @@ const TradeRecorder = ({ userId, mode, fundData, onUpdate }: TradeRecorderProps)
         const profitToReserve = (pnl * (fundData.profit_dist_reserve || 25)) / 100;
         const profitToProfit = (pnl * (fundData.profit_dist_profit || 25)) / 100;
         
-        // Update active fund with its share of profit (already included in newBalance)
-        // Add profit distribution to reserve and profit funds
+        // Distribute the profit
+        updatedFundData.active_fund = currentActiveFund + profitToActive;
         updatedFundData.reserve_fund += profitToReserve;
         updatedFundData.profit_fund += profitToProfit;
+      } else if (pnl < 0) {
+        // Loss: move money from reserve fund to active fund to cover the loss
+        const lossAmount = Math.abs(pnl);
+        const transferFromReserve = Math.min(lossAmount, updatedFundData.reserve_fund);
         
-        // Adjust active fund to only contain its allocated portion
-        updatedFundData.active_fund = currentBalance + profitToActive;
+        // Keep active fund at the same level by transferring from reserve
+        updatedFundData.active_fund = currentActiveFund;
+        updatedFundData.reserve_fund -= transferFromReserve;
+      } else {
+        // No profit/loss
+        updatedFundData.active_fund = newActiveFund;
       }
+      
+      // Calculate new total capital (should always equal active + reserve + profit)
+      updatedFundData.total_capital = updatedFundData.active_fund + updatedFundData.reserve_fund + updatedFundData.profit_fund;
 
       // Update fund data
       const { error: fundError } = await (supabase as any)
@@ -107,7 +112,7 @@ const TradeRecorder = ({ userId, mode, fundData, onUpdate }: TradeRecorderProps)
           type: pnl >= 0 ? 'Win' : 'Loss',
           details: `Weekly trading result: ${formatCurrency(pnl)}`,
           amount: pnl,
-          end_balance: newTotalCapital,
+           end_balance: updatedFundData.total_capital,
         });
 
       if (historyError) throw historyError;
@@ -133,17 +138,11 @@ const TradeRecorder = ({ userId, mode, fundData, onUpdate }: TradeRecorderProps)
   const recordGoldTrade = async (data: GoldForm) => {
     setLoading(true);
     try {
-      const currentBalance = fundData.active_fund;
-      const newBalance = data.end_balance;
-      const pnl = newBalance - currentBalance;
-      
-      // Calculate new fund distribution (similar to diamond)
-      const totalCapitalChange = pnl;
-      const newTotalCapital = fundData.total_capital + totalCapitalChange;
+      const currentActiveFund = fundData.active_fund;
+      const newActiveFund = data.end_balance;
+      const pnl = newActiveFund - currentActiveFund;
       
       let updatedFundData = { ...fundData };
-      updatedFundData.total_capital = newTotalCapital;
-      updatedFundData.active_fund = newBalance;
       
       if (pnl > 0) {
         // Profit: distribute according to profit distribution settings
@@ -151,14 +150,25 @@ const TradeRecorder = ({ userId, mode, fundData, onUpdate }: TradeRecorderProps)
         const profitToReserve = (pnl * (fundData.profit_dist_reserve || 25)) / 100;
         const profitToProfit = (pnl * (fundData.profit_dist_profit || 25)) / 100;
         
-        // Update active fund with its share of profit (already included in newBalance)
-        // Add profit distribution to reserve and profit funds
+        // Distribute the profit
+        updatedFundData.active_fund = currentActiveFund + profitToActive;
         updatedFundData.reserve_fund += profitToReserve;
         updatedFundData.profit_fund += profitToProfit;
+      } else if (pnl < 0) {
+        // Loss: move money from reserve fund to active fund to cover the loss
+        const lossAmount = Math.abs(pnl);
+        const transferFromReserve = Math.min(lossAmount, updatedFundData.reserve_fund);
         
-        // Adjust active fund to only contain its allocated portion
-        updatedFundData.active_fund = currentBalance + profitToActive;
+        // Keep active fund at the same level by transferring from reserve
+        updatedFundData.active_fund = currentActiveFund;
+        updatedFundData.reserve_fund -= transferFromReserve;
+      } else {
+        // No profit/loss
+        updatedFundData.active_fund = newActiveFund;
       }
+      
+      // Calculate new total capital (should always equal active + reserve + profit)
+      updatedFundData.total_capital = updatedFundData.active_fund + updatedFundData.reserve_fund + updatedFundData.profit_fund;
 
       // Update fund data
       const { error: fundError } = await (supabase as any)
@@ -182,7 +192,7 @@ const TradeRecorder = ({ userId, mode, fundData, onUpdate }: TradeRecorderProps)
           type: pnl >= 0 ? 'Win' : 'Loss',
           details: `Daily trading result: ${formatCurrency(pnl)}`,
           amount: pnl,
-          end_balance: newTotalCapital,
+          end_balance: updatedFundData.total_capital,
           trade_date: data.trade_date,
         });
 
