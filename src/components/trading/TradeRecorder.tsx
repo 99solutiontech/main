@@ -72,12 +72,17 @@ const TradeRecorder = ({ userId, mode, fundData, onUpdate }: TradeRecorderProps)
       
       if (pnl > 0) {
         // Profit: distribute according to profit distribution settings
-        const profitToActive = (pnl * fundData.profit_dist_active) / 100;
-        const profitToReserve = (pnl * fundData.profit_dist_reserve) / 100;
-        const profitToProfit = (pnl * fundData.profit_dist_profit) / 100;
+        const profitToActive = (pnl * (fundData.profit_dist_active || 50)) / 100;
+        const profitToReserve = (pnl * (fundData.profit_dist_reserve || 25)) / 100;
+        const profitToProfit = (pnl * (fundData.profit_dist_profit || 25)) / 100;
         
+        // Update active fund with its share of profit (already included in newBalance)
+        // Add profit distribution to reserve and profit funds
         updatedFundData.reserve_fund += profitToReserve;
         updatedFundData.profit_fund += profitToProfit;
+        
+        // Adjust active fund to only contain its allocated portion
+        updatedFundData.active_fund = currentBalance + profitToActive;
       }
 
       // Update fund data
@@ -141,12 +146,18 @@ const TradeRecorder = ({ userId, mode, fundData, onUpdate }: TradeRecorderProps)
       updatedFundData.active_fund = newBalance;
       
       if (pnl > 0) {
-        const profitToActive = (pnl * fundData.profit_dist_active) / 100;
-        const profitToReserve = (pnl * fundData.profit_dist_reserve) / 100;
-        const profitToProfit = (pnl * fundData.profit_dist_profit) / 100;
+        // Profit: distribute according to profit distribution settings
+        const profitToActive = (pnl * (fundData.profit_dist_active || 50)) / 100;
+        const profitToReserve = (pnl * (fundData.profit_dist_reserve || 25)) / 100;
+        const profitToProfit = (pnl * (fundData.profit_dist_profit || 25)) / 100;
         
+        // Update active fund with its share of profit (already included in newBalance)
+        // Add profit distribution to reserve and profit funds
         updatedFundData.reserve_fund += profitToReserve;
         updatedFundData.profit_fund += profitToProfit;
+        
+        // Adjust active fund to only contain its allocated portion
+        updatedFundData.active_fund = currentBalance + profitToActive;
       }
 
       // Update fund data

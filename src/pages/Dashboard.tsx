@@ -210,7 +210,6 @@ const Dashboard = () => {
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <Gem className="h-6 w-6 text-primary" />
-                  <Star className="h-6 w-6 text-accent" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold">Moneyx v8.2</h1>

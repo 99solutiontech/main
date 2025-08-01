@@ -113,16 +113,16 @@ const CapitalGrowthChart = ({ userId, mode }: CapitalGrowthChartProps) => {
         },
         ticks: {
           maxTicksLimit: 7,
-          color: 'hsl(var(--muted-foreground))',
+          color: 'hsl(var(--foreground))',
         },
       },
       y: {
         display: true,
         grid: {
-          color: 'hsla(var(--muted-foreground), 0.2)',
+          color: 'hsla(var(--border), 0.8)',
         },
         ticks: {
-          color: 'hsl(var(--muted-foreground))',
+          color: 'hsl(var(--foreground))',
           callback: function(value) {
             return '$' + Number(value).toLocaleString();
           },
