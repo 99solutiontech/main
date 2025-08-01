@@ -59,7 +59,7 @@ const MonthlyGrowthChart = ({ userId, mode }: MonthlyGrowthChartProps) => {
 
       const years = [...new Set(
         (yearsData || []).map((record: any) => new Date(record.created_at).getFullYear().toString())
-      )].sort().reverse();
+      )].sort().reverse() as string[];
       
       setAvailableYears(years);
 
