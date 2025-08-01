@@ -14,13 +14,192 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      fund_data: {
+        Row: {
+          active_fund: number
+          created_at: string
+          id: string
+          initial_capital: number
+          lot_base_capital: number | null
+          lot_base_lot: number | null
+          mode: string
+          profit_dist_active: number | null
+          profit_dist_profit: number | null
+          profit_dist_reserve: number | null
+          profit_fund: number
+          reserve_fund: number
+          sub_user_name: string | null
+          target_reserve_fund: number
+          total_capital: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_fund?: number
+          created_at?: string
+          id?: string
+          initial_capital?: number
+          lot_base_capital?: number | null
+          lot_base_lot?: number | null
+          mode: string
+          profit_dist_active?: number | null
+          profit_dist_profit?: number | null
+          profit_dist_reserve?: number | null
+          profit_fund?: number
+          reserve_fund?: number
+          sub_user_name?: string | null
+          target_reserve_fund?: number
+          total_capital?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_fund?: number
+          created_at?: string
+          id?: string
+          initial_capital?: number
+          lot_base_capital?: number | null
+          lot_base_lot?: number | null
+          mode?: string
+          profit_dist_active?: number | null
+          profit_dist_profit?: number | null
+          profit_dist_reserve?: number | null
+          profit_fund?: number
+          reserve_fund?: number
+          sub_user_name?: string | null
+          target_reserve_fund?: number
+          total_capital?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      fund_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at: string
+          description: string
+          from_fund: string | null
+          id: string
+          mode: string
+          sub_user_name: string | null
+          to_fund: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at?: string
+          description: string
+          from_fund?: string | null
+          id?: string
+          mode: string
+          sub_user_name?: string | null
+          to_fund?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          balance_before?: number
+          created_at?: string
+          description?: string
+          from_fund?: string | null
+          id?: string
+          mode?: string
+          sub_user_name?: string | null
+          to_fund?: string | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          is_active: boolean | null
+          role: string | null
+          trader_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          role?: string | null
+          trader_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          role?: string | null
+          trader_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trading_history: {
+        Row: {
+          amount: number | null
+          created_at: string
+          details: string
+          end_balance: number
+          id: string
+          mode: string
+          sub_user_name: string | null
+          trade_date: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          details: string
+          end_balance: number
+          id?: string
+          mode: string
+          sub_user_name?: string | null
+          trade_date?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          details?: string
+          end_balance?: number
+          id?: string
+          mode?: string
+          sub_user_name?: string | null
+          trade_date?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

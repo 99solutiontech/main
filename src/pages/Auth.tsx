@@ -46,7 +46,8 @@ const Auth = () => {
   const handleSignUp = async (data: SignUpForm) => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      // Add timeout for auth requests
+      const signUpPromise = supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -58,6 +59,12 @@ const Auth = () => {
         }
       });
 
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout - please check your connection')), 15000)
+      );
+
+      const { error } = await Promise.race([signUpPromise, timeoutPromise]) as any;
+
       if (error) throw error;
 
       toast({
@@ -65,11 +72,22 @@ const Auth = () => {
         description: t('checkEmail'),
       });
     } catch (error: any) {
-      toast({
-        title: t('error'),
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error('Sign up error:', error);
+      
+      // Check if it's a connection error
+      if (error.message.includes('Failed to fetch') || error.message.includes('timeout') || error.message.includes('fetch')) {
+        toast({
+          title: 'Connection Error',
+          description: 'Unable to connect to authentication server. Please check your internet connection and try again.',
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: t('error'),
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -78,20 +96,38 @@ const Auth = () => {
   const handleSignIn = async (data: SignInForm) => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      // Add timeout for auth requests
+      const signInPromise = supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
+
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout - please check your connection')), 15000)
+      );
+
+      const { error } = await Promise.race([signInPromise, timeoutPromise]) as any;
 
       if (error) throw error;
 
       navigate('/');
     } catch (error: any) {
-      toast({
-        title: t('error'),
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error('Sign in error:', error);
+      
+      // Check if it's a connection error
+      if (error.message.includes('Failed to fetch') || error.message.includes('timeout') || error.message.includes('fetch')) {
+        toast({
+          title: 'Connection Error', 
+          description: 'Unable to connect to authentication server. Please check your internet connection and try again.',
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: t('error'),
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
