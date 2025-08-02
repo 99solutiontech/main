@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AppThemeProvider } from '@/contexts/AppThemeContext';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 import LanguageSelector from '@/components/LanguageSelector';
 import { Gem, LogOut, Settings, TrendingUp, DollarSign, Calculator, Calendar, BarChart3, Users, Fuel } from 'lucide-react';
 import FundOverview from '@/components/trading/FundOverview';
@@ -353,9 +354,10 @@ const Dashboard = () => {
   }
 
   return (
-    <AppThemeProvider>
-      <ThemeProvider tradingMode={currentMode} onModeChange={handleModeChange}>
-        <div className="min-h-screen bg-background">
+    <LanguageProvider>
+      <AppThemeProvider>
+        <ThemeProvider tradingMode={currentMode} onModeChange={handleModeChange}>
+          <div className="min-h-screen bg-background">
         <header className="border-b bg-card">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
@@ -553,8 +555,9 @@ const Dashboard = () => {
         )}
         </main>
       </div>
-      </ThemeProvider>
-    </AppThemeProvider>
+        </ThemeProvider>
+      </AppThemeProvider>
+    </LanguageProvider>
   );
 };
 
