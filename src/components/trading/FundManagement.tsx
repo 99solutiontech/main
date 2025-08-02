@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { DollarSign } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import DepositSettings from './DepositSettings';
 import ProfitManagementSettings from './ProfitManagementSettings';
 
@@ -29,9 +30,21 @@ interface FundData {
   lot_base_lot: number;
 }
 
+interface SubUser {
+  id: string;
+  name: string;
+  mode: 'diamond' | 'gold';
+  initial_capital: number;
+  total_capital: number;
+  active_fund: number;
+  reserve_fund: number;
+  profit_fund: number;
+}
+
 interface FundManagementProps {
   userId: string;
   fundData: FundData;
+  subUsers?: SubUser[];
   subUserName?: string;
   onUpdate: () => void;
 }
@@ -49,12 +62,16 @@ interface TransferForm {
   from: 'active_fund' | 'reserve_fund' | 'profit_fund';
   to: 'active_fund' | 'reserve_fund' | 'profit_fund';
   amount: number;
+  targetUser?: string;
+  targetUserType?: 'main' | 'sub';
 }
 
-const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagementProps) => {
+const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate }: FundManagementProps) => {
   const [loading, setLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [isTransferBetweenAccounts, setIsTransferBetweenAccounts] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const depositForm = useForm<DepositForm>();
   const withdrawForm = useForm<WithdrawForm>();
@@ -68,8 +85,11 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
     setLoading(true);
     try {
       const amount = Number(data.amount);
-      const toActive = amount * 0.4;
-      const toReserve = amount * 0.6;
+      // Use stored deposit percentages or default 40/60 split
+      const activePercentage = fundData.profit_dist_active || 40;
+      const reservePercentage = 100 - activePercentage;
+      const toActive = amount * (activePercentage / 100);
+      const toReserve = amount * (reservePercentage / 100);
 
       const newActiveFund = fundData.active_fund + toActive;
       const newReserveFund = fundData.reserve_fund + toReserve;
@@ -95,7 +115,7 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
         amount: amount,
         balance_before: fundData.total_capital,
         balance_after: newTotalCapital,
-        description: `Deposited ${formatCurrency(amount)} (40% to Active, 60% to Reserve)`,
+        description: `Deposited ${formatCurrency(amount)} (${activePercentage}% to Active, ${reservePercentage}% to Reserve)`,
         sub_user_name: subUserName,
       });
 
@@ -182,49 +202,160 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
       const fromField = data.from;
       const toField = data.to;
       
-      if (fromField === toField) {
-        throw new Error('Source and destination must be different');
+      if (isTransferBetweenAccounts) {
+        // Handle transfer between main and sub accounts
+        if (!data.targetUser || !data.targetUserType) {
+          throw new Error('Please select target account');
+        }
+
+        if (amount > fundData[fromField]) {
+          throw new Error(`Insufficient funds in ${fromField.replace('_', ' ')}`);
+        }
+
+        // Get target fund data
+        let targetFundData;
+        if (data.targetUserType === 'main') {
+          const { data: mainFund, error } = await supabase
+            .from('fund_data')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('mode', fundData.mode)
+            .is('sub_user_name', null)
+            .single();
+          
+          if (error) throw error;
+          targetFundData = mainFund;
+        } else {
+          const targetSubUser = subUsers.find(su => su.id === data.targetUser);
+          if (!targetSubUser) throw new Error('Target sub-user not found');
+          
+          const { data: subFund, error } = await supabase
+            .from('fund_data')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('mode', fundData.mode)
+            .eq('sub_user_name', targetSubUser.name)
+            .single();
+          
+          if (error) throw error;
+          targetFundData = subFund;
+        }
+
+        // Update source fund
+        const newFromValue = fundData[fromField] - amount;
+        const newSourceTotal = fundData.total_capital - amount;
+
+        const { error: sourceFundError } = await supabase
+          .from('fund_data')
+          .update({
+            [fromField]: newFromValue,
+            total_capital: newSourceTotal,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', fundData.id);
+
+        if (sourceFundError) throw sourceFundError;
+
+        // Update target fund
+        const newToValue = targetFundData[toField] + amount;
+        const newTargetTotal = targetFundData.total_capital + amount;
+
+        const { error: targetFundError } = await supabase
+          .from('fund_data')
+          .update({
+            [toField]: newToValue,
+            total_capital: newTargetTotal,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', targetFundData.id);
+
+        if (targetFundError) throw targetFundError;
+
+        // Record transactions for both accounts
+        const sourceAccountName = subUserName || 'Main Account';
+        const targetAccountName = data.targetUserType === 'main' ? 'Main Account' : subUsers.find(su => su.id === data.targetUser)?.name || 'Unknown';
+
+        const { error: sourceHistoryError } = await supabase.from('transaction_history').insert({
+          user_id: userId,
+          mode: fundData.mode,
+          transaction_type: 'transfer',
+          from_fund: fromField.replace('_fund', ''),
+          to_fund: toField.replace('_fund', ''),
+          amount: amount,
+          balance_before: fundData.total_capital,
+          balance_after: newSourceTotal,
+          description: `Transferred ${formatCurrency(amount)} from ${sourceAccountName} ${fromField.replace('_', ' ')} to ${targetAccountName} ${toField.replace('_', ' ')}`,
+          sub_user_name: subUserName,
+        });
+
+        if (sourceHistoryError) throw sourceHistoryError;
+
+        const { error: targetHistoryError } = await supabase.from('transaction_history').insert({
+          user_id: userId,
+          mode: fundData.mode,
+          transaction_type: 'transfer',
+          from_fund: fromField.replace('_fund', ''),
+          to_fund: toField.replace('_fund', ''),
+          amount: amount,
+          balance_before: targetFundData.total_capital,
+          balance_after: newTargetTotal,
+          description: `Received ${formatCurrency(amount)} from ${sourceAccountName} ${fromField.replace('_', ' ')} to ${toField.replace('_', ' ')}`,
+          sub_user_name: data.targetUserType === 'sub' ? targetAccountName : null,
+        });
+
+        if (targetHistoryError) throw targetHistoryError;
+
+        toast({
+          title: "Success",
+          description: `Transfer completed successfully to ${targetAccountName}`,
+        });
+      } else {
+        // Handle internal transfer within same account
+        if (fromField === toField) {
+          throw new Error('Source and destination must be different');
+        }
+        
+        if (amount > fundData[fromField]) {
+          throw new Error(`Insufficient funds in ${fromField.replace('_', ' ')}`);
+        }
+
+        const newFromValue = fundData[fromField] - amount;
+        const newToValue = fundData[toField] + amount;
+
+        const { error: fundError } = await supabase
+          .from('fund_data')
+          .update({
+            [fromField]: newFromValue,
+            [toField]: newToValue,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', fundData.id);
+
+        if (fundError) throw fundError;
+
+        const { error: historyError } = await supabase.from('transaction_history').insert({
+          user_id: userId,
+          mode: fundData.mode,
+          transaction_type: 'transfer',
+          from_fund: fromField.replace('_fund', ''),
+          to_fund: toField.replace('_fund', ''),
+          amount: amount,
+          balance_before: fundData.total_capital,
+          balance_after: fundData.total_capital, // Total doesn't change for internal transfers
+          description: `Transferred ${formatCurrency(amount)} from ${fromField.replace('_', ' ')} to ${toField.replace('_', ' ')}`,
+          sub_user_name: subUserName,
+        });
+
+        if (historyError) throw historyError;
+
+        toast({
+          title: "Success",
+          description: "Transfer completed successfully",
+        });
       }
-      
-      if (amount > fundData[fromField]) {
-        throw new Error(`Insufficient funds in ${fromField.replace('_', ' ')}`);
-      }
-
-      const newFromValue = fundData[fromField] - amount;
-      const newToValue = fundData[toField] + amount;
-
-      const { error: fundError } = await supabase
-        .from('fund_data')
-        .update({
-          [fromField]: newFromValue,
-          [toField]: newToValue,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', fundData.id);
-
-      if (fundError) throw fundError;
-
-      const { error: historyError } = await supabase.from('transaction_history').insert({
-        user_id: userId,
-        mode: fundData.mode,
-        transaction_type: 'transfer',
-        from_fund: fromField.replace('_fund', ''),
-        to_fund: toField.replace('_fund', ''),
-        amount: amount,
-        balance_before: fundData.total_capital,
-        balance_after: fundData.total_capital, // Total doesn't change for internal transfers
-        description: `Transferred ${formatCurrency(amount)} from ${fromField.replace('_', ' ')} to ${toField.replace('_', ' ')}`,
-        sub_user_name: subUserName,
-      });
-
-      if (historyError) throw historyError;
-
-      toast({
-        title: "Success",
-        description: "Transfer completed successfully",
-      });
 
       transferForm.reset();
+      setIsTransferBetweenAccounts(false);
       onUpdate();
     } catch (error: any) {
       toast({
@@ -243,13 +374,20 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
         <CardTitle className="flex items-center justify-between text-foreground">
           <div className="flex items-center gap-2">
             <DollarSign className="h-5 w-5" />
-            Fund Management
+            {t('fundManagement')}
           </div>
-          <ProfitManagementSettings 
-            fundData={fundData}
-            subUserName={subUserName}
-            onUpdate={onUpdate}
-          />
+          <div className="flex items-center gap-2">
+            <DepositSettings 
+              fundData={fundData}
+              subUserName={subUserName}
+              onUpdate={onUpdate}
+            />
+            <ProfitManagementSettings 
+              fundData={fundData}
+              subUserName={subUserName}
+              onUpdate={onUpdate}
+            />
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -266,15 +404,15 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
         
         <Tabs defaultValue="deposit" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="deposit">Deposit</TabsTrigger>
-            <TabsTrigger value="withdraw">Withdraw</TabsTrigger>
-            <TabsTrigger value="transfer">Transfer</TabsTrigger>
+            <TabsTrigger value="deposit">{t('deposit')}</TabsTrigger>
+            <TabsTrigger value="withdraw">{t('withdraw')}</TabsTrigger>
+            <TabsTrigger value="transfer">{t('transfer')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="deposit" className="space-y-4">
             <form onSubmit={depositForm.handleSubmit(handleDeposit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="deposit-amount" className="text-foreground">Amount (USD)</Label>
+                <Label htmlFor="deposit-amount" className="text-foreground">{t('amount')}</Label>
                 <Input
                   id="deposit-amount"
                   type="number"
@@ -283,11 +421,11 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
                   placeholder="1000.00"
                 />
                 <p className="text-sm text-muted-foreground">
-                  Will be split: 40% to Active Fund, 60% to Reserve Fund
+                  {t('willBeSplit')}: {fundData.profit_dist_active || 40}% {t('toActiveFund')}, {100 - (fundData.profit_dist_active || 40)}% {t('toReserveFund')}
                 </p>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Processing...' : 'Deposit'}
+                {loading ? t('processing') : t('deposit')}
               </Button>
             </form>
           </TabsContent>
@@ -295,26 +433,26 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
           <TabsContent value="withdraw" className="space-y-4">
             <form onSubmit={withdrawForm.handleSubmit(handleWithdraw)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="withdraw-from" className="text-foreground">Withdraw From</Label>
+                <Label htmlFor="withdraw-from" className="text-foreground">{t('from')}</Label>
                 <Select onValueChange={(value) => withdrawForm.setValue('from', value as any)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select fund" />
+                    <SelectValue placeholder={`${t('from')} ${t('activeFund').toLowerCase()}`} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active_fund">
-                      Active Fund ({formatCurrency(fundData.active_fund)})
+                      {t('activeFund')} ({formatCurrency(fundData.active_fund)})
                     </SelectItem>
                     <SelectItem value="reserve_fund">
-                      Reserve Fund ({formatCurrency(fundData.reserve_fund)})
+                      {t('reserveFund')} ({formatCurrency(fundData.reserve_fund)})
                     </SelectItem>
                     <SelectItem value="profit_fund">
-                      Profit Fund ({formatCurrency(fundData.profit_fund)})
+                      {t('profitFund')} ({formatCurrency(fundData.profit_fund)})
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="withdraw-amount" className="text-foreground">Amount (USD)</Label>
+                <Label htmlFor="withdraw-amount" className="text-foreground">{t('amount')}</Label>
                 <Input
                   id="withdraw-amount"
                   type="number"
@@ -324,61 +462,99 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
                 />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Processing...' : 'Withdraw'}
+                {loading ? t('processing') : t('withdraw')}
               </Button>
             </form>
           </TabsContent>
 
           <TabsContent value="transfer" className="space-y-4">
-            <form onSubmit={transferForm.handleSubmit(handleTransfer)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="transfer-from" className="text-foreground">From</Label>
-                  <Select onValueChange={(value) => transferForm.setValue('from', value as any)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Source" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active_fund">
-                        Active Fund ({formatCurrency(fundData.active_fund)})
-                      </SelectItem>
-                      <SelectItem value="reserve_fund">
-                        Reserve Fund ({formatCurrency(fundData.reserve_fund)})
-                      </SelectItem>
-                      <SelectItem value="profit_fund">
-                        Profit Fund ({formatCurrency(fundData.profit_fund)})
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="transfer-to" className="text-foreground">To</Label>
-                  <Select onValueChange={(value) => transferForm.setValue('to', value as any)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Destination" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active_fund">Active Fund</SelectItem>
-                      <SelectItem value="reserve_fund">Reserve Fund</SelectItem>
-                      <SelectItem value="profit_fund">Profit Fund</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="transfer-amount" className="text-foreground">Amount (USD)</Label>
-                <Input
-                  id="transfer-amount"
-                  type="number"
-                  step="0.01"
-                  {...transferForm.register('amount', { required: true, min: 0.01 })}
-                  placeholder="200.00"
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="transfer-between-accounts"
+                  checked={isTransferBetweenAccounts}
+                  onChange={(e) => setIsTransferBetweenAccounts(e.target.checked)}
+                  className="rounded"
                 />
+                <Label htmlFor="transfer-between-accounts" className="text-sm">
+                  {t('transferBetweenAccounts')}
+                </Label>
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Processing...' : 'Transfer'}
-              </Button>
-            </form>
+
+              <form onSubmit={transferForm.handleSubmit(handleTransfer)} className="space-y-4">
+                {isTransferBetweenAccounts && (
+                  <div className="space-y-2">
+                    <Label className="text-foreground">{t('to')} Account</Label>
+                    <Select onValueChange={(value) => {
+                      const [type, userId] = value.split(':');
+                      transferForm.setValue('targetUserType', type as any);
+                      transferForm.setValue('targetUser', userId);
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select target account" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="main:">{t('mainAccount')}</SelectItem>
+                        {subUsers.map((subUser) => (
+                          <SelectItem key={subUser.id} value={`sub:${subUser.id}`}>
+                            {t('subAccount')}: {subUser.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="transfer-from" className="text-foreground">{t('fromFund')}</Label>
+                    <Select onValueChange={(value) => transferForm.setValue('from', value as any)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('from')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active_fund">
+                          {t('activeFund')} ({formatCurrency(fundData.active_fund)})
+                        </SelectItem>
+                        <SelectItem value="reserve_fund">
+                          {t('reserveFund')} ({formatCurrency(fundData.reserve_fund)})
+                        </SelectItem>
+                        <SelectItem value="profit_fund">
+                          {t('profitFund')} ({formatCurrency(fundData.profit_fund)})
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="transfer-to" className="text-foreground">{t('toFund')}</Label>
+                    <Select onValueChange={(value) => transferForm.setValue('to', value as any)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('to')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active_fund">{t('activeFund')}</SelectItem>
+                        <SelectItem value="reserve_fund">{t('reserveFund')}</SelectItem>
+                        <SelectItem value="profit_fund">{t('profitFund')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="transfer-amount" className="text-foreground">{t('amount')}</Label>
+                  <Input
+                    id="transfer-amount"
+                    type="number"
+                    step="0.01"
+                    {...transferForm.register('amount', { required: true, min: 0.01 })}
+                    placeholder="200.00"
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? t('processing') : t('transfer')}
+                </Button>
+              </form>
+            </div>
           </TabsContent>
         </Tabs>
       </CardContent>

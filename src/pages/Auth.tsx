@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageSelector from '@/components/LanguageSelector';
-import { Gem } from 'lucide-react';
+import logoImage from '@/assets/moneyX-logo.png';
 
 interface SignUpForm {
   email: string;
@@ -141,7 +141,7 @@ const Auth = () => {
         </div>
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Gem className="h-8 w-8 text-primary" />
+            <img src={logoImage} alt="MoneyX Logo" className="h-16 w-16 object-contain" />
           </div>
           <h1 className="text-3xl font-bold tracking-wider">MoneyX v8.2</h1>
           <p className="text-muted-foreground tracking-wide">{t('tradingSystem')}</p>
