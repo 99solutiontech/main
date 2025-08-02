@@ -175,7 +175,7 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserChange
         {(!selectedSubUser || selectedSubUser === 'main') && (
           <UserManagement 
             userId={userId} 
-            mode={currentMode}
+            currentMode={currentMode}
             onReset={loadSubUsers}
           />
         )}

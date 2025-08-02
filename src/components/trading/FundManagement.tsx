@@ -8,8 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign } from 'lucide-react';
-import FundSettings from './FundSettings';
+import { DollarSign, Settings } from 'lucide-react';
 import DepositSettings from './DepositSettings';
 
 interface FundData {
@@ -41,7 +40,7 @@ interface DepositForm {
 }
 
 interface WithdrawForm {
-  from: 'active_fund' | 'profit_fund';
+  from: 'active_fund' | 'reserve_fund' | 'profit_fund';
   amount: number;
 }
 
@@ -53,6 +52,7 @@ interface TransferForm {
 
 const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagementProps) => {
   const [loading, setLoading] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const { toast } = useToast();
 
   const depositForm = useForm<DepositForm>();
@@ -66,37 +66,34 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
   const handleDeposit = async (data: DepositForm) => {
     setLoading(true);
     try {
-      const amount = data.amount;
+      const amount = Number(data.amount);
       const toActive = amount * 0.4;
       const toReserve = amount * 0.6;
 
       const newActiveFund = fundData.active_fund + toActive;
       const newReserveFund = fundData.reserve_fund + toReserve;
-      const newTotalCapital = newActiveFund + newReserveFund + fundData.profit_fund;
+      const newTotalCapital = fundData.total_capital + amount;
 
-      const updatedFundData = {
-        initial_capital: fundData.initial_capital + amount,
-        total_capital: newTotalCapital,
-        active_fund: newActiveFund,
-        reserve_fund: newReserveFund,
-        target_reserve_fund: fundData.target_reserve_fund + toReserve,
-      };
-
-      const { error: fundError } = await (supabase as any)
+      const { error: fundError } = await supabase
         .from('fund_data')
-        .update(updatedFundData)
+        .update({
+          total_capital: newTotalCapital,
+          active_fund: newActiveFund,
+          reserve_fund: newReserveFund,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', fundData.id);
 
       if (fundError) throw fundError;
 
-      const { error: historyError } = await (supabase as any).from('fund_transactions').insert({
+      const { error: historyError } = await supabase.from('fund_transactions').insert({
         user_id: userId,
         mode: fundData.mode,
         transaction_type: 'deposit',
         to_fund: 'mixed',
         amount: amount,
         balance_before: fundData.total_capital,
-        balance_after: updatedFundData.total_capital,
+        balance_after: newTotalCapital,
         description: `Deposited ${formatCurrency(amount)} (40% to Active, 60% to Reserve)`,
         sub_user_name: subUserName,
       });
@@ -124,7 +121,7 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
   const handleWithdraw = async (data: WithdrawForm) => {
     setLoading(true);
     try {
-      const amount = data.amount;
+      const amount = Number(data.amount);
       const fromField = data.from;
       
       if (amount > fundData[fromField]) {
@@ -132,31 +129,27 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
       }
 
       const newFundValue = fundData[fromField] - amount;
-      const newTotalCapital = (fromField === 'active_fund' ? newFundValue : fundData.active_fund) +
-                              fundData.reserve_fund +
-                              (fromField === 'profit_fund' ? newFundValue : fundData.profit_fund);
+      const newTotalCapital = fundData.total_capital - amount;
 
-      const updatedFundData = {
-        ...fundData,
-        total_capital: newTotalCapital,
-        [fromField]: newFundValue,
-      };
-
-      const { error: fundError } = await (supabase as any)
+      const { error: fundError } = await supabase
         .from('fund_data')
-        .update(updatedFundData)
+        .update({
+          [fromField]: newFundValue,
+          total_capital: newTotalCapital,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', fundData.id);
 
       if (fundError) throw fundError;
 
-      const { error: historyError } = await (supabase as any).from('fund_transactions').insert({
+      const { error: historyError } = await supabase.from('fund_transactions').insert({
         user_id: userId,
         mode: fundData.mode,
         transaction_type: 'withdraw',
         from_fund: fromField.replace('_fund', ''),
         amount: amount,
         balance_before: fundData.total_capital,
-        balance_after: updatedFundData.total_capital,
+        balance_after: newTotalCapital,
         description: `Withdrew ${formatCurrency(amount)} from ${fromField.replace('_', ' ')}`,
         sub_user_name: subUserName,
       });
@@ -184,7 +177,7 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
   const handleTransfer = async (data: TransferForm) => {
     setLoading(true);
     try {
-      const amount = data.amount;
+      const amount = Number(data.amount);
       const fromField = data.from;
       const toField = data.to;
       
@@ -198,24 +191,19 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
 
       const newFromValue = fundData[fromField] - amount;
       const newToValue = fundData[toField] + amount;
-      // Total capital remains the same for transfers
-      const newTotalCapital = fundData.active_fund + fundData.reserve_fund + fundData.profit_fund;
 
-      const updatedFundData = {
-        ...fundData,
-        total_capital: newTotalCapital,
-        [fromField]: newFromValue,
-        [toField]: newToValue,
-      };
-
-      const { error: fundError } = await (supabase as any)
+      const { error: fundError } = await supabase
         .from('fund_data')
-        .update(updatedFundData)
+        .update({
+          [fromField]: newFromValue,
+          [toField]: newToValue,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', fundData.id);
 
       if (fundError) throw fundError;
 
-      const { error: historyError } = await (supabase as any).from('fund_transactions').insert({
+      const { error: historyError } = await supabase.from('fund_transactions').insert({
         user_id: userId,
         mode: fundData.mode,
         transaction_type: 'transfer',
@@ -223,7 +211,7 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
         to_fund: toField.replace('_fund', ''),
         amount: amount,
         balance_before: fundData.total_capital,
-        balance_after: fundData.total_capital,
+        balance_after: fundData.total_capital, // Total doesn't change for internal transfers
         description: `Transferred ${formatCurrency(amount)} from ${fromField.replace('_', ' ')} to ${toField.replace('_', ' ')}`,
         sub_user_name: subUserName,
       });
@@ -249,17 +237,35 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
   };
 
   return (
-    <Card className="relative">
+    <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-foreground">
-          <DollarSign className="h-5 w-5" />
-          Fund Management
+        <CardTitle className="flex items-center justify-between text-foreground">
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            Fund Management
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowSettings(!showSettings)}
+            className="h-8 w-8 p-0"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
         </CardTitle>
-        <div className="absolute top-2 right-2">
-          <FundSettings fundData={fundData} onUpdate={onUpdate} />
-        </div>
       </CardHeader>
       <CardContent>
+        {showSettings && (
+          <div className="mb-4">
+            <DepositSettings 
+              fundData={fundData} 
+              subUserName={subUserName}
+              onUpdate={onUpdate}
+              onClose={() => setShowSettings(false)}
+            />
+          </div>
+        )}
+        
         <Tabs defaultValue="deposit" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="deposit">Deposit</TabsTrigger>
@@ -270,7 +276,7 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
           <TabsContent value="deposit" className="space-y-4">
             <form onSubmit={depositForm.handleSubmit(handleDeposit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="deposit-amount">Amount (USD)</Label>
+                <Label htmlFor="deposit-amount" className="text-foreground">Amount (USD)</Label>
                 <Input
                   id="deposit-amount"
                   type="number"
@@ -278,12 +284,9 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
                   {...depositForm.register('amount', { required: true, min: 0.01 })}
                   placeholder="1000.00"
                 />
-                <div className="flex items-center justify-between">
-                  <div className="text-xs text-muted-foreground">
-                    Will be split: 40% to Active Fund, 60% to Reserve Fund
-                  </div>
-                  <DepositSettings fundData={fundData} subUserName={subUserName} onUpdate={onUpdate} />
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  Will be split: 40% to Active Fund, 60% to Reserve Fund
+                </p>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Processing...' : 'Deposit'}
@@ -294,7 +297,7 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
           <TabsContent value="withdraw" className="space-y-4">
             <form onSubmit={withdrawForm.handleSubmit(handleWithdraw)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="withdraw-from">Withdraw From</Label>
+                <Label htmlFor="withdraw-from" className="text-foreground">Withdraw From</Label>
                 <Select onValueChange={(value) => withdrawForm.setValue('from', value as any)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select fund" />
@@ -303,6 +306,9 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
                     <SelectItem value="active_fund">
                       Active Fund ({formatCurrency(fundData.active_fund)})
                     </SelectItem>
+                    <SelectItem value="reserve_fund">
+                      Reserve Fund ({formatCurrency(fundData.reserve_fund)})
+                    </SelectItem>
                     <SelectItem value="profit_fund">
                       Profit Fund ({formatCurrency(fundData.profit_fund)})
                     </SelectItem>
@@ -310,7 +316,7 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="withdraw-amount">Amount (USD)</Label>
+                <Label htmlFor="withdraw-amount" className="text-foreground">Amount (USD)</Label>
                 <Input
                   id="withdraw-amount"
                   type="number"
@@ -329,26 +335,26 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
             <form onSubmit={transferForm.handleSubmit(handleTransfer)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="transfer-from">From</Label>
+                  <Label htmlFor="transfer-from" className="text-foreground">From</Label>
                   <Select onValueChange={(value) => transferForm.setValue('from', value as any)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Source" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="active_fund">
-                        Active ({formatCurrency(fundData.active_fund)})
+                        Active Fund ({formatCurrency(fundData.active_fund)})
                       </SelectItem>
                       <SelectItem value="reserve_fund">
-                        Reserve ({formatCurrency(fundData.reserve_fund)})
+                        Reserve Fund ({formatCurrency(fundData.reserve_fund)})
                       </SelectItem>
                       <SelectItem value="profit_fund">
-                        Profit ({formatCurrency(fundData.profit_fund)})
+                        Profit Fund ({formatCurrency(fundData.profit_fund)})
                       </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="transfer-to">To</Label>
+                  <Label htmlFor="transfer-to" className="text-foreground">To</Label>
                   <Select onValueChange={(value) => transferForm.setValue('to', value as any)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Destination" />
@@ -362,7 +368,7 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="transfer-amount">Amount (USD)</Label>
+                <Label htmlFor="transfer-amount" className="text-foreground">Amount (USD)</Label>
                 <Input
                   id="transfer-amount"
                   type="number"

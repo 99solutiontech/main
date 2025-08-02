@@ -171,11 +171,24 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
 
   const resetSubUserData = async (subUserName: string) => {
     try {
+      // First, get the sub user's fund data to get initial capital and ID
+      const { data: subUserFund, error: fundError } = await supabase
+        .from('fund_data')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('sub_user_name', subUserName)
+        .single();
+
+      if (fundError || !subUserFund) {
+        throw new Error('Sub user fund data not found');
+      }
+
       // Delete trading history for this sub user
       const { error: historyError } = await supabase
         .from('trading_history')
         .delete()
         .eq('user_id', userId)
+        .eq('mode', subUserFund.mode)
         .eq('sub_user_name', subUserName);
 
       if (historyError) throw historyError;
@@ -185,37 +198,35 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
         .from('fund_transactions')
         .delete()
         .eq('user_id', userId)
+        .eq('mode', subUserFund.mode)
         .eq('sub_user_name', subUserName);
 
       if (transactionError) throw transactionError;
 
-      // Reset fund data to initial values instead of deleting
-      const subUserFund = subUsers.find(su => su.name === subUserName);
-      if (subUserFund) {
-        const { error: fundError } = await supabase
-          .from('fund_data')
-          .update({
-            total_capital: subUserFund.initial_capital,
-            active_fund: subUserFund.initial_capital * 0.4,
-            reserve_fund: subUserFund.initial_capital * 0.6,
-            profit_fund: 0,
-            target_reserve_fund: subUserFund.initial_capital * 0.6,
-          })
-          .eq('user_id', userId)
-          .eq('sub_user_name', subUserName);
+      // Reset fund data to initial values
+      const { error: updateError } = await supabase
+        .from('fund_data')
+        .update({
+          total_capital: subUserFund.initial_capital,
+          active_fund: subUserFund.initial_capital * 0.4,
+          reserve_fund: subUserFund.initial_capital * 0.6,
+          profit_fund: 0,
+          target_reserve_fund: subUserFund.initial_capital * 0.6,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', subUserFund.id);
 
-        if (fundError) throw fundError;
+      if (updateError) throw updateError;
 
-        // Add initial history record
-        await supabase.from('trading_history').insert({
-          user_id: userId,
-          mode: subUserFund.mode,
-          sub_user_name: subUserName,
-          type: 'Initialize',
-          details: `Data reset - Initial capital restored to $${subUserFund.initial_capital.toLocaleString()}`,
-          end_balance: subUserFund.initial_capital,
-        });
-      }
+      // Add initial history record
+      await supabase.from('trading_history').insert({
+        user_id: userId,
+        mode: subUserFund.mode,
+        sub_user_name: subUserName,
+        type: 'Initialize',
+        details: `Data reset - Initial capital restored to $${subUserFund.initial_capital.toLocaleString()}`,
+        end_balance: subUserFund.initial_capital,
+      });
 
       toast({
         title: t('success'),

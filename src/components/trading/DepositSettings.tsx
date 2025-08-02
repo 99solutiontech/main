@@ -37,6 +37,7 @@ interface DepositSettingsProps {
   fundData: FundData;
   subUserName?: string;
   onUpdate: () => void;
+  onClose?: () => void;
 }
 
 interface SettingsForm {
@@ -44,7 +45,7 @@ interface SettingsForm {
   reservePercentage: number;
 }
 
-const DepositSettings = ({ fundData, subUserName, onUpdate }: DepositSettingsProps) => {
+const DepositSettings = ({ fundData, subUserName, onUpdate, onClose }: DepositSettingsProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();

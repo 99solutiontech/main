@@ -16,6 +16,7 @@ interface FundTransaction {
   balance_after: number;
   description: string;
   created_at: string;
+  sub_user_name?: string;
 }
 
 interface FundTransactionHistoryProps {
@@ -32,19 +33,23 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
     loadTransactions();
   }, [userId, mode, subUserName]);
 
-  // Add this method to allow parent components to refresh data
-  const refreshTransactions = () => {
-    loadTransactions();
-  };
-
-  // Expose refresh method via ref or callback
   useEffect(() => {
-    const handleRefresh = () => loadTransactions();
+    const handleRefresh = () => {
+      loadTransactions();
+    };
+
+    // Listen for refresh events
     window.addEventListener('refreshTransactions', handleRefresh);
-    return () => window.removeEventListener('refreshTransactions', handleRefresh);
+    window.addEventListener('refreshFundData', handleRefresh);
+    
+    return () => {
+      window.removeEventListener('refreshTransactions', handleRefresh);
+      window.removeEventListener('refreshFundData', handleRefresh);
+    };
   }, []);
 
   const loadTransactions = async () => {
+    setLoading(true);
     try {
       let query = supabase
         .from('fund_transactions')
@@ -60,12 +65,17 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
 
       const { data, error } = await query
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(20);
 
-      if (error) throw error;
-      setTransactions(data || []);
+      if (error) {
+        console.error('Error loading transactions:', error);
+        setTransactions([]);
+      } else {
+        setTransactions(data || []);
+      }
     } catch (error) {
       console.error('Error loading transactions:', error);
+      setTransactions([]);
     } finally {
       setLoading(false);
     }
@@ -86,6 +96,8 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
       case 'withdraw':
         return 'text-red-500';
       case 'transfer':
+      case 'transfer_in':
+      case 'transfer_out':
         return 'text-blue-500';
       default:
         return 'text-muted-foreground';
@@ -95,13 +107,30 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
   const getTransactionBadge = (type: string) => {
     switch (type) {
       case 'deposit':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Deposit</Badge>;
+        return <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Deposit</Badge>;
       case 'withdraw':
         return <Badge variant="destructive">Withdraw</Badge>;
       case 'transfer':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Transfer</Badge>;
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Transfer</Badge>;
+      case 'transfer_in':
+        return <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Transfer In</Badge>;
+      case 'transfer_out':
+        return <Badge variant="secondary" className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Transfer Out</Badge>;
       default:
         return <Badge variant="outline">{type}</Badge>;
+    }
+  };
+
+  const getAmountPrefix = (type: string) => {
+    switch (type) {
+      case 'deposit':
+      case 'transfer_in':
+        return '+';
+      case 'withdraw':
+      case 'transfer_out':
+        return '-';
+      default:
+        return '';
     }
   };
 
@@ -109,7 +138,7 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <ArrowUpDown className="h-5 w-5" />
             Fund Transaction History
           </CardTitle>
@@ -117,6 +146,7 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
         <CardContent>
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground mt-2">Loading transactions...</p>
           </div>
         </CardContent>
       </Card>
@@ -126,7 +156,7 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-foreground">
           <ArrowUpDown className="h-5 w-5" />
           Fund Transaction History
         </CardTitle>
@@ -147,7 +177,7 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
                       {formatDate(transaction.created_at)}
                     </span>
                   </div>
-                  <span className="font-mono text-sm">
+                  <span className="font-mono text-sm text-foreground">
                     {formatCurrency(transaction.balance_after)}
                   </span>
                 </div>
@@ -155,7 +185,7 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
                   {transaction.description}
                 </div>
                 <div className={`text-sm font-semibold ${getTransactionColor(transaction.transaction_type)}`}>
-                  {transaction.transaction_type === 'deposit' ? '+' : transaction.transaction_type === 'withdraw' ? '-' : ''}
+                  {getAmountPrefix(transaction.transaction_type)}
                   {formatCurrency(transaction.amount)}
                 </div>
               </div>

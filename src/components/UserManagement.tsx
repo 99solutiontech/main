@@ -18,45 +18,62 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 interface UserManagementProps {
   userId: string;
-  mode: 'diamond' | 'gold';
+  currentMode: 'diamond' | 'gold';
+  fundData?: any;
   onReset?: () => void;
 }
 
-const UserManagement = ({ userId, mode, onReset }: UserManagementProps) => {
+const UserManagement = ({ userId, currentMode, fundData, onReset }: UserManagementProps) => {
   const { toast } = useToast();
   const { t } = useLanguage();
 
   const handleResetAllData = async () => {
+    if (!userId || !fundData) return;
+    
     try {
-      // Delete all trading history for this user and mode (including sub users)
-      const { error: historyError } = await supabase
+      // Delete all trading history for current mode and main account
+      await supabase
         .from('trading_history')
         .delete()
         .eq('user_id', userId)
-        .eq('mode', mode);
+        .eq('mode', currentMode)
+        .is('sub_user_name', null);
 
-      if (historyError) throw historyError;
-
-      // Delete all fund transactions for this user and mode (including sub users)
-      const { error: transactionError } = await supabase
+      // Delete all fund transactions for current mode and main account
+      await supabase
         .from('fund_transactions')
         .delete()
         .eq('user_id', userId)
-        .eq('mode', mode);
+        .eq('mode', currentMode)
+        .is('sub_user_name', null);
 
-      if (transactionError) throw transactionError;
-
-      // Delete fund data instead of resetting to 0 (including sub users)
-      const { error: fundError } = await supabase
+      // Reset fund data to initial capital for current mode and main account
+      const initialCapital = fundData.initial_capital;
+      const activeAmount = initialCapital * 0.4;
+      const reserveAmount = initialCapital * 0.6;
+      
+      await supabase
         .from('fund_data')
-        .delete()
-        .eq('user_id', userId)
-        .eq('mode', mode);
+        .update({
+          total_capital: initialCapital,
+          active_fund: activeAmount,
+          reserve_fund: reserveAmount,
+          profit_fund: 0,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', fundData.id);
 
-      if (fundError) throw fundError;
+      // Add reset entry to trading history
+      await supabase.from('trading_history').insert({
+        user_id: userId,
+        mode: currentMode,
+        type: 'Initialize',
+        details: `Data reset - Initial capital restored to $${initialCapital.toLocaleString()}`,
+        end_balance: initialCapital,
+      });
 
       toast({
-        title: t('dataResetSuccess'),
+        title: t('success'),
         description: t('allDataHasBeenReset'),
       });
 
@@ -66,7 +83,7 @@ const UserManagement = ({ userId, mode, onReset }: UserManagementProps) => {
       
       onReset?.();
     } catch (error) {
-      console.error('Error resetting data:', error);
+      console.error('Reset error:', error);
       toast({
         title: t('error'),
         description: t('failedToResetData'),
