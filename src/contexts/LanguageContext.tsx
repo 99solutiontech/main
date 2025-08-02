@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type Language = 'lo' | 'en';
+export type Language = 'lo' | 'en' | 'th';
 
 interface LanguageContextType {
   language: Language;
@@ -11,6 +11,94 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 const translations = {
+  th: {
+    // Auth page
+    'welcome': 'ยินดีต้อนรับ',
+    'signin': 'เข้าสู่ระบบ',
+    'signup': 'สมัครสมาชิก',
+    'email': 'อีเมล',
+    'password': 'รหัสผ่าน',
+    'fullName': 'ชื่อเต็ม',
+    'traderName': 'ชื่อผู้ค้า',
+    'createAccount': 'สร้างบัญชี',
+    'signInButton': 'เข้าสู่ระบบ',
+    'signingIn': 'กำลังเข้าสู่ระบบ...',
+    'creatingAccount': 'กำลังสร้างบัญชี...',
+    'checkEmail': 'กรุณาตรวจสอบอีเมลของคุณเพื่อยืนยันบัญชี',
+    'error': 'ข้อผิดพลาด',
+    'success': 'สำเร็จ!',
+    'tradingSystem': 'ระบบการค้าแบบมืออาชีพ',
+    'signInToAccount': 'เข้าสู่ระบบบัญชีของคุณ หรือ สร้างบัญชีใหม่',
+    
+    // Dashboard
+    'dashboard': 'หน้าหลัก',
+    'totalCapital': 'ทุนทั้งหมด',
+    'activeFund': 'เงินทุนการค้า',
+    'reserveFund': 'เงินทุนสำรอง',
+    'profitFund': 'เงินกำไร',
+    'tradingCapital': 'ทุนการค้า',
+    'safetyCapital': 'ทุนความปลอดภัย',
+    'earnedProfits': 'กำไรที่ได้รับ',
+    'signOut': 'ออกจากระบบ',
+    
+    // Trading modes
+    'diamondMode': 'โหมดเพชร',
+    'goldMode': 'โหมดทอง',
+    
+    // Trade recorder
+    'recordTradeResult': 'บันทึกผลการค้า',
+    'endOfWeekBalance': 'ยอดเงินสิ้นสัปดาห์',
+    'tradeDate': 'วันที่การค้า',
+    'activeFundBalance': 'ยอดเงินทุนการค้า',
+    'record': 'บันทึก',
+    'recording': 'กำลังบันทึก...',
+    
+    // Lot calculator
+    'lotCalculator': 'เครื่องคิดไลท์ล็อต',
+    'accountBalance': 'ยอดเงินบัญชี',
+    'riskPercentage': 'เปอร์เซ็นต์ความเสี่ยง',
+    'stopLossPips': 'จุดหยุดขาดทุน (pips)',
+    'calculate': 'คำนวณ',
+    'recommendedLotSize': 'ขนาดล็อตที่แนะนำ',
+    'riskAmount': 'จำนวนเงินที่เสี่ยง',
+    'positionValue': 'มูลค่าโพซิชัน',
+    
+    // Fund management
+    'fundManagement': 'การจัดการกองทุน',
+    'deposit': 'ฝากเงิน',
+    'withdraw': 'ถอนเงิน',
+    'transfer': 'โอนเงิน',
+    'amountField': 'จำนวนเงิน',
+    'from': 'จาก',
+    'to': 'ไป',
+    'depositFunds': 'ฝากเงินทุน',
+    'withdrawFunds': 'ถอนเงินทุน',
+    'transferFunds': 'โอนเงินทุน',
+    'processing': 'กำลังประมวลผล...',
+    
+    // Trading calendar
+    'tradingCalendar': 'ปฏิทินการค้า',
+    
+    // Trading history
+    'tradingHistory': 'ประวัติการค้า',
+    'date': 'วันที่',
+    'type': 'ประเภท',
+    'amount': 'จำนวน',
+    'balance': 'ยอดเงิน',
+    'pnl': 'กำไร/ขาดทุน',
+    'noHistory': 'ไม่มีประวัติการค้า',
+    
+    // Capital growth chart
+    'capitalGrowthChart': 'แผนภูมิการเติบโตของทุน',
+    'growth': 'การเติบโต',
+    
+    // Common
+    'loading': 'กำลังโหลด...',
+    'language': 'ภาษา',
+    'lao': 'ลาว',
+    'english': 'อังกฤษ',
+    'thai': 'ไทย',
+  },
   lo: {
     // Auth page
     'welcome': 'ຍິນດີຕ້ອນຮັບ',
@@ -97,6 +185,7 @@ const translations = {
     'language': 'ພາສາ',
     'lao': 'ລາວ',
     'english': 'ອັງກິດ',
+    'thai': 'ໄທ',
   },
   en: {
     // Auth page
@@ -184,6 +273,7 @@ const translations = {
     'language': 'Language',
     'lao': 'Lao',
     'english': 'English',
+    'thai': 'Thai',
   }
 };
 

@@ -68,11 +68,15 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
       const toActive = amount * 0.4;
       const toReserve = amount * 0.6;
 
+      const newActiveFund = fundData.active_fund + toActive;
+      const newReserveFund = fundData.reserve_fund + toReserve;
+      const newTotalCapital = newActiveFund + newReserveFund + fundData.profit_fund;
+
       const updatedFundData = {
         initial_capital: fundData.initial_capital + amount,
-        total_capital: fundData.total_capital + amount,
-        active_fund: fundData.active_fund + toActive,
-        reserve_fund: fundData.reserve_fund + toReserve,
+        total_capital: newTotalCapital,
+        active_fund: newActiveFund,
+        reserve_fund: newReserveFund,
         target_reserve_fund: fundData.target_reserve_fund + toReserve,
       };
 
@@ -125,10 +129,15 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
         throw new Error(`Insufficient funds in ${fromField.replace('_', ' ')}`);
       }
 
+      const newFundValue = fundData[fromField] - amount;
+      const newTotalCapital = (fromField === 'active_fund' ? newFundValue : fundData.active_fund) +
+                              fundData.reserve_fund +
+                              (fromField === 'profit_fund' ? newFundValue : fundData.profit_fund);
+
       const updatedFundData = {
         ...fundData,
-        total_capital: fundData.total_capital - amount,
-        [fromField]: fundData[fromField] - amount,
+        total_capital: newTotalCapital,
+        [fromField]: newFundValue,
       };
 
       const { error: fundError } = await (supabase as any)
@@ -185,10 +194,16 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
         throw new Error(`Insufficient funds in ${fromField.replace('_', ' ')}`);
       }
 
+      const newFromValue = fundData[fromField] - amount;
+      const newToValue = fundData[toField] + amount;
+      // Total capital remains the same for transfers
+      const newTotalCapital = fundData.active_fund + fundData.reserve_fund + fundData.profit_fund;
+
       const updatedFundData = {
         ...fundData,
-        [fromField]: fundData[fromField] - amount,
-        [toField]: fundData[toField] + amount,
+        total_capital: newTotalCapital,
+        [fromField]: newFromValue,
+        [toField]: newToValue,
       };
 
       const { error: fundError } = await (supabase as any)

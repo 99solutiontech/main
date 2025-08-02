@@ -30,8 +30,10 @@ const FundOverview = ({ fundData }: FundOverviewProps) => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
-  const pnl = fundData.total_capital - fundData.initial_capital;
-  const pnlPercent = (pnl / fundData.initial_capital) * 100;
+  // Calculate actual total capital from individual funds
+  const actualTotalCapital = fundData.active_fund + fundData.reserve_fund + fundData.profit_fund;
+  const pnl = actualTotalCapital - fundData.initial_capital;
+  const pnlPercent = fundData.initial_capital > 0 ? (pnl / fundData.initial_capital) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -41,7 +43,7 @@ const FundOverview = ({ fundData }: FundOverviewProps) => {
           <CardTitle className="text-center">{t('totalCapital')}</CardTitle>
         </CardHeader>
         <CardContent className="text-center">
-          <div className="text-4xl font-bold mb-2">{formatCurrency(fundData.total_capital)}</div>
+          <div className="text-4xl font-bold mb-2">{formatCurrency(actualTotalCapital)}</div>
           <div className="flex items-center justify-center gap-2">
             {pnl > 0 ? (
               <TrendingUp className="h-4 w-4 text-green-500" />

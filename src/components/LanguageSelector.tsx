@@ -14,6 +14,7 @@ const LanguageSelector = () => {
   const languages: { code: Language; name: string; nativeName: string }[] = [
     { code: 'lo', name: 'Lao', nativeName: 'ລາວ' },
     { code: 'en', name: 'English', nativeName: 'English' },
+    { code: 'th', name: 'Thai', nativeName: 'ไทย' },
   ];
 
   return (

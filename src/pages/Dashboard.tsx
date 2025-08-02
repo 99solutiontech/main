@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { AppThemeProvider } from '@/contexts/AppThemeContext';
 import LanguageSelector from '@/components/LanguageSelector';
+import ThemeToggle from '@/components/ThemeToggle';
 import { Gem, LogOut, Settings, TrendingUp, DollarSign, Calculator, Calendar, BarChart3, Users } from 'lucide-react';
 import FundOverview from '@/components/trading/FundOverview';
 import TradeRecorder from '@/components/trading/TradeRecorder';
@@ -23,6 +25,7 @@ import SubUserManager from '@/components/trading/SubUserManager';
 import MonthlyGrowthChart from '@/components/trading/MonthlyGrowthChart';
 import FundSettings from '@/components/trading/FundSettings';
 import SubUserSelector from '@/components/SubUserSelector';
+import WeeklyCalendar from '@/components/trading/WeeklyCalendar';
 import { User, Session } from '@supabase/supabase-js';
 
 interface Profile {
@@ -350,8 +353,9 @@ const Dashboard = () => {
   }
 
   return (
-    <ThemeProvider tradingMode={currentMode} onModeChange={handleModeChange}>
-      <div className="min-h-screen bg-background">
+    <AppThemeProvider>
+      <ThemeProvider tradingMode={currentMode} onModeChange={handleModeChange}>
+        <div className="min-h-screen bg-background">
         <header className="border-b bg-card">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
@@ -368,9 +372,10 @@ const Dashboard = () => {
               </div>
               
                 <div className="flex items-center gap-4">
+                <ThemeToggle />
                 <LanguageSelector />
                 
-                <SubUserSelector 
+                <SubUserSelector
                   userId={user.id}
                   currentMode={currentMode}
                   selectedSubUser={selectedSubUser}
@@ -382,10 +387,6 @@ const Dashboard = () => {
                     }
                   }}
                 />
-                
-                <Badge variant={currentMode === 'diamond' ? 'default' : 'secondary'}>
-                  {currentMode === 'diamond' ? t('diamondMode') : t('goldMode')}
-                </Badge>
                 
                 <Select value={currentMode} onValueChange={handleModeChange}>
                   <SelectTrigger className="w-40">
@@ -468,11 +469,25 @@ const Dashboard = () => {
                 mode={currentMode} 
                 subUserName={selectedSubUser?.name}
               />
+              {currentMode === 'gold' && (
+                <TradingCalendar 
+                  userId={user.id} 
+                  mode={currentMode} 
+                  subUserName={selectedSubUser?.name}
+                />
+              )}
+              {currentMode === 'diamond' && (
+                <WeeklyCalendar 
+                  userId={user.id} 
+                  mode={currentMode} 
+                  subUserName={selectedSubUser?.name}
+                />
+              )}
             </div>
             
             <div className="space-y-8">
               <Tabs defaultValue="record" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="record" className="text-xs">
                     <TrendingUp className="h-4 w-4" />
                   </TabsTrigger>
@@ -481,9 +496,6 @@ const Dashboard = () => {
                   </TabsTrigger>
                   <TabsTrigger value="funds" className="text-xs">
                     <DollarSign className="h-4 w-4" />
-                  </TabsTrigger>
-                  <TabsTrigger value="calendar" className="text-xs">
-                    <Calendar className="h-4 w-4" />
                   </TabsTrigger>
                 </TabsList>
                 
@@ -515,25 +527,6 @@ const Dashboard = () => {
                     onUpdate={() => loadFundData(user.id, currentMode, selectedSubUser?.name)}
                   />
                 </TabsContent>
-                
-                <TabsContent value="calendar">
-                  {currentMode === 'gold' && (
-                    <TradingCalendar 
-                      userId={user.id} 
-                      mode={currentMode} 
-                      subUserName={selectedSubUser?.name}
-                    />
-                  )}
-                  {currentMode === 'diamond' && (
-                    <Card>
-                      <CardContent className="pt-6">
-                        <p className="text-center text-muted-foreground">
-                          Calendar view is only available in Gold mode
-                        </p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </TabsContent>
               </Tabs>
               
               <div className="grid grid-cols-1 gap-6">
@@ -551,9 +544,10 @@ const Dashboard = () => {
             </div>
           </div>
         )}
-      </main>
-    </div>
-    </ThemeProvider>
+        </main>
+      </div>
+      </ThemeProvider>
+    </AppThemeProvider>
   );
 };
 

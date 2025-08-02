@@ -97,17 +97,15 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserSelect
 
   return (
     <div className="flex items-center gap-2">
-      <Users className="h-4 w-4 text-muted-foreground" />
-      
       <Select value={selectedSubUser?.id || 'main'} onValueChange={handleSubUserChange}>
-        <SelectTrigger className="w-48">
-          <SelectValue placeholder="Select Account" />
+        <SelectTrigger className="w-40">
+          <SelectValue placeholder="Account" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="main">
             <div className="flex items-center justify-between w-full">
-              <span>Main Account</span>
-              <Badge variant="outline" className="ml-2">Primary</Badge>
+              <span>Main</span>
+              <Badge variant="outline" className="ml-1 text-xs">Primary</Badge>
             </div>
           </SelectItem>
           {subUsers.map((subUser) => (
@@ -125,8 +123,8 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserSelect
 
       <Dialog open={showManager} onOpenChange={setShowManager}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Settings className="h-4 w-4" />
+          <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+            <Settings className="h-3 w-3" />
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
