@@ -78,12 +78,12 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
         updatedFundData.reserve_fund += profitToReserve;
         updatedFundData.profit_fund += profitToProfit;
       } else if (pnl < 0) {
-        // Loss: move money from reserve fund to active fund to cover the loss
+        // Loss: try to cover loss with reserve fund, but allow active fund to decrease if insufficient
         const lossAmount = Math.abs(pnl);
         const transferFromReserve = Math.min(lossAmount, updatedFundData.reserve_fund);
         
-        // Keep active fund at the same level by transferring from reserve
-        updatedFundData.active_fund = currentActiveFund;
+        // Apply the actual loss to active fund and use reserve to cover what's possible
+        updatedFundData.active_fund = newActiveFund + transferFromReserve;
         updatedFundData.reserve_fund -= transferFromReserve;
       } else {
         // No profit/loss
@@ -159,12 +159,12 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
         updatedFundData.reserve_fund += profitToReserve;
         updatedFundData.profit_fund += profitToProfit;
       } else if (pnl < 0) {
-        // Loss: move money from reserve fund to active fund to cover the loss
+        // Loss: try to cover loss with reserve fund, but allow active fund to decrease if insufficient
         const lossAmount = Math.abs(pnl);
         const transferFromReserve = Math.min(lossAmount, updatedFundData.reserve_fund);
         
-        // Keep active fund at the same level by transferring from reserve
-        updatedFundData.active_fund = currentActiveFund;
+        // Apply the actual loss to active fund and use reserve to cover what's possible
+        updatedFundData.active_fund = newActiveFund + transferFromReserve;
         updatedFundData.reserve_fund -= transferFromReserve;
       } else {
         // No profit/loss
