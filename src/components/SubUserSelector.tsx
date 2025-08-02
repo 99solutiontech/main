@@ -126,6 +126,9 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserChange
         description: t('subUserDataReset').replace('{name}', subUserName),
       });
 
+      // Trigger refresh of transaction history
+      window.dispatchEvent(new Event('refreshTransactions'));
+      
       loadSubUsers();
     } catch (error) {
       console.error('Error resetting sub-user data:', error);

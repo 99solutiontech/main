@@ -32,6 +32,18 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
     loadTransactions();
   }, [userId, mode, subUserName]);
 
+  // Add this method to allow parent components to refresh data
+  const refreshTransactions = () => {
+    loadTransactions();
+  };
+
+  // Expose refresh method via ref or callback
+  useEffect(() => {
+    const handleRefresh = () => loadTransactions();
+    window.addEventListener('refreshTransactions', handleRefresh);
+    return () => window.removeEventListener('refreshTransactions', handleRefresh);
+  }, []);
+
   const loadTransactions = async () => {
     try {
       const query = supabase

@@ -63,6 +63,9 @@ const UserManagement = ({ userId, mode, onReset }: UserManagementProps) => {
         description: t('allDataHasBeenReset'),
       });
 
+      // Trigger refresh of transaction history
+      window.dispatchEvent(new Event('refreshTransactions'));
+      
       onReset?.();
     } catch (error) {
       console.error('Error resetting data:', error);
