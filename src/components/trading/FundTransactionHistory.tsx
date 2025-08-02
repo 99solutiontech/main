@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowUpDown } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TransactionHistory {
   id: string;
@@ -28,6 +29,7 @@ interface FundTransactionHistoryProps {
 const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHistoryProps) => {
   const [transactions, setTransactions] = useState<TransactionHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadTransactions();
@@ -140,7 +142,7 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-foreground">
             <ArrowUpDown className="h-5 w-5" />
-            Fund Transaction History
+            {t('fundTransactionHistory')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -158,7 +160,7 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-foreground">
           <ArrowUpDown className="h-5 w-5" />
-          Fund Transaction History
+          {t('fundTransactionHistory')}
         </CardTitle>
       </CardHeader>
       <CardContent>

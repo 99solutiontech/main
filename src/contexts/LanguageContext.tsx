@@ -80,6 +80,24 @@ const updatedTranslations = {
     'english': 'English',
     'thai': 'Thai',
     'toggleTheme': 'Toggle theme',
+    
+    // Additional translations
+    'capitalGrowth': 'Capital Growth',
+    'tradingHistory': 'Trading History',
+    'fundTransactionHistory': 'Fund Transaction History',
+    'recordTradeResult': 'Record Trade Result',
+    'lotCalculator': 'Lot Calculator',
+    'initializeFund': 'Initialize Fund',
+    'initialCapital': 'Initial Capital (USD)',
+    'setUpInitialCapital': 'Set up your initial capital for',
+    'endOfWeekActiveFundBalance': 'End of Week Active Fund Balance',
+    'recordWeeklyResult': 'Record Weekly Result',
+    'initialize': 'Initialize',
+    'initialCapitalSet': 'Initial capital set to',
+    'depositedAmount': 'Deposited',
+    'settingsUpdate': 'settings_update',
+    'updatedProfitDistribution': 'Updated profit distribution',
+    'monthlyGrowth': 'Monthly Growth',
   },
   th: {
     // Auth page
@@ -132,6 +150,24 @@ const updatedTranslations = {
     'subAccount': 'บัญชีย่อย',
     'fromFund': 'จากกองทุน',
     'toFund': 'ไปยังกองทุน',
+    
+    // Additional translations
+    'capitalGrowth': 'การเติบโตของทุน',
+    'tradingHistory': 'ประวัติการเทรด',
+    'fundTransactionHistory': 'ประวัติธุรกรรมกองทุน',
+    'recordTradeResult': 'บันทึกผลการเทรด',
+    'lotCalculator': 'คำนวณล็อต',
+    'initializeFund': 'เริ่มต้นกองทุน',
+    'initialCapital': 'ทุนเริ่มต้น (USD)',
+    'setUpInitialCapital': 'ตั้งค่าทุนเริ่มต้นของคุณสำหรับโหมด',
+    'endOfWeekActiveFundBalance': 'ยอดกองทุนการค้าสิ้นสัปดาห์',
+    'recordWeeklyResult': 'บันทึกผลรายสัปดาห์',
+    'initialize': 'เริ่มต้น',
+    'initialCapitalSet': 'ตั้งทุนเริ่มต้นเป็น',
+    'depositedAmount': 'ฝากเงิน',
+    'settingsUpdate': 'อัปเดตการตั้งค่า',
+    'updatedProfitDistribution': 'อัปเดตการกระจายกำไร',
+    'monthlyGrowth': 'การเติบโตรายเดือน',
     
     // Reset functionality
     'resetData': 'รีเซ็ตข้อมูล',
@@ -202,6 +238,24 @@ const updatedTranslations = {
     'subAccount': 'ບັນຊີຍ່ອຍ',
     'fromFund': 'ຈາກກອງທຶນ',
     'toFund': 'ໄປຍັງກອງທຶນ',
+    
+    // Additional translations
+    'capitalGrowth': 'ການເຕີບໂຕຂອງທຶນ',
+    'tradingHistory': 'ປະຫວັດການເທດ',
+    'fundTransactionHistory': 'ປະຫວັດທຸລະກຳກອງທຶນ',
+    'recordTradeResult': 'ບັນທຶກຜົນການເທດ',
+    'lotCalculator': 'ຄຳນວນລ໌ອດ',
+    'initializeFund': 'ເລີ່ມຕົ້ນກອງທຶນ',
+    'initialCapital': 'ທຶນເລີ່ມຕົ້ນ (USD)',
+    'setUpInitialCapital': 'ຕັ້ງຄ່າທຶນເລີ່ມຕົ້ນຂອງທ່ານສຳລັບໂໝດ',
+    'endOfWeekActiveFundBalance': 'ຍອດກອງທຶນການຄ້າສິ້ນສັບປະດາ',
+    'recordWeeklyResult': 'ບັນທຶກຜົນລາຍສັບປະດາ',
+    'initialize': 'ເລີ່ມຕົ້ນ',
+    'initialCapitalSet': 'ຕັ້ງທຶນເລີ່ມຕົ້ນເປັນ',
+    'depositedAmount': 'ຝາກເງິນ',
+    'settingsUpdate': 'ອັບເດດການຕັ້ງຄ່າ',
+    'updatedProfitDistribution': 'ອັບເດດການກະຈາຍກຳໄລ',
+    'monthlyGrowth': 'ການເຕີບໂຕລາຍເດືອນ',
     
     // Reset functionality
     'resetData': 'ຣີເຊັດຂໍ້ມູນ',

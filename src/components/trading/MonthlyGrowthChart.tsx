@@ -14,6 +14,7 @@ import {
   ChartOptions,
 } from 'chart.js';
 import { BarChart3 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 ChartJS.register(
   CategoryScale,
@@ -41,6 +42,7 @@ const MonthlyGrowthChart = ({ userId, mode, subUserName }: MonthlyGrowthChartPro
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [availableYears, setAvailableYears] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadChartData();
@@ -237,7 +239,7 @@ const MonthlyGrowthChart = ({ userId, mode, subUserName }: MonthlyGrowthChartPro
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            Monthly Growth Analysis
+            {t('monthlyGrowth')}
           </CardTitle>
           {availableYears.length > 0 && (
             <Select value={selectedYear} onValueChange={setSelectedYear}>

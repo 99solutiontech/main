@@ -394,21 +394,30 @@ const Dashboard = () => {
                   }}
                 />
                 
-                <Select value={currentMode} onValueChange={handleModeChange}>
+                 <Select value={currentMode} onValueChange={handleModeChange}>
                   <SelectTrigger className="w-40">
-                    <SelectValue />
+                    <SelectValue>
+                      <div className="flex items-center gap-2">
+                        {currentMode === 'diamond' ? (
+                          <Gem className="h-4 w-4" />
+                        ) : (
+                          <Coins className="h-4 w-4 text-yellow-500" />
+                        )}
+                        {currentMode === 'diamond' ? t('diamondMode') : t('goldMode')}
+                      </div>
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="diamond">
                       <div className="flex items-center gap-2">
                         <Gem className="h-4 w-4" />
-                        Diamond Mode
+                        {t('diamondMode')}
                       </div>
                     </SelectItem>
                     <SelectItem value="gold">
                       <div className="flex items-center gap-2">
                         <Coins className="h-4 w-4 text-yellow-500" />
-                        Gold Mode
+                        {t('goldMode')}
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -416,7 +425,7 @@ const Dashboard = () => {
                 
                 <Button variant="outline" size="sm" onClick={handleSignOut}>
                   <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
+                  {t('signOut')}
                 </Button>
               </div>
             </div>
@@ -427,9 +436,9 @@ const Dashboard = () => {
         {!fundData ? (
           <Card className="max-w-md mx-auto">
             <CardHeader>
-              <CardTitle>Initialize Fund</CardTitle>
+              <CardTitle>{t('initializeFund')}</CardTitle>
               <CardDescription>
-                Set up your initial capital for {currentMode} mode
+                {t('setUpInitialCapital')} {currentMode === 'diamond' ? t('diamondMode') : t('goldMode')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -443,7 +452,7 @@ const Dashboard = () => {
               }}>
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium">Initial Capital (USD)</label>
+                    <label className="text-sm font-medium">{t('initialCapital')}</label>
                     <input
                       name="capital"
                       type="number"
@@ -455,7 +464,7 @@ const Dashboard = () => {
                     />
                   </div>
                   <Button type="submit" className="w-full">
-                    Initialize Fund
+                    {t('initializeFund')}
                   </Button>
                 </div>
               </form>

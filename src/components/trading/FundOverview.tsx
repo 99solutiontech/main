@@ -30,10 +30,6 @@ const FundOverview = ({ fundData }: FundOverviewProps) => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
-  const formatLabel = (key: string) => {
-    // Convert camelCase to Title Case with spaces
-    return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-  };
 
   // Calculate actual total capital from individual funds
   const actualTotalCapital = fundData.active_fund + fundData.reserve_fund + fundData.profit_fund;
@@ -49,7 +45,7 @@ const FundOverview = ({ fundData }: FundOverviewProps) => {
       {/* Total Capital Overview */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-center">{formatLabel('totalCapital')}</CardTitle>
+          <CardTitle className="text-center">{t('totalCapital')}</CardTitle>
         </CardHeader>
         <CardContent className="text-center">
           <div className="text-4xl font-bold mb-2">{formatCurrency(actualTotalCapital)}</div>
@@ -70,8 +66,8 @@ const FundOverview = ({ fundData }: FundOverviewProps) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{formatLabel('activeFund')}</CardTitle>
-            <CardDescription>{formatLabel('tradingCapital')}</CardDescription>
+            <CardTitle className="text-base">{t('activeFund')}</CardTitle>
+            <CardDescription>{t('tradingCapital')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(fundData.active_fund)}</div>
@@ -80,8 +76,8 @@ const FundOverview = ({ fundData }: FundOverviewProps) => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{formatLabel('reserveFund')}</CardTitle>
-            <CardDescription>{formatLabel('safetyCapital')}</CardDescription>
+            <CardTitle className="text-base">{t('reserveFund')}</CardTitle>
+            <CardDescription>{t('safetyCapital')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(fundData.reserve_fund)}</div>
@@ -90,8 +86,8 @@ const FundOverview = ({ fundData }: FundOverviewProps) => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{formatLabel('profitFund')}</CardTitle>
-            <CardDescription>{formatLabel('earnedProfits')}</CardDescription>
+            <CardTitle className="text-base">{t('profitFund')}</CardTitle>
+            <CardDescription>{t('earnedProfits')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(fundData.profit_fund)}</div>

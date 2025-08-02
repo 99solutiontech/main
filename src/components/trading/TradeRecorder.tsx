@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface FundData {
   id: string;
@@ -44,6 +45,7 @@ interface GoldForm {
 const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeRecorderProps) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   const diamondForm = useForm<DiamondForm>();
   const goldForm = useForm<GoldForm>({
@@ -222,13 +224,13 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Record Trade Result</CardTitle>
+        <CardTitle>{t('recordTradeResult')}</CardTitle>
       </CardHeader>
       <CardContent>
         {mode === 'diamond' ? (
           <form onSubmit={diamondForm.handleSubmit(recordDiamondTrade)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="eow-balance">End of Week Active Fund Balance</Label>
+              <Label htmlFor="eow-balance">{t('endOfWeekActiveFundBalance')}</Label>
               <Input
                 id="eow-balance"
                 type="number"
@@ -238,7 +240,7 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Recording...' : 'Record Weekly Result'}
+              {loading ? t('processing') : t('recordWeeklyResult')}
             </Button>
           </form>
         ) : (

@@ -14,6 +14,7 @@ import {
   ChartOptions,
 } from 'chart.js';
 import { TrendingUp } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 ChartJS.register(
   CategoryScale,
@@ -41,6 +42,7 @@ interface CapitalGrowthChartProps {
 const CapitalGrowthChart = ({ userId, mode, subUserName }: CapitalGrowthChartProps) => {
   const [chartData, setChartData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadChartData();
@@ -149,7 +151,7 @@ const CapitalGrowthChart = ({ userId, mode, subUserName }: CapitalGrowthChartPro
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5" />
-          Capital Growth
+          {t('capitalGrowth')}
         </CardTitle>
       </CardHeader>
       <CardContent>

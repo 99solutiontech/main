@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Calculator } from 'lucide-react';
 import LotSizeSettings from './LotSizeSettings';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface FundData {
   id: string;
@@ -26,6 +27,8 @@ interface LotCalculatorProps {
 }
 
 const LotCalculator = ({ fundData, onUpdate }: LotCalculatorProps) => {
+  const { t } = useLanguage();
+  
   const calculateRecommendedLot = () => {
     if (!fundData.lot_base_capital || fundData.lot_base_capital <= 0) return 0;
     
@@ -40,7 +43,7 @@ const LotCalculator = ({ fundData, onUpdate }: LotCalculatorProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-foreground">
           <Calculator className="h-5 w-5" />
-          Lot Size Calculator
+          {t('lotCalculator')}
         </CardTitle>
         <CardDescription>
           Recommended lot size based on current active fund

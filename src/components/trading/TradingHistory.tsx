@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { History } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TradingRecord {
   id: string;
@@ -25,6 +26,7 @@ interface TradingHistoryProps {
 const TradingHistory = ({ userId, mode, subUserName }: TradingHistoryProps) => {
   const [history, setHistory] = useState<TradingRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadHistory();
@@ -82,10 +84,10 @@ const TradingHistory = ({ userId, mode, subUserName }: TradingHistoryProps) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <History className="h-5 w-5" />
-            Trading History
-          </CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <History className="h-5 w-5" />
+          {t('tradingHistory')}
+        </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
@@ -101,7 +103,7 @@ const TradingHistory = ({ userId, mode, subUserName }: TradingHistoryProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <History className="h-5 w-5" />
-          Trading History
+          {t('tradingHistory')}
         </CardTitle>
       </CardHeader>
       <CardContent>
