@@ -154,8 +154,8 @@ const MonthlyGrowthChart = ({ userId, mode, subUserName }: MonthlyGrowthChartPro
           {
             label: 'Trade Volume',
             data: volumeData,
-            backgroundColor: 'hsla(var(--accent), 0.6)',
-            borderColor: 'hsl(var(--accent))',
+            backgroundColor: 'hsla(var(--foreground), 0.6)',
+            borderColor: 'hsl(var(--foreground))',
             borderWidth: 1,
             yAxisID: 'y1',
             type: 'line' as const,

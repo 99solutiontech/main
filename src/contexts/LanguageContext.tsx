@@ -10,7 +10,59 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-const translations = {
+  const translations = {
+    en: {
+      // Reset functionality
+      resetData: 'Reset Data',
+      resetDataConfirm: 'Reset All Data?',
+      resetDataWarning: 'This action will permanently delete all trading history, transactions, and reset fund data to default values. This action cannot be undone.',
+      resetSubUserWarning: 'This action will permanently delete all data for sub-account "{name}". This action cannot be undone.',
+      dataResetSuccess: 'Data Reset Successfully',
+      allDataHasBeenReset: 'All data has been reset to default values',
+      subUserDataReset: 'Sub-account {name} data has been reset',
+      failedToResetData: 'Failed to reset data. Please try again.',
+      
+      // Theme
+      toggleTheme: 'Toggle theme',
+      
+      // Existing translations...
+    },
+    th: {
+      // Reset functionality
+      resetData: 'รีเซ็ตข้อมูล',
+      resetDataConfirm: 'รีเซ็ตข้อมูลทั้งหมด?',
+      resetDataWarning: 'การดำเนินการนี้จะลบประวัติการเทรด ธุรกรรม และรีเซ็ตข้อมูลกองทุนเป็นค่าเริ่มต้นอย่างถาวร การดำเนินการนี้ไม่สามารถยกเลิกได้',
+      resetSubUserWarning: 'การดำเนินการนี้จะลบข้อมูลทั้งหมดของบัญชีย่อย "{name}" อย่างถาวร การดำเนินการนี้ไม่สามารถยกเลิกได้',
+      dataResetSuccess: 'รีเซ็ตข้อมูลสำเร็จ',
+      allDataHasBeenReset: 'ข้อมูลทั้งหมดได้รับการรีเซ็ตเป็นค่าเริ่มต้นแล้ว',
+      subUserDataReset: 'ข้อมูลบัญชีย่อย {name} ได้รับการรีเซ็ตแล้ว',
+      failedToResetData: 'ไม่สามารถรีเซ็ตข้อมูลได้ กรุณาลองอีกครั้ง',
+      
+      // Theme
+      toggleTheme: 'สลับธีม',
+      
+      // Existing translations...
+    },
+    lo: {
+      // Reset functionality
+      resetData: 'ຣີເຊັດຂໍ້ມູນ',
+      resetDataConfirm: 'ຣີເຊັດຂໍ້ມູນທັງໝົດ?',
+      resetDataWarning: 'ການກະທຳນີ້ຈະລຶບປະຫວັດການເທດ, ທຸລະກຳ, ແລະ ຣີເຊັດຂໍ້ມູນກອງທຶນເປັນຄ່າເລີ່ມຕົ້ນຢ່າງຖາວອນ. ການກະທຳນີ້ບໍ່ສາມາດຍົກເລີກໄດ້.',
+      resetSubUserWarning: 'ການກະທຳນີ້ຈະລຶບຂໍ້ມູນທັງໝົດຂອງບັນຊີຍ່ອຍ "{name}" ຢ່າງຖາວອນ. ການກະທຳນີ້ບໍ່ສາມາດຍົກເລີກໄດ້.',
+      dataResetSuccess: 'ຣີເຊັດຂໍ້ມູນສຳເລັດ',
+      allDataHasBeenReset: 'ຂໍ້ມູນທັງໝົດໄດ້ຮັບການຣີເຊັດເປັນຄ່າເລີ່ມຕົ້ນແລ້ວ',
+      subUserDataReset: 'ຂໍ້ມູນບັນຊີຍ່ອຍ {name} ໄດ້ຮັບການຣີເຊັດແລ້ວ',
+      failedToResetData: 'ບໍ່ສາມາດຣີເຊັດຂໍ້ມູນໄດ້. ກະລຸນາລອງອີກຄັ້ງ.',
+      
+      // Theme
+      toggleTheme: 'ສະຫຼັບທີມ',
+      
+      // Existing translations...
+    },
+  };
+
+  // Update translations object structure
+  const updatedTranslations = {
   th: {
     // Auth page
     'welcome': 'ยินดีต้อนรับ',

@@ -117,24 +117,24 @@ const CapitalGrowthChart = ({ userId, mode, subUserName }: CapitalGrowthChartPro
       x: {
         display: true,
         grid: {
-          color: mode === 'diamond' ? 'rgba(55, 65, 81, 0.5)' : 'rgba(229, 231, 235, 0.5)',
+          color: 'hsla(var(--border), 0.8)',
         },
         ticks: {
           maxTicksLimit: 7,
-          color: mode === 'diamond' ? '#E5E7EB' : '#374151',
+          color: 'hsl(var(--foreground))',
         },
       },
       y: {
         display: true,
         grid: {
-          color: mode === 'diamond' ? 'rgba(55, 65, 81, 0.8)' : 'rgba(229, 231, 235, 0.8)',
+          color: 'hsla(var(--border), 0.8)',
         },
-      ticks: {
-        color: mode === 'diamond' ? '#E5E7EB' : '#374151',
-        callback: function(value) {
-          return '$' + Number(value).toLocaleString();
+        ticks: {
+          color: 'hsl(var(--foreground))',
+          callback: function(value) {
+            return '$' + Number(value).toLocaleString();
+          },
         },
-      },
       },
     },
     interaction: {

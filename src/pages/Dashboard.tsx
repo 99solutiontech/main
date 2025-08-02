@@ -74,6 +74,7 @@ const Dashboard = () => {
   const [currentMode, setCurrentMode] = useState<'diamond' | 'gold'>('diamond');
   const [loading, setLoading] = useState(true);
   const [selectedSubUser, setSelectedSubUser] = useState<SubUser | null>(null);
+  const [subUsers, setSubUsers] = useState<SubUser[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -378,12 +379,17 @@ const Dashboard = () => {
                 <SubUserSelector
                   userId={user.id}
                   currentMode={currentMode}
-                  selectedSubUser={selectedSubUser}
-                  onSubUserSelect={(subUser) => {
-                    setSelectedSubUser(subUser);
+                  selectedSubUser={selectedSubUser?.name || null}
+                  onSubUserChange={(subUserName) => {
+                    if (subUserName) {
+                      const subUser = { id: 'temp', name: subUserName, mode: currentMode, initial_capital: 0, total_capital: 0, active_fund: 0, reserve_fund: 0, profit_fund: 0, created_at: new Date().toISOString() };
+                      setSelectedSubUser(subUser);
+                    } else {
+                      setSelectedSubUser(null);
+                    }
                     setFundData(null); // Reset fund data when switching users
                     if (user) {
-                      loadFundData(user.id, currentMode, subUser?.name);
+                      loadFundData(user.id, currentMode, subUserName);
                     }
                   }}
                 />
