@@ -161,7 +161,7 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserChange
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="main">
-              {t('mainAccount')} ({formatCurrency(subUsers.find(u => u.name === null)?.totalCapital || 0)})
+              Main Account ({formatCurrency(subUsers.find(u => u.name === null)?.totalCapital || 0)})
             </SelectItem>
             {subUsers.filter(user => user.name !== null).map((user) => (
               <SelectItem key={user.id} value={user.name!}>
@@ -180,43 +180,11 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserChange
           />
         )}
         
-        {/* Sub-user reset button */}
-        {selectedSubUser && selectedSubUser !== 'main' && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                <RotateCcw className="h-4 w-4" />
-                <span className="sr-only">{t('resetData')}</span>
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-destructive" />
-                  {t('resetDataConfirm')}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t('resetSubUserWarning').replace('{name}', selectedSubUser)}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                <AlertDialogAction 
-                  onClick={() => handleResetSubUser(selectedSubUser)}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  {t('resetData')}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
-        
         <Dialog open={isManagerOpen} onOpenChange={setIsManagerOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="h-8 w-8 p-0">
               <Settings className="h-4 w-4" />
-              <span className="sr-only">{t('manageSubAccounts')}</span>
+              <span className="sr-only">Manage Sub Accounts</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl">
@@ -225,6 +193,8 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserChange
               currentMode={currentMode}
               selectedSubUser={null}
               onSubUserSelect={() => {}}
+              selectedSubUserName={selectedSubUser}
+              onResetSubUser={handleResetSubUser}
             />
           </DialogContent>
         </Dialog>

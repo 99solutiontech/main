@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Users, Plus, Trash2, DollarSign } from 'lucide-react';
+import { Users, Plus, Trash2, DollarSign, RotateCcw } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface SubUser {
@@ -29,6 +29,8 @@ interface SubUserManagerProps {
   currentMode: 'diamond' | 'gold';
   onSubUserSelect: (subUser: SubUser | null) => void;
   selectedSubUser: SubUser | null;
+  selectedSubUserName?: string | null;
+  onResetSubUser?: (subUserName: string) => void;
 }
 
 interface CreateSubUserForm {
@@ -37,7 +39,7 @@ interface CreateSubUserForm {
   initial_capital: number;
 }
 
-const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser }: SubUserManagerProps) => {
+const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser, selectedSubUserName, onResetSubUser }: SubUserManagerProps) => {
   const [subUsers, setSubUsers] = useState<SubUser[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -216,6 +218,20 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser 
                         <Badge variant={subUser.mode === 'diamond' ? 'default' : 'secondary'}>
                           {subUser.mode}
                         </Badge>
+                        {onResetSubUser && subUser.name && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onResetSubUser(subUser.name);
+                            }}
+                            className="h-8 w-8 p-0"
+                            title="Reset Data"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
