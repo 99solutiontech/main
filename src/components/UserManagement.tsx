@@ -31,69 +31,38 @@ const UserManagement = ({ userId, currentMode, fundData, onReset }: UserManageme
     if (!userId) return;
     
     try {
-      // Get current fund data
-      const { data: currentFundData, error: fundDataError } = await supabase
-        .from('fund_data')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('mode', currentMode)
-        .is('sub_user_name', null)
-        .single();
-
-      if (fundDataError || !currentFundData) {
-        throw new Error('Fund data not found');
-      }
-
-      // Delete all trading history for current mode and main account
+      // Delete ALL data for this user and mode (including sub-accounts)
+      
+      // 1. Delete all trading history for current mode (main + sub accounts)
       await supabase
         .from('trading_history')
         .delete()
         .eq('user_id', userId)
-        .eq('mode', currentMode)
-        .is('sub_user_name', null);
+        .eq('mode', currentMode);
 
-      // Delete all transaction history for current mode and main account
+      // 2. Delete all transaction history for current mode (main + sub accounts)
       await supabase
         .from('transaction_history')
         .delete()
         .eq('user_id', userId)
-        .eq('mode', currentMode)
-        .is('sub_user_name', null);
+        .eq('mode', currentMode);
 
-      // Reset fund data to initial capital for current mode and main account
-      const initialCapital = currentFundData.initial_capital;
-      const activeAmount = initialCapital * 0.4;
-      const reserveAmount = initialCapital * 0.6;
-      
+      // 3. Delete ALL fund data for current mode (main + sub accounts)
       await supabase
         .from('fund_data')
-        .update({
-          total_capital: initialCapital,
-          active_fund: activeAmount,
-          reserve_fund: reserveAmount,
-          profit_fund: 0,
-          target_reserve_fund: reserveAmount,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', currentFundData.id);
-
-      // Add reset entry to trading history
-      await supabase.from('trading_history').insert({
-        user_id: userId,
-        mode: currentMode,
-        type: 'Initialize',
-        details: `Data reset - Initial capital restored to $${initialCapital.toLocaleString()}`,
-        end_balance: initialCapital,
-      });
+        .delete()
+        .eq('user_id', userId)
+        .eq('mode', currentMode);
 
       toast({
         title: t('success'),
-        description: t('allDataHasBeenReset'),
+        description: `All ${currentMode} mode data has been completely reset. Please set up initial fund again.`,
       });
 
-      // Trigger refresh of transaction history and components
+      // Trigger refresh of all components
       window.dispatchEvent(new Event('refreshTransactions'));
       window.dispatchEvent(new Event('refreshFundData'));
+      window.dispatchEvent(new Event('resetComplete'));
       
       onReset?.();
     } catch (error) {
@@ -121,7 +90,7 @@ const UserManagement = ({ userId, currentMode, fundData, onReset }: UserManageme
             {t('resetDataConfirm')}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            {t('resetDataWarning')}
+            This will completely erase ALL data for {currentMode} mode including trading history, transaction history, and fund setup. You will need to set up initial fund again. This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

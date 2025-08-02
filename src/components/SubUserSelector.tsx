@@ -91,45 +91,58 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserChange
 
   const handleResetSubUser = async (subUserName: string) => {
     try {
-      // Delete all trading history for this sub-user
-      const { error: historyError } = await supabase
+      // Get mode for proper deletion
+      const { data: subUserData } = await supabase
+        .from('fund_data')
+        .select('mode')
+        .eq('user_id', userId)
+        .eq('sub_user_name', subUserName)
+        .single();
+
+      if (!subUserData) {
+        throw new Error('Sub user not found');
+      }
+
+      // Delete ALL data for this sub-user
+      
+      // 1. Delete all trading history
+      await supabase
         .from('trading_history')
         .delete()
         .eq('user_id', userId)
-        .eq('mode', currentMode)
+        .eq('mode', subUserData.mode)
         .eq('sub_user_name', subUserName);
 
-      if (historyError) throw historyError;
-
-      // Delete all transaction history for this sub-user
-      const { error: transactionError } = await supabase
+      // 2. Delete all transaction history
+      await supabase
         .from('transaction_history')
         .delete()
         .eq('user_id', userId)
-        .eq('mode', currentMode)
+        .eq('mode', subUserData.mode)
         .eq('sub_user_name', subUserName);
 
-      if (transactionError) throw transactionError;
-
-      // Delete fund data for sub-user to start fresh
-      const { error: fundError } = await supabase
+      // 3. Delete fund data (complete wipe)
+      await supabase
         .from('fund_data')
         .delete()
         .eq('user_id', userId)
-        .eq('mode', currentMode)
         .eq('sub_user_name', subUserName);
 
-      if (fundError) throw fundError;
-
       toast({
-        title: t('dataResetSuccess'),
-        description: t('subUserDataReset').replace('{name}', subUserName),
+        title: t('success'),
+        description: `Sub account "${subUserName}" has been completely reset and deleted.`,
       });
 
-      // Trigger refresh of transaction history
+      // Trigger refresh
       window.dispatchEvent(new Event('refreshTransactions'));
+      window.dispatchEvent(new Event('refreshFundData'));
       
       loadSubUsers();
+      
+      // If this was the selected sub user, switch back to main
+      if (selectedSubUser === subUserName) {
+        onSubUserChange(null);
+      }
     } catch (error) {
       console.error('Error resetting sub-user data:', error);
       toast({

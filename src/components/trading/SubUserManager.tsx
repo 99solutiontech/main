@@ -171,10 +171,10 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
 
   const resetSubUserData = async (subUserName: string) => {
     try {
-      // First, get the sub user's fund data to get initial capital and ID
+      // Get the sub user's mode for proper deletion
       const { data: subUserFund, error: fundError } = await supabase
         .from('fund_data')
-        .select('*')
+        .select('mode')
         .eq('user_id', userId)
         .eq('sub_user_name', subUserName)
         .single();
@@ -183,54 +183,34 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
         throw new Error('Sub user fund data not found');
       }
 
-      // Delete trading history for this sub user
-      const { error: historyError } = await supabase
+      // Delete ALL data for this sub user
+      
+      // 1. Delete trading history for this sub user
+      await supabase
         .from('trading_history')
         .delete()
         .eq('user_id', userId)
         .eq('mode', subUserFund.mode)
         .eq('sub_user_name', subUserName);
 
-      if (historyError) throw historyError;
-
-      // Delete transaction history for this sub user
-      const { error: transactionError } = await supabase
+      // 2. Delete transaction history for this sub user
+      await supabase
         .from('transaction_history')
         .delete()
         .eq('user_id', userId)
         .eq('mode', subUserFund.mode)
         .eq('sub_user_name', subUserName);
 
-      if (transactionError) throw transactionError;
-
-      // Reset fund data to initial values
-      const { error: updateError } = await supabase
+      // 3. Delete fund data for this sub user (complete wipe)
+      await supabase
         .from('fund_data')
-        .update({
-          total_capital: subUserFund.initial_capital,
-          active_fund: subUserFund.initial_capital * 0.4,
-          reserve_fund: subUserFund.initial_capital * 0.6,
-          profit_fund: 0,
-          target_reserve_fund: subUserFund.initial_capital * 0.6,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', subUserFund.id);
-
-      if (updateError) throw updateError;
-
-      // Add initial history record
-      await supabase.from('trading_history').insert({
-        user_id: userId,
-        mode: subUserFund.mode,
-        sub_user_name: subUserName,
-        type: 'Initialize',
-        details: `Data reset - Initial capital restored to $${subUserFund.initial_capital.toLocaleString()}`,
-        end_balance: subUserFund.initial_capital,
-      });
+        .delete()
+        .eq('user_id', userId)
+        .eq('sub_user_name', subUserName);
 
       toast({
         title: t('success'),
-        description: `Sub account "${subUserName}" data has been reset successfully`,
+        description: `Sub account "${subUserName}" has been completely reset and deleted.`,
       });
 
       // Trigger refresh of transaction history and components
@@ -296,18 +276,18 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
                         <Badge variant={subUser.mode === 'diamond' ? 'default' : 'secondary'}>
                           {subUser.mode}
                         </Badge>
-                        {onResetSubUser && subUser.name && (
+                        {subUser.name && (
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (confirm('Are you sure you want to reset all data for this sub account? This action cannot be undone.')) {
+                              if (confirm(`Are you sure you want to completely reset "${subUser.name}"? This will delete ALL data including trading history, transaction history, and fund setup. This action cannot be undone.`)) {
                                 resetSubUserData(subUser.name);
                               }
                             }}
                             className="h-8 w-8 p-0"
-                            title="Reset Data"
+                            title="Reset All Data"
                           >
                             <RotateCcw className="h-4 w-4" />
                           </Button>
