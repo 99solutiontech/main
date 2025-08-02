@@ -60,8 +60,9 @@ const UserManagement = ({ userId, mode, onReset }: UserManagementProps) => {
         description: t('allDataHasBeenReset'),
       });
 
-      // Trigger refresh of transaction history
+      // Trigger refresh of transaction history and components
       window.dispatchEvent(new Event('refreshTransactions'));
+      window.dispatchEvent(new Event('refreshFundData'));
       
       onReset?.();
     } catch (error) {

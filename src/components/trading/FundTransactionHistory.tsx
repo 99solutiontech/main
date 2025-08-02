@@ -46,16 +46,16 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
 
   const loadTransactions = async () => {
     try {
-      const query = supabase
+      let query = supabase
         .from('fund_transactions')
         .select('*')
         .eq('user_id', userId)
         .eq('mode', mode);
 
       if (subUserName) {
-        query.eq('sub_user_name', subUserName);
+        query = query.eq('sub_user_name', subUserName);
       } else {
-        query.is('sub_user_name', null);
+        query = query.is('sub_user_name', null);
       }
 
       const { data, error } = await query

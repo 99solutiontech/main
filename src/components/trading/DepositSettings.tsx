@@ -65,7 +65,8 @@ const DepositSettings = ({ fundData, subUserName, onUpdate }: DepositSettingsPro
   };
 
   const handleUpdateSettings = async (data: SettingsForm) => {
-    if (data.activePercentage + data.reservePercentage !== 100) {
+    const total = Number(data.activePercentage) + Number(data.reservePercentage);
+    if (Math.abs(total - 100) > 0.01) {
       toast({
         title: "Error",
         description: "Active and Reserve percentages must add up to 100%",

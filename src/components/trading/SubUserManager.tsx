@@ -222,8 +222,9 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
         description: `Sub account "${subUserName}" data has been reset successfully`,
       });
 
-      // Trigger refresh of transaction history
+      // Trigger refresh of transaction history and components
       window.dispatchEvent(new Event('refreshTransactions'));
+      window.dispatchEvent(new Event('refreshFundData'));
       
       loadSubUsers();
     } catch (error: any) {

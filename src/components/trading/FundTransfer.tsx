@@ -208,7 +208,7 @@ const FundTransfer = ({ userId, fundData, subUsers, currentSubUser, onUpdate }: 
                   <SelectItem value="main:main">Main Account</SelectItem>
                 )}
                 {subUsers
-                  .filter(su => su.mode === fundData.mode && su.id !== currentSubUser?.id)
+                  .filter(su => su.mode === fundData.mode && (!currentSubUser || su.name !== currentSubUser.name))
                   .map((subUser) => (
                     <SelectItem key={subUser.id} value={`sub:${subUser.id}`}>
                       {subUser.name} ({formatCurrency(subUser.total_capital)})
