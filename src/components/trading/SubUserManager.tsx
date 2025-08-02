@@ -236,14 +236,14 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5" />
-          Sub Accounts
+          {t('subAccounts')}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="list" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="list">Accounts</TabsTrigger>
-            <TabsTrigger value="create">Create New</TabsTrigger>
+            <TabsTrigger value="list">{t('accounts')}</TabsTrigger>
+            <TabsTrigger value="create">{t('createNew')}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="list" className="space-y-4">
@@ -313,7 +313,7 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
           <TabsContent value="create">
             <form onSubmit={form.handleSubmit(createSubUser)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Account Name</Label>
+                <Label htmlFor="name">{t('accountName')}</Label>
                 <Input
                   id="name"
                   {...form.register('name', { required: true })}
@@ -322,7 +322,7 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="mode">Mode</Label>
+                <Label htmlFor="mode">{t('mode')}</Label>
                 <Select
                   value={form.watch('mode')}
                   onValueChange={(value: 'diamond' | 'gold') => form.setValue('mode', value)}
@@ -350,7 +350,7 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
               
               <Button type="submit" className="w-full" disabled={loading}>
                 <Plus className="h-4 w-4 mr-2" />
-                {loading ? 'Creating...' : 'Create Sub Account'}
+                {loading ? t('creating') : t('createSubAccount')}
               </Button>
             </form>
           </TabsContent>

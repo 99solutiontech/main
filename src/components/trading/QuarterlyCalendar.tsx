@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TradingRecord {
   id: string;
@@ -25,6 +26,7 @@ const QuarterlyCalendar = ({ userId, mode, subUserName }: QuarterlyCalendarProps
   const [currentQuarter, setCurrentQuarter] = useState(new Date());
   const [tradingData, setTradingData] = useState<TradingRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadTradingData();
@@ -145,7 +147,7 @@ const QuarterlyCalendar = ({ userId, mode, subUserName }: QuarterlyCalendarProps
                 `}
               >
                 <span className="font-medium text-xs text-foreground">
-                  Week {i + 1}
+                  {t('week')} {i + 1}
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -169,7 +171,7 @@ const QuarterlyCalendar = ({ userId, mode, subUserName }: QuarterlyCalendarProps
               <TooltipContent className="bg-popover border p-3 rounded-lg shadow-lg">
                 <div className="space-y-2 text-sm">
                   <div className="font-semibold text-foreground">
-                    Week {i + 1}: {weekStart.toLocaleDateString()} - {weekEnd.toLocaleDateString()}
+                    {t('week')} {i + 1}: {weekStart.toLocaleDateString()} - {weekEnd.toLocaleDateString()}
                   </div>
                   <div className="space-y-1">
                     <div className="text-foreground">Start Balance: {formatCurrency(balanceBefore)}</div>
@@ -179,8 +181,8 @@ const QuarterlyCalendar = ({ userId, mode, subUserName }: QuarterlyCalendarProps
                     </div>
                   </div>
                   <div className="space-y-1 text-xs">
-                    <div className="text-green-600 dark:text-green-400">Wins: {wins.length} ({formatCurrency(totalWins)})</div>
-                    <div className="text-red-600 dark:text-red-400">Losses: {losses.length} ({formatCurrency(Math.abs(totalLosses))})</div>
+                    <div className="text-green-600 dark:text-green-400">{t('wins')}: {wins.length} ({formatCurrency(totalWins)})</div>
+                    <div className="text-red-600 dark:text-red-400">{t('losses')}: {losses.length} ({formatCurrency(Math.abs(totalLosses))})</div>
                   </div>
                 </div>
               </TooltipContent>
@@ -219,10 +221,10 @@ const QuarterlyCalendar = ({ userId, mode, subUserName }: QuarterlyCalendarProps
     return (
       <Card className="col-span-full">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-foreground">
-            <Calendar className="h-5 w-5" />
-            Quarterly Trading Calendar
-          </CardTitle>
+        <CardTitle className="flex items-center gap-2 text-foreground">
+          <Calendar className="h-5 w-5" />
+          {t('quarterlyTradingCalendar')}
+        </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
@@ -238,7 +240,7 @@ const QuarterlyCalendar = ({ userId, mode, subUserName }: QuarterlyCalendarProps
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-foreground">
           <Calendar className="h-5 w-5" />
-          Quarterly Trading Calendar
+          {t('quarterlyTradingCalendar')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -248,7 +250,7 @@ const QuarterlyCalendar = ({ userId, mode, subUserName }: QuarterlyCalendarProps
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <h3 className="text-lg font-semibold text-foreground">
-            Q{quarterNumber} {currentQuarter.getFullYear()} - Week View
+            Q{quarterNumber} {currentQuarter.getFullYear()} - {t('weekView')}
           </h3>
           <Button variant="outline" size="sm" onClick={() => navigateQuarter('next')}>
             <ChevronRight className="h-4 w-4" />
@@ -262,25 +264,25 @@ const QuarterlyCalendar = ({ userId, mode, subUserName }: QuarterlyCalendarProps
 
         {/* Quarterly Summary */}
         <div className="pt-4 border-t space-y-2">
-          <div className="text-sm font-medium text-foreground">Quarterly Summary</div>
+          <div className="text-sm font-medium text-foreground">{t('quarterlySummary')}</div>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="space-y-1">
               <div className="flex justify-between">
-                <span className="text-foreground">Wins:</span>
+                <span className="text-foreground">{t('wins')}:</span>
                 <span className="text-green-600 dark:text-green-400">{stats.winCount}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-foreground">Losses:</span>
+                <span className="text-foreground">{t('losses')}:</span>
                 <span className="text-red-600 dark:text-red-400">{stats.lossCount}</span>
               </div>
             </div>
             <div className="space-y-1">
               <div className="flex justify-between">
-                <span className="text-foreground">Win Rate:</span>
+                <span className="text-foreground">{t('winRate')}:</span>
                 <span className="text-foreground">{stats.winRate.toFixed(1)}%</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-foreground">Net P&L:</span>
+                <span className="text-foreground">{t('netPnL')}:</span>
                 <span className={stats.netPnL >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
                   {formatCurrency(stats.netPnL)}
                 </span>

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Settings } from 'lucide-react';
 
 interface FundData {
@@ -41,6 +42,7 @@ const ProfitManagementSettings = ({ fundData, subUserName, onUpdate }: ProfitMan
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<SettingsForm>({
     defaultValues: {
@@ -116,10 +118,9 @@ const ProfitManagementSettings = ({ fundData, subUserName, onUpdate }: ProfitMan
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Profit Management Settings</DialogTitle>
+          <DialogTitle>{t('profitManagementSettings')}</DialogTitle>
           <DialogDescription>
-            Configure how profits from trade results are distributed across your funds.
-            These percentages apply when recording trade results.
+            {t('configureHowProfitsDistributed')}
           </DialogDescription>
         </DialogHeader>
         
@@ -127,7 +128,7 @@ const ProfitManagementSettings = ({ fundData, subUserName, onUpdate }: ProfitMan
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="profit_dist_active">
-                Active Fund Distribution (%)
+                {t('activeFundDistribution')}
               </Label>
               <Input
                 id="profit_dist_active"
@@ -145,7 +146,7 @@ const ProfitManagementSettings = ({ fundData, subUserName, onUpdate }: ProfitMan
 
             <div className="space-y-2">
               <Label htmlFor="profit_dist_reserve">
-                Reserve Fund Distribution (%)
+                {t('reserveFundDistribution')}
               </Label>
               <Input
                 id="profit_dist_reserve"
@@ -163,7 +164,7 @@ const ProfitManagementSettings = ({ fundData, subUserName, onUpdate }: ProfitMan
 
             <div className="space-y-2">
               <Label htmlFor="profit_dist_profit">
-                Profit Fund Distribution (%)
+                {t('profitFundDistribution')}
               </Label>
               <Input
                 id="profit_dist_profit"
@@ -181,20 +182,20 @@ const ProfitManagementSettings = ({ fundData, subUserName, onUpdate }: ProfitMan
 
             <div className="text-sm">
               <p className={`font-medium ${total === 100 ? 'text-green-600' : 'text-red-600'}`}>
-                Total: {total}% {total !== 100 && '(Must equal 100%)'}
+                {t('total')}: {total}% {total !== 100 && '(Must equal 100%)'}
               </p>
               <div className="mt-2 text-muted-foreground">
-                <p>Current: Active {watchedValues.profit_dist_active}%, Reserve {watchedValues.profit_dist_reserve}%, Profit {watchedValues.profit_dist_profit}%</p>
+                <p>{t('current')}: Active {watchedValues.profit_dist_active}%, Reserve {watchedValues.profit_dist_reserve}%, Profit {watchedValues.profit_dist_profit}%</p>
               </div>
             </div>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button type="submit" disabled={loading || total !== 100}>
-              {loading ? 'Updating...' : 'Update Settings'}
+              {loading ? t('updating') : t('updateSettings')}
             </Button>
           </DialogFooter>
         </form>

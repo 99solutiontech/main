@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface FundData {
   id: string;
@@ -46,6 +47,7 @@ const LotSizeSettings = ({ fundData, onUpdate }: LotSizeSettingsProps) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const form = useForm<SettingsForm>({
     defaultValues: {
@@ -94,14 +96,14 @@ const LotSizeSettings = ({ fundData, onUpdate }: LotSizeSettingsProps) => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Lot Size Settings</DialogTitle>
+          <DialogTitle className="text-foreground">{t('lotSizeSettings')}</DialogTitle>
           <DialogDescription>
-            Configure the base capital and lot size for calculations
+            {t('configureBaseCapitalLotSize')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(updateSettings)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="lot_base_capital" className="text-foreground">Base Capital (USD)</Label>
+            <Label htmlFor="lot_base_capital" className="text-foreground">{t('baseCapital')}</Label>
             <Input
               id="lot_base_capital"
               type="number"
@@ -111,7 +113,7 @@ const LotSizeSettings = ({ fundData, onUpdate }: LotSizeSettingsProps) => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="lot_base_lot" className="text-foreground">Base Lot Size</Label>
+            <Label htmlFor="lot_base_lot" className="text-foreground">{t('baseLotSize')}</Label>
             <Input
               id="lot_base_lot"
               type="number"
@@ -122,10 +124,10 @@ const LotSizeSettings = ({ fundData, onUpdate }: LotSizeSettingsProps) => {
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">
-              Cancel
+              {t('cancel')}
             </Button>
             <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Updating...' : 'Update'}
+              {loading ? t('updating') : t('update')}
             </Button>
           </div>
         </form>

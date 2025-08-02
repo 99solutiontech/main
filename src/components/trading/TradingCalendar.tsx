@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TradingRecord {
   id: string;
@@ -25,6 +26,7 @@ const TradingCalendar = ({ userId, mode, subUserName }: TradingCalendarProps) =>
   const [currentDate, setCurrentDate] = useState(new Date());
   const [tradingData, setTradingData] = useState<TradingRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadTradingData();
@@ -198,7 +200,7 @@ const TradingCalendar = ({ userId, mode, subUserName }: TradingCalendarProps) =>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-foreground">
           <Calendar className="h-5 w-5" />
-          Monthly Trading Calendar
+          {t('monthlyTradingCalendar')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -231,25 +233,25 @@ const TradingCalendar = ({ userId, mode, subUserName }: TradingCalendarProps) =>
 
         {/* Monthly Summary */}
         <div className="pt-4 border-t space-y-2">
-          <div className="text-sm font-medium text-foreground">Monthly Summary</div>
+          <div className="text-sm font-medium text-foreground">{t('monthlySummary')}</div>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="space-y-1">
               <div className="flex justify-between">
-                <span className="text-foreground">Wins:</span>
+                <span className="text-foreground">{t('wins')}:</span>
                 <span className="text-green-600 dark:text-green-400">{stats.winCount}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-foreground">Losses:</span>
+                <span className="text-foreground">{t('losses')}:</span>
                 <span className="text-red-600 dark:text-red-400">{stats.lossCount}</span>
               </div>
             </div>
             <div className="space-y-1">
               <div className="flex justify-between">
-                <span className="text-foreground">Win Rate:</span>
+                <span className="text-foreground">{t('winRate')}:</span>
                 <span className="text-foreground">{stats.winRate.toFixed(1)}%</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-foreground">Net P&L:</span>
+                <span className="text-foreground">{t('netPnL')}:</span>
                 <span className={stats.netPnL >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
                   {formatCurrency(stats.netPnL)}
                 </span>

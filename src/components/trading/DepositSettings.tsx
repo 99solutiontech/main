@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Settings } from 'lucide-react';
 
 interface FundData {
@@ -49,6 +50,7 @@ const DepositSettings = ({ fundData, subUserName, onUpdate, onClose }: DepositSe
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   // Calculate current percentages based on active and reserve fund distribution
   const currentActivePercentage = 40; // Default from current logic
@@ -172,16 +174,15 @@ const DepositSettings = ({ fundData, subUserName, onUpdate, onClose }: DepositSe
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Deposit Allocation Settings</DialogTitle>
+          <DialogTitle>{t('depositAllocationSettings')}</DialogTitle>
           <DialogDescription>
-            Adjust how deposits are split between Active and Reserve funds. 
-            Changing these settings will rebalance your existing funds accordingly.
+            {t('adjustHowDepositsAreSplit')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(handleUpdateSettings)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="activePercentage">Active Fund %</Label>
+              <Label htmlFor="activePercentage">{t('activeFundPercent')}</Label>
               <Input
                 id="activePercentage"
                 type="number"
@@ -200,7 +201,7 @@ const DepositSettings = ({ fundData, subUserName, onUpdate, onClose }: DepositSe
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="reservePercentage">Reserve Fund %</Label>
+              <Label htmlFor="reservePercentage">{t('reserveFundPercent')}</Label>
               <Input
                 id="reservePercentage"
                 type="number"
@@ -221,22 +222,22 @@ const DepositSettings = ({ fundData, subUserName, onUpdate, onClose }: DepositSe
           </div>
           
           <div className="bg-muted p-3 rounded-lg">
-            <h4 className="font-medium mb-2">Current Fund Distribution:</h4>
+            <h4 className="font-medium mb-2">{t('currentFundDistribution')}</h4>
             <div className="text-sm space-y-1">
-              <div>Active Fund: {formatCurrency(fundData.active_fund)}</div>
-              <div>Reserve Fund: {formatCurrency(fundData.reserve_fund)}</div>
+              <div>{t('activeFund')}: {formatCurrency(fundData.active_fund)}</div>
+              <div>{t('reserveFund')}: {formatCurrency(fundData.reserve_fund)}</div>
               <div className="text-muted-foreground">
-                Total Available: {formatCurrency(fundData.active_fund + fundData.reserve_fund)}
+                {t('totalAvailable')}: {formatCurrency(fundData.active_fund + fundData.reserve_fund)}
               </div>
             </div>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Updating...' : 'Update Settings'}
+              {loading ? t('updating') : t('updateSettings')}
             </Button>
           </DialogFooter>
         </form>
