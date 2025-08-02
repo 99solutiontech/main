@@ -11,7 +11,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AppThemeProvider } from '@/contexts/AppThemeContext';
 import LanguageSelector from '@/components/LanguageSelector';
-import ThemeToggle from '@/components/ThemeToggle';
 import { Gem, LogOut, Settings, TrendingUp, DollarSign, Calculator, Calendar, BarChart3, Users, Fuel } from 'lucide-react';
 import FundOverview from '@/components/trading/FundOverview';
 import TradeRecorder from '@/components/trading/TradeRecorder';
@@ -373,7 +372,6 @@ const Dashboard = () => {
               </div>
               
                 <div className="flex items-center gap-4">
-                <ThemeToggle />
                 <LanguageSelector />
                 
                 <SubUserSelector
@@ -393,8 +391,36 @@ const Dashboard = () => {
                     }
                   }}
                 />
-                
-                
+                 
+                 <Select value={currentMode} onValueChange={handleModeChange}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue>
+                      <div className="flex items-center gap-2">
+                        {currentMode === 'diamond' ? (
+                          <Gem className="h-4 w-4" />
+                        ) : (
+                          <Fuel className="h-4 w-4 text-yellow-500" />
+                        )}
+                        {currentMode === 'diamond' ? t('diamondMode') : t('goldMode')}
+                      </div>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="diamond">
+                      <div className="flex items-center gap-2">
+                        <Gem className="h-4 w-4" />
+                        {t('diamondMode')}
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="gold">
+                      <div className="flex items-center gap-2">
+                        <Fuel className="h-4 w-4 text-yellow-500" />
+                        {t('goldMode')}
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                 
                 <Button variant="outline" size="sm" onClick={handleSignOut}>
                   <LogOut className="h-4 w-4 mr-2" />
                   {t('signOut')}
