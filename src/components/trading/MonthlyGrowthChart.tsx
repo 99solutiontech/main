@@ -142,13 +142,13 @@ const MonthlyGrowthChart = ({ userId, mode, subUserName }: MonthlyGrowthChartPro
             data: profitData,
             backgroundColor: profitData.map(profit => 
               profit >= 0 
-                ? 'hsla(var(--primary), 0.8)' 
-                : 'hsla(var(--destructive), 0.8)'
+                ? 'hsla(142, 76%, 36%, 0.8)' // Green for profit
+                : 'hsla(0, 84%, 60%, 0.8)' // Red for loss
             ),
             borderColor: profitData.map(profit => 
               profit >= 0 
-                ? 'hsl(var(--primary))' 
-                : 'hsl(var(--destructive))'
+                ? 'hsl(142, 76%, 36%)' // Green for profit
+                : 'hsl(0, 84%, 60%)' // Red for loss
             ),
             borderWidth: 1,
             yAxisID: 'y',
@@ -156,9 +156,9 @@ const MonthlyGrowthChart = ({ userId, mode, subUserName }: MonthlyGrowthChartPro
           {
             label: 'Trade Volume',
             data: volumeData,
-            backgroundColor: 'hsla(var(--foreground), 0.6)',
-            borderColor: 'hsl(var(--foreground))',
-            borderWidth: 1,
+            backgroundColor: 'hsla(45, 100%, 65%, 0.6)', // Gold/yellow color
+            borderColor: '#ffffff', // White border
+            borderWidth: 2,
             yAxisID: 'y1',
             type: 'line' as const,
           },
