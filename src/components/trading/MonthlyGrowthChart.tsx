@@ -178,7 +178,7 @@ const MonthlyGrowthChart = ({ userId, mode, subUserName }: MonthlyGrowthChartPro
       legend: {
         position: 'top' as const,
         labels: {
-          color: 'hsl(var(--foreground))',
+          color: '#ffffff',
         },
       },
       tooltip: {
@@ -202,7 +202,7 @@ const MonthlyGrowthChart = ({ userId, mode, subUserName }: MonthlyGrowthChartPro
           display: false,
         },
         ticks: {
-          color: 'hsl(var(--foreground))',
+          color: '#ffffff',
         },
       },
       y: {
@@ -213,7 +213,7 @@ const MonthlyGrowthChart = ({ userId, mode, subUserName }: MonthlyGrowthChartPro
           color: 'hsla(var(--border), 0.8)',
         },
         ticks: {
-          color: 'hsl(var(--foreground))',
+          color: '#ffffff',
           callback: function(value) {
             return '$' + Number(value).toLocaleString();
           },
@@ -227,7 +227,7 @@ const MonthlyGrowthChart = ({ userId, mode, subUserName }: MonthlyGrowthChartPro
           drawOnChartArea: false,
         },
         ticks: {
-          color: 'hsl(var(--foreground))',
+          color: '#ffffff',
         },
       },
     },

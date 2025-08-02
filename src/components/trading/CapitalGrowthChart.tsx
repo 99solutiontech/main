@@ -123,7 +123,7 @@ const CapitalGrowthChart = ({ userId, mode, subUserName }: CapitalGrowthChartPro
         },
         ticks: {
           maxTicksLimit: 7,
-          color: 'hsl(var(--foreground))',
+          color: '#ffffff',
         },
       },
       y: {
@@ -132,7 +132,7 @@ const CapitalGrowthChart = ({ userId, mode, subUserName }: CapitalGrowthChartPro
           color: 'hsla(var(--border), 0.8)',
         },
         ticks: {
-          color: 'hsl(var(--foreground))',
+          color: '#ffffff',
           callback: function(value) {
             return '$' + Number(value).toLocaleString();
           },
