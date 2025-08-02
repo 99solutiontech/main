@@ -84,8 +84,8 @@ const CapitalGrowthChart = ({ userId, mode, subUserName }: CapitalGrowthChartPro
           {
             label: 'Total Capital',
             data: balances,
-            borderColor: 'hsl(var(--primary))',
-            backgroundColor: 'hsla(var(--primary), 0.1)',
+            borderColor: '#ffffff', // White line
+            backgroundColor: 'hsla(255, 255%, 100%, 0.1)', // White with low opacity
             tension: 0.4,
             fill: true,
           },

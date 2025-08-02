@@ -394,34 +394,6 @@ const Dashboard = () => {
                   }}
                 />
                 
-                 <Select value={currentMode} onValueChange={handleModeChange}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue>
-                      <div className="flex items-center gap-2">
-                        {currentMode === 'diamond' ? (
-                          <Gem className="h-4 w-4" />
-                        ) : (
-                          <Fuel className="h-4 w-4 text-yellow-500" />
-                        )}
-                        {currentMode === 'diamond' ? t('diamondMode') : t('goldMode')}
-                      </div>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="diamond">
-                      <div className="flex items-center gap-2">
-                        <Gem className="h-4 w-4" />
-                        {t('diamondMode')}
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="gold">
-                      <div className="flex items-center gap-2">
-                        <Fuel className="h-4 w-4 text-yellow-500" />
-                        {t('goldMode')}
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
                 
                 <Button variant="outline" size="sm" onClick={handleSignOut}>
                   <LogOut className="h-4 w-4 mr-2" />
