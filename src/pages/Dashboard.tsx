@@ -23,7 +23,7 @@ import CapitalGrowthChart from '@/components/trading/CapitalGrowthChart';
 import FundTransactionHistory from '@/components/trading/FundTransactionHistory';
 import SubUserManager from '@/components/trading/SubUserManager';
 import MonthlyGrowthChart from '@/components/trading/MonthlyGrowthChart';
-import FundSettings from '@/components/trading/FundSettings';
+
 import SubUserSelector from '@/components/SubUserSelector';
 import QuarterlyCalendar from '@/components/trading/QuarterlyCalendar';
 import { User, Session } from '@supabase/supabase-js';
