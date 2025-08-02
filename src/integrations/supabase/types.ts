@@ -74,51 +74,6 @@ export type Database = {
         }
         Relationships: []
       }
-      fund_transactions: {
-        Row: {
-          amount: number
-          balance_after: number
-          balance_before: number
-          created_at: string
-          description: string
-          from_fund: string | null
-          id: string
-          mode: string
-          sub_user_name: string | null
-          to_fund: string | null
-          transaction_type: string
-          user_id: string
-        }
-        Insert: {
-          amount: number
-          balance_after: number
-          balance_before: number
-          created_at?: string
-          description: string
-          from_fund?: string | null
-          id?: string
-          mode: string
-          sub_user_name?: string | null
-          to_fund?: string | null
-          transaction_type: string
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          balance_after?: number
-          balance_before?: number
-          created_at?: string
-          description?: string
-          from_fund?: string | null
-          id?: string
-          mode?: string
-          sub_user_name?: string | null
-          to_fund?: string | null
-          transaction_type?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           created_at: string
@@ -187,6 +142,51 @@ export type Database = {
           sub_user_name?: string | null
           trade_date?: string | null
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transaction_history: {
+        Row: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at: string
+          description: string
+          from_fund: string | null
+          id: string
+          mode: string
+          sub_user_name: string | null
+          to_fund: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at?: string
+          description: string
+          from_fund?: string | null
+          id?: string
+          mode: string
+          sub_user_name?: string | null
+          to_fund?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          balance_before?: number
+          created_at?: string
+          description?: string
+          from_fund?: string | null
+          id?: string
+          mode?: string
+          sub_user_name?: string | null
+          to_fund?: string | null
+          transaction_type?: string
           user_id?: string
         }
         Relationships: []

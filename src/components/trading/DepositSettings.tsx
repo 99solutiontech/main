@@ -125,7 +125,7 @@ const DepositSettings = ({ fundData, subUserName, onUpdate, onClose }: DepositSe
         if (fundError) throw fundError;
 
         // Record the transaction
-        const { error: historyError } = await supabase.from('fund_transactions').insert({
+        const { error: historyError } = await supabase.from('transaction_history').insert({
           user_id: fundData.user_id,
           mode: fundData.mode,
           transaction_type: 'transfer',

@@ -86,7 +86,7 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
 
       if (fundError) throw fundError;
 
-      const { error: historyError } = await supabase.from('fund_transactions').insert({
+      const { error: historyError } = await supabase.from('transaction_history').insert({
         user_id: userId,
         mode: fundData.mode,
         transaction_type: 'deposit',
@@ -142,7 +142,7 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
 
       if (fundError) throw fundError;
 
-      const { error: historyError } = await supabase.from('fund_transactions').insert({
+      const { error: historyError } = await supabase.from('transaction_history').insert({
         user_id: userId,
         mode: fundData.mode,
         transaction_type: 'withdraw',
@@ -203,7 +203,7 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
 
       if (fundError) throw fundError;
 
-      const { error: historyError } = await supabase.from('fund_transactions').insert({
+      const { error: historyError } = await supabase.from('transaction_history').insert({
         user_id: userId,
         mode: fundData.mode,
         transaction_type: 'transfer',

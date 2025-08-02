@@ -138,7 +138,7 @@ const FundTransfer = ({ userId, fundData, subUsers, currentSubUser, onUpdate }: 
       const targetDescription = `Received ${formatCurrency(amount)} from ${currentSubUser ? `Sub-user: ${currentSubUser.name}` : 'Main Account'}`;
 
       // Source transaction
-      await supabase.from('fund_transactions').insert({
+      await supabase.from('transaction_history').insert({
         user_id: userId,
         mode: fundData.mode,
         transaction_type: 'transfer_out',
@@ -152,7 +152,7 @@ const FundTransfer = ({ userId, fundData, subUsers, currentSubUser, onUpdate }: 
       });
 
       // Target transaction
-      await supabase.from('fund_transactions').insert({
+      await supabase.from('transaction_history').insert({
         user_id: userId,
         mode: fundData.mode,
         transaction_type: 'transfer_in',

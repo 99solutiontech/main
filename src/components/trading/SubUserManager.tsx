@@ -193,9 +193,9 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
 
       if (historyError) throw historyError;
 
-      // Delete fund transactions for this sub user
+      // Delete transaction history for this sub user
       const { error: transactionError } = await supabase
-        .from('fund_transactions')
+        .from('transaction_history')
         .delete()
         .eq('user_id', userId)
         .eq('mode', subUserFund.mode)

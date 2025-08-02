@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowUpDown } from 'lucide-react';
 
-interface FundTransaction {
+interface TransactionHistory {
   id: string;
   user_id: string;
   mode: string;
@@ -26,7 +26,7 @@ interface FundTransactionHistoryProps {
 }
 
 const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHistoryProps) => {
-  const [transactions, setTransactions] = useState<FundTransaction[]>([]);
+  const [transactions, setTransactions] = useState<TransactionHistory[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -52,7 +52,7 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
     setLoading(true);
     try {
       let query = supabase
-        .from('fund_transactions')
+        .from('transaction_history')
         .select('*')
         .eq('user_id', userId)
         .eq('mode', mode);
@@ -65,7 +65,7 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
 
       const { data, error } = await query
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(50);
 
       if (error) {
         console.error('Error loading transactions:', error);

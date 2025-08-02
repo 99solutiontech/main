@@ -28,9 +28,22 @@ const UserManagement = ({ userId, currentMode, fundData, onReset }: UserManageme
   const { t } = useLanguage();
 
   const handleResetAllData = async () => {
-    if (!userId || !fundData) return;
+    if (!userId) return;
     
     try {
+      // Get current fund data
+      const { data: currentFundData, error: fundDataError } = await supabase
+        .from('fund_data')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('mode', currentMode)
+        .is('sub_user_name', null)
+        .single();
+
+      if (fundDataError || !currentFundData) {
+        throw new Error('Fund data not found');
+      }
+
       // Delete all trading history for current mode and main account
       await supabase
         .from('trading_history')
@@ -39,16 +52,16 @@ const UserManagement = ({ userId, currentMode, fundData, onReset }: UserManageme
         .eq('mode', currentMode)
         .is('sub_user_name', null);
 
-      // Delete all fund transactions for current mode and main account
+      // Delete all transaction history for current mode and main account
       await supabase
-        .from('fund_transactions')
+        .from('transaction_history')
         .delete()
         .eq('user_id', userId)
         .eq('mode', currentMode)
         .is('sub_user_name', null);
 
       // Reset fund data to initial capital for current mode and main account
-      const initialCapital = fundData.initial_capital;
+      const initialCapital = currentFundData.initial_capital;
       const activeAmount = initialCapital * 0.4;
       const reserveAmount = initialCapital * 0.6;
       
@@ -59,9 +72,10 @@ const UserManagement = ({ userId, currentMode, fundData, onReset }: UserManageme
           active_fund: activeAmount,
           reserve_fund: reserveAmount,
           profit_fund: 0,
+          target_reserve_fund: reserveAmount,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', fundData.id);
+        .eq('id', currentFundData.id);
 
       // Add reset entry to trading history
       await supabase.from('trading_history').insert({
