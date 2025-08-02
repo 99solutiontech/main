@@ -136,8 +136,9 @@ const updatedTranslations = {
     'accountName': 'Account Name',
     'mode': 'Mode',
     'creating': 'Creating...',
-    'createSubAccount': 'Create Sub Account',
-    'week': 'Week',
+     'createSubAccount': 'Create Sub Account',
+     'week': 'Week',
+     'lowActiveFundWarning': 'Be careful! Your active amount is lower than initial deposit. Please deposit more amount before trade in existing setting.',
   },
   th: {
     // Auth page
@@ -246,8 +247,9 @@ const updatedTranslations = {
     'accountName': 'ชื่อบัญชี',
     'mode': 'โหมด',
     'creating': 'กำลังสร้าง...',
-    'createSubAccount': 'สร้างบัญชีย่อย',
-    'week': 'สัปดาห์',
+     'createSubAccount': 'สร้างบัญชีย่อย',
+     'week': 'สัปดาห์',
+     'lowActiveFundWarning': 'ระวัง! จำนวนเงินทุนการค้าของคุณต่ำกว่าเงินฝากเริ่มต้น กรุณาฝากเงินเพิ่มก่อนทำการเทรดในการตั้งค่าที่มีอยู่',
     
     // Reset functionality
     'resetData': 'รีเซ็ตข้อมูล',
@@ -374,8 +376,9 @@ const updatedTranslations = {
     'accountName': 'ຊື່ບັນຊີ',
     'mode': 'ໂໝດ',
     'creating': 'ກຳລັງສ້າງ...',
-    'createSubAccount': 'ສ້າງບັນຊີຍ່ອຍ',
-    'week': 'ອາທິດ',
+     'createSubAccount': 'ສ້າງບັນຊີຍ່ອຍ',
+     'week': 'ອາທິດ',
+     'lowActiveFundWarning': 'ລະວັງ! ຈຳນວນເງິນທຶນການຄ້າຂອງທ່ານຕ່ຳກວ່າເງິນຝາກເລີ່ມຕົ້ນ. ກະລຸນາຝາກເງິນເພີ່ມກ່ອນການເທດໃນການຕັ້ງຄ່າທີ່ມີຢູ່.',
     
     // Reset functionality
     'resetData': 'ຣີເຊັດຂໍ້ມູນ',

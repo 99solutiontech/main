@@ -73,7 +73,7 @@ const FundOverview = ({ fundData }: FundOverviewProps) => {
             <div className="text-2xl font-bold">{formatCurrency(fundData.active_fund)}</div>
             {fundData.active_fund < fundData.initial_capital && (
               <div className="mt-2 text-sm text-red-500 font-medium">
-                ⚠️ Be careful! Your active amount is lower than initial deposit. Please deposit more amount before trade in existing setting.
+                ⚠️ {t('lowActiveFundWarning')}
               </div>
             )}
           </CardContent>

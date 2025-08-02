@@ -110,9 +110,10 @@ const FundTransfer = ({ userId, fundData, subUsers, currentSubUser, onUpdate }: 
       const { error: sourceError } = await supabase
         .from('fund_data')
         .update({
-          ...fundData,
           total_capital: newSourceTotal,
-          [fromField]: newSourceFromValue,
+          active_fund: fromField === 'active_fund' ? newSourceFromValue : fundData.active_fund,
+          reserve_fund: fromField === 'reserve_fund' ? newSourceFromValue : fundData.reserve_fund,
+          profit_fund: fromField === 'profit_fund' ? newSourceFromValue : fundData.profit_fund,
         })
         .eq('id', fundData.id);
 
@@ -125,9 +126,10 @@ const FundTransfer = ({ userId, fundData, subUsers, currentSubUser, onUpdate }: 
       const { error: targetError } = await supabase
         .from('fund_data')
         .update({
-          ...targetFundData,
           total_capital: newTargetTotal,
-          [toField]: newTargetToValue,
+          active_fund: toField === 'active_fund' ? newTargetToValue : targetFundData.active_fund,
+          reserve_fund: toField === 'reserve_fund' ? newTargetToValue : targetFundData.reserve_fund,
+          profit_fund: toField === 'profit_fund' ? newTargetToValue : targetFundData.profit_fund,
         })
         .eq('id', targetFundData.id);
 
