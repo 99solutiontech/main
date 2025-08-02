@@ -111,27 +111,13 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserChange
 
       if (transactionError) throw transactionError;
 
-      // Reset fund data to default values for sub-user
+      // Delete fund data for sub-user to start fresh
       const { error: fundError } = await supabase
         .from('fund_data')
-        .upsert({
-          user_id: userId,
-          mode: currentMode,
-          sub_user_name: subUserName,
-          initial_capital: 0,
-          total_capital: 0,
-          active_fund: 0,
-          reserve_fund: 0,
-          profit_fund: 0,
-          target_reserve_fund: 0,
-          profit_dist_active: 50,
-          profit_dist_reserve: 25,
-          profit_dist_profit: 25,
-          lot_base_capital: 1000,
-          lot_base_lot: 0.4,
-        }, {
-          onConflict: 'user_id,mode,sub_user_name'
-        });
+        .delete()
+        .eq('user_id', userId)
+        .eq('mode', currentMode)
+        .eq('sub_user_name', subUserName);
 
       if (fundError) throw fundError;
 
@@ -232,7 +218,9 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserChange
           </DialogTrigger>
           <DialogContent className="max-w-4xl">
             <SubUserManager 
-              userId={userId} 
+              userId={userId}
+              currentMode={currentMode}
+              selectedSubUser={null}
               onSubUserSelect={() => {}}
             />
           </DialogContent>

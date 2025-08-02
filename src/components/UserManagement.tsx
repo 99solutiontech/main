@@ -48,27 +48,13 @@ const UserManagement = ({ userId, mode, onReset }: UserManagementProps) => {
 
       if (transactionError) throw transactionError;
 
-      // Reset fund data to default values
+      // Delete fund data instead of resetting to 0
       const { error: fundError } = await supabase
         .from('fund_data')
-        .upsert({
-          user_id: userId,
-          mode: mode,
-          sub_user_name: null,
-          initial_capital: 0,
-          total_capital: 0,
-          active_fund: 0,
-          reserve_fund: 0,
-          profit_fund: 0,
-          target_reserve_fund: 0,
-          profit_dist_active: 50,
-          profit_dist_reserve: 25,
-          profit_dist_profit: 25,
-          lot_base_capital: 1000,
-          lot_base_lot: 0.4,
-        }, {
-          onConflict: 'user_id,mode,sub_user_name'
-        });
+        .delete()
+        .eq('user_id', userId)
+        .eq('mode', mode)
+        .is('sub_user_name', null);
 
       if (fundError) throw fundError;
 

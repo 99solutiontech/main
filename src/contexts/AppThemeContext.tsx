@@ -20,11 +20,8 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     // Apply theme to document
     const root = document.documentElement;
-    if (themeMode === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
+    root.classList.remove('light', 'dark');
+    root.classList.add(themeMode);
   }, [themeMode]);
 
   return (

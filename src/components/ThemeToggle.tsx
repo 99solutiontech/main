@@ -2,10 +2,18 @@ import { Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppTheme } from '@/contexts/AppThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useEffect } from 'react';
 
 const ThemeToggle = () => {
   const { themeMode, setThemeMode } = useAppTheme();
   const { t } = useLanguage();
+
+  useEffect(() => {
+    // Apply theme to document root
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(themeMode);
+  }, [themeMode]);
 
   const toggleTheme = () => {
     setThemeMode(themeMode === 'light' ? 'dark' : 'light');
