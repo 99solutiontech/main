@@ -28,33 +28,30 @@ const UserManagement = ({ userId, mode, onReset }: UserManagementProps) => {
 
   const handleResetAllData = async () => {
     try {
-      // Delete all trading history for this user and mode
+      // Delete all trading history for this user and mode (including sub users)
       const { error: historyError } = await supabase
         .from('trading_history')
         .delete()
         .eq('user_id', userId)
-        .eq('mode', mode)
-        .is('sub_user_name', null);
+        .eq('mode', mode);
 
       if (historyError) throw historyError;
 
-      // Delete all fund transactions for this user and mode
+      // Delete all fund transactions for this user and mode (including sub users)
       const { error: transactionError } = await supabase
         .from('fund_transactions')
         .delete()
         .eq('user_id', userId)
-        .eq('mode', mode)
-        .is('sub_user_name', null);
+        .eq('mode', mode);
 
       if (transactionError) throw transactionError;
 
-      // Delete fund data instead of resetting to 0
+      // Delete fund data instead of resetting to 0 (including sub users)
       const { error: fundError } = await supabase
         .from('fund_data')
         .delete()
         .eq('user_id', userId)
-        .eq('mode', mode)
-        .is('sub_user_name', null);
+        .eq('mode', mode);
 
       if (fundError) throw fundError;
 

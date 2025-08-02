@@ -169,6 +169,72 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
     }
   };
 
+  const resetSubUserData = async (subUserName: string) => {
+    try {
+      // Delete trading history for this sub user
+      const { error: historyError } = await supabase
+        .from('trading_history')
+        .delete()
+        .eq('user_id', userId)
+        .eq('sub_user_name', subUserName);
+
+      if (historyError) throw historyError;
+
+      // Delete fund transactions for this sub user
+      const { error: transactionError } = await supabase
+        .from('fund_transactions')
+        .delete()
+        .eq('user_id', userId)
+        .eq('sub_user_name', subUserName);
+
+      if (transactionError) throw transactionError;
+
+      // Reset fund data to initial values instead of deleting
+      const subUserFund = subUsers.find(su => su.name === subUserName);
+      if (subUserFund) {
+        const { error: fundError } = await supabase
+          .from('fund_data')
+          .update({
+            total_capital: subUserFund.initial_capital,
+            active_fund: subUserFund.initial_capital * 0.4,
+            reserve_fund: subUserFund.initial_capital * 0.6,
+            profit_fund: 0,
+            target_reserve_fund: subUserFund.initial_capital * 0.6,
+          })
+          .eq('user_id', userId)
+          .eq('sub_user_name', subUserName);
+
+        if (fundError) throw fundError;
+
+        // Add initial history record
+        await supabase.from('trading_history').insert({
+          user_id: userId,
+          mode: subUserFund.mode,
+          sub_user_name: subUserName,
+          type: 'Initialize',
+          details: `Data reset - Initial capital restored to $${subUserFund.initial_capital.toLocaleString()}`,
+          end_balance: subUserFund.initial_capital,
+        });
+      }
+
+      toast({
+        title: t('success'),
+        description: `Sub account "${subUserName}" data has been reset successfully`,
+      });
+
+      // Trigger refresh of transaction history
+      window.dispatchEvent(new Event('refreshTransactions'));
+      
+      loadSubUsers();
+    } catch (error: any) {
+      toast({
+        title: t('error'),
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
@@ -224,7 +290,9 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              onResetSubUser(subUser.name);
+                              if (confirm('Are you sure you want to reset all data for this sub account? This action cannot be undone.')) {
+                                resetSubUserData(subUser.name);
+                              }
                             }}
                             className="h-8 w-8 p-0"
                             title="Reset Data"

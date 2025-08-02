@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { DollarSign } from 'lucide-react';
 import FundSettings from './FundSettings';
+import DepositSettings from './DepositSettings';
 
 interface FundData {
   id: string;
@@ -277,8 +278,11 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
                   {...depositForm.register('amount', { required: true, min: 0.01 })}
                   placeholder="1000.00"
                 />
-                <div className="text-xs text-muted-foreground">
-                  Will be split: 40% to Active Fund, 60% to Reserve Fund
+                <div className="flex items-center justify-between">
+                  <div className="text-xs text-muted-foreground">
+                    Will be split: 40% to Active Fund, 60% to Reserve Fund
+                  </div>
+                  <DepositSettings fundData={fundData} subUserName={subUserName} onUpdate={onUpdate} />
                 </div>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
