@@ -12,7 +12,7 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AppThemeProvider } from '@/contexts/AppThemeContext';
 import LanguageSelector from '@/components/LanguageSelector';
 import ThemeToggle from '@/components/ThemeToggle';
-import { Gem, LogOut, Settings, TrendingUp, DollarSign, Calculator, Calendar, BarChart3, Users } from 'lucide-react';
+import { Gem, LogOut, Settings, TrendingUp, DollarSign, Calculator, Calendar, BarChart3, Users, Coins } from 'lucide-react';
 import FundOverview from '@/components/trading/FundOverview';
 import TradeRecorder from '@/components/trading/TradeRecorder';
 import LotCalculator from '@/components/trading/LotCalculator';
@@ -365,7 +365,7 @@ const Dashboard = () => {
                   <Gem className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold">Moneyx v8.2</h1>
+                  <h1 className="text-2xl font-bold tracking-wider">MoneyX v8.2</h1>
                   <p className="text-sm text-muted-foreground">
                     {t('welcome')}, {profile.trader_name}
                   </p>
@@ -407,7 +407,7 @@ const Dashboard = () => {
                     </SelectItem>
                     <SelectItem value="gold">
                       <div className="flex items-center gap-2">
-                        <Gem className="h-4 w-4 text-yellow-500" />
+                        <Coins className="h-4 w-4 text-yellow-500" />
                         Gold Mode
                       </div>
                     </SelectItem>

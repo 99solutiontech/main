@@ -143,8 +143,8 @@ const Auth = () => {
           <div className="flex items-center justify-center gap-2 mb-4">
             <Gem className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold">Moneyx v8.2</h1>
-          <p className="text-muted-foreground">{t('tradingSystem')}</p>
+          <h1 className="text-3xl font-bold tracking-wider">MoneyX v8.2</h1>
+          <p className="text-muted-foreground tracking-wide">{t('tradingSystem')}</p>
         </div>
 
         <Card>

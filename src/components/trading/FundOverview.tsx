@@ -37,8 +37,11 @@ const FundOverview = ({ fundData }: FundOverviewProps) => {
 
   // Calculate actual total capital from individual funds
   const actualTotalCapital = fundData.active_fund + fundData.reserve_fund + fundData.profit_fund;
-  // Use stored total_capital which excludes deposits and transfers for P&L calculation
-  const pnl = fundData.total_capital - fundData.initial_capital;
+  
+  // Calculate P&L only from trading results (excludes deposits/transfers)
+  // This represents the actual profit/loss from trading activities
+  const tradingOnlyTotal = fundData.initial_capital + fundData.profit_fund;
+  const pnl = tradingOnlyTotal - fundData.initial_capital;
   const pnlPercent = fundData.initial_capital > 0 ? (pnl / fundData.initial_capital) * 100 : 0;
 
   return (

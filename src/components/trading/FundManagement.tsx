@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, Settings } from 'lucide-react';
+import { DollarSign } from 'lucide-react';
 import DepositSettings from './DepositSettings';
+import ProfitManagementSettings from './ProfitManagementSettings';
 
 interface FundData {
   id: string;
@@ -244,14 +245,11 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
             <DollarSign className="h-5 w-5" />
             Fund Management
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setShowSettings(!showSettings)}
-            className="h-8 w-8 p-0"
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
+          <ProfitManagementSettings 
+            fundData={fundData}
+            subUserName={subUserName}
+            onUpdate={onUpdate}
+          />
         </CardTitle>
       </CardHeader>
       <CardContent>
