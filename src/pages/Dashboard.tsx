@@ -25,7 +25,7 @@ import SubUserManager from '@/components/trading/SubUserManager';
 import MonthlyGrowthChart from '@/components/trading/MonthlyGrowthChart';
 import FundSettings from '@/components/trading/FundSettings';
 import SubUserSelector from '@/components/SubUserSelector';
-import WeeklyCalendar from '@/components/trading/WeeklyCalendar';
+import QuarterlyCalendar from '@/components/trading/QuarterlyCalendar';
 import { User, Session } from '@supabase/supabase-js';
 
 interface Profile {
@@ -477,7 +477,7 @@ const Dashboard = () => {
                 />
               )}
               {currentMode === 'diamond' && (
-                <WeeklyCalendar 
+                <QuarterlyCalendar 
                   userId={user.id} 
                   mode={currentMode} 
                   subUserName={selectedSubUser?.name}
@@ -500,23 +500,17 @@ const Dashboard = () => {
                 </TabsList>
                 
                 <TabsContent value="record">
-                  <div className="grid grid-cols-1 gap-6">
-                    <TradeRecorder 
-                      userId={user.id} 
-                      mode={currentMode} 
-                      fundData={fundData}
-                      subUserName={selectedSubUser?.name}
-                      onUpdate={() => loadFundData(user.id, currentMode, selectedSubUser?.name)}
-                    />
-                    <FundSettings 
-                      fundData={fundData}
-                      onUpdate={() => loadFundData(user.id, currentMode, selectedSubUser?.name)}
-                    />
-                  </div>
+                  <TradeRecorder 
+                    userId={user.id} 
+                    mode={currentMode} 
+                    fundData={fundData}
+                    subUserName={selectedSubUser?.name}
+                    onUpdate={() => loadFundData(user.id, currentMode, selectedSubUser?.name)}
+                  />
                 </TabsContent>
                 
                 <TabsContent value="calculator">
-                  <LotCalculator fundData={fundData} />
+                  <LotCalculator fundData={fundData} onUpdate={() => loadFundData(user.id, currentMode, selectedSubUser?.name)} />
                 </TabsContent>
                 
                 <TabsContent value="funds">

@@ -122,7 +122,7 @@ const TradingCalendar = ({ userId, mode, subUserName }: TradingCalendarProps) =>
                   hover:bg-muted transition-colors
                 `}
               >
-                <span className="font-medium">{day}</span>
+                <span className="font-medium text-foreground">{day}</span>
                 {trade && (
                   <div className={`
                     text-xs font-semibold mt-1
@@ -135,12 +135,15 @@ const TradingCalendar = ({ userId, mode, subUserName }: TradingCalendarProps) =>
             </TooltipTrigger>
             {trade && (
               <TooltipContent className="bg-popover border p-3 rounded-lg shadow-lg">
-                <div className="space-y-1 text-sm">
-                  <div className="font-semibold">{new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toLocaleDateString()}</div>
-                  <div className={`font-medium ${trade.type === 'Win' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {trade.type}: {trade.amount !== undefined ? formatCurrency(Math.abs(trade.amount)) : 'No amount'}
+                <div className="space-y-2 text-sm">
+                  <div className="font-semibold text-foreground">{new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toLocaleDateString()}</div>
+                  <div className="space-y-1">
+                    <div className="text-foreground">Start Balance: {formatCurrency(trade.end_balance - (trade.amount || 0))}</div>
+                    <div className="text-foreground">End Balance: {formatCurrency(trade.end_balance)}</div>
+                    <div className={`font-medium ${trade.type === 'Win' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                      P&L: {trade.amount !== undefined ? formatCurrency(Math.abs(trade.amount)) : 'No amount'}
+                    </div>
                   </div>
-                  <div>End Balance: {formatCurrency(trade.end_balance)}</div>
                   {trade.details && <div className="text-muted-foreground">{trade.details}</div>}
                 </div>
               </TooltipContent>
@@ -193,9 +196,9 @@ const TradingCalendar = ({ userId, mode, subUserName }: TradingCalendarProps) =>
   return (
     <Card className="col-span-full">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-foreground">
           <Calendar className="h-5 w-5" />
-          Trading Calendar
+          Monthly Trading Calendar
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -228,25 +231,25 @@ const TradingCalendar = ({ userId, mode, subUserName }: TradingCalendarProps) =>
 
         {/* Monthly Summary */}
         <div className="pt-4 border-t space-y-2">
-          <div className="text-sm font-medium">Monthly Summary</div>
+          <div className="text-sm font-medium text-foreground">Monthly Summary</div>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="space-y-1">
               <div className="flex justify-between">
-                <span>Wins:</span>
+                <span className="text-foreground">Wins:</span>
                 <span className="text-green-600 dark:text-green-400">{stats.winCount}</span>
               </div>
               <div className="flex justify-between">
-                <span>Losses:</span>
+                <span className="text-foreground">Losses:</span>
                 <span className="text-red-600 dark:text-red-400">{stats.lossCount}</span>
               </div>
             </div>
             <div className="space-y-1">
               <div className="flex justify-between">
-                <span>Win Rate:</span>
-                <span>{stats.winRate.toFixed(1)}%</span>
+                <span className="text-foreground">Win Rate:</span>
+                <span className="text-foreground">{stats.winRate.toFixed(1)}%</span>
               </div>
               <div className="flex justify-between">
-                <span>Net P&L:</span>
+                <span className="text-foreground">Net P&L:</span>
                 <span className={stats.netPnL >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
                   {formatCurrency(stats.netPnL)}
                 </span>

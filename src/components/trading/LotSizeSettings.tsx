@@ -32,45 +32,36 @@ interface FundData {
   lot_base_lot: number;
 }
 
-interface FundSettingsProps {
+interface LotSizeSettingsProps {
   fundData: FundData;
   onUpdate: () => void;
 }
 
 interface SettingsForm {
-  profit_dist_active: number;
-  profit_dist_reserve: number;
-  profit_dist_profit: number;
+  lot_base_capital: number;
+  lot_base_lot: number;
 }
 
-const FundSettings = ({ fundData, onUpdate }: FundSettingsProps) => {
+const LotSizeSettings = ({ fundData, onUpdate }: LotSizeSettingsProps) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<SettingsForm>({
     defaultValues: {
-      profit_dist_active: fundData.profit_dist_active,
-      profit_dist_reserve: fundData.profit_dist_reserve,
-      profit_dist_profit: fundData.profit_dist_profit,
+      lot_base_capital: fundData.lot_base_capital,
+      lot_base_lot: fundData.lot_base_lot,
     },
   });
 
   const updateSettings = async (data: SettingsForm) => {
     setLoading(true);
     try {
-      // Validate that percentages add up to 100
-      const total = data.profit_dist_active + data.profit_dist_reserve + data.profit_dist_profit;
-      if (total !== 100) {
-        throw new Error('Profit distribution percentages must add up to 100%');
-      }
-
       const { error } = await supabase
         .from('fund_data')
         .update({
-          profit_dist_active: data.profit_dist_active,
-          profit_dist_reserve: data.profit_dist_reserve,
-          profit_dist_profit: data.profit_dist_profit,
+          lot_base_capital: data.lot_base_capital,
+          lot_base_lot: data.lot_base_lot,
         })
         .eq('id', fundData.id);
 
@@ -78,7 +69,7 @@ const FundSettings = ({ fundData, onUpdate }: FundSettingsProps) => {
 
       toast({
         title: "Success",
-        description: "Fund settings updated successfully",
+        description: "Lot size settings updated successfully",
       });
 
       setOpen(false);
@@ -97,52 +88,37 @@ const FundSettings = ({ fundData, onUpdate }: FundSettingsProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 absolute top-2 right-2">
           <Settings className="h-3 w-3" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Fund Settings</DialogTitle>
+          <DialogTitle className="text-foreground">Lot Size Settings</DialogTitle>
           <DialogDescription>
-            Configure profit distribution percentages
+            Configure the base capital and lot size for calculations
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(updateSettings)} className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="profit_dist_active" className="text-foreground">Active Fund (%)</Label>
-              <Input
-                id="profit_dist_active"
-                type="number"
-                min="0"
-                max="100"
-                {...form.register('profit_dist_active', { required: true, min: 0, max: 100 })}
-                placeholder="50"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="profit_dist_reserve" className="text-foreground">Reserve Fund (%)</Label>
-              <Input
-                id="profit_dist_reserve"
-                type="number"
-                min="0"
-                max="100"
-                {...form.register('profit_dist_reserve', { required: true, min: 0, max: 100 })}
-                placeholder="25"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="profit_dist_profit" className="text-foreground">Profit Fund (%)</Label>
-              <Input
-                id="profit_dist_profit"
-                type="number"
-                min="0"
-                max="100"
-                {...form.register('profit_dist_profit', { required: true, min: 0, max: 100 })}
-                placeholder="25"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="lot_base_capital" className="text-foreground">Base Capital (USD)</Label>
+            <Input
+              id="lot_base_capital"
+              type="number"
+              step="0.01"
+              {...form.register('lot_base_capital', { required: true, min: 0.01 })}
+              placeholder="1000.00"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="lot_base_lot" className="text-foreground">Base Lot Size</Label>
+            <Input
+              id="lot_base_lot"
+              type="number"
+              step="0.01"
+              {...form.register('lot_base_lot', { required: true, min: 0.01 })}
+              placeholder="0.40"
+            />
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">
@@ -158,4 +134,4 @@ const FundSettings = ({ fundData, onUpdate }: FundSettingsProps) => {
   );
 };
 
-export default FundSettings;
+export default LotSizeSettings;

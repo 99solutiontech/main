@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { DollarSign } from 'lucide-react';
+import FundSettings from './FundSettings';
 
 interface FundData {
   id: string;
@@ -247,12 +248,15 @@ const FundManagement = ({ userId, fundData, subUserName, onUpdate }: FundManagem
   };
 
   return (
-    <Card>
+    <Card className="relative">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-foreground">
           <DollarSign className="h-5 w-5" />
           Fund Management
         </CardTitle>
+        <div className="absolute top-2 right-2">
+          <FundSettings fundData={fundData} onUpdate={onUpdate} />
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="deposit" className="w-full">

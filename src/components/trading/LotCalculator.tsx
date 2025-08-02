@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calculator } from 'lucide-react';
+import LotSizeSettings from './LotSizeSettings';
 
 interface FundData {
   id: string;
@@ -21,9 +22,10 @@ interface FundData {
 
 interface LotCalculatorProps {
   fundData: FundData;
+  onUpdate: () => void;
 }
 
-const LotCalculator = ({ fundData }: LotCalculatorProps) => {
+const LotCalculator = ({ fundData, onUpdate }: LotCalculatorProps) => {
   const calculateRecommendedLot = () => {
     if (!fundData.lot_base_capital || fundData.lot_base_capital <= 0) return 0;
     
@@ -34,15 +36,16 @@ const LotCalculator = ({ fundData }: LotCalculatorProps) => {
   const recommendedLot = calculateRecommendedLot();
 
   return (
-    <Card>
+    <Card className="relative">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-foreground">
           <Calculator className="h-5 w-5" />
           Lot Size Calculator
         </CardTitle>
         <CardDescription>
           Recommended lot size based on current active fund
         </CardDescription>
+        <LotSizeSettings fundData={fundData} onUpdate={onUpdate} />
       </CardHeader>
       <CardContent className="text-center space-y-4">
         <div>
@@ -57,16 +60,16 @@ const LotCalculator = ({ fundData }: LotCalculatorProps) => {
         <div className="pt-4 border-t">
           <div className="text-sm space-y-1">
             <div className="flex justify-between">
-              <span>Active Fund:</span>
-              <span>${fundData.active_fund.toLocaleString()}</span>
+              <span className="text-foreground">Active Fund:</span>
+              <span className="text-foreground">${fundData.active_fund.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
-              <span>Base Capital:</span>
-              <span>${fundData.lot_base_capital.toLocaleString()}</span>
+              <span className="text-foreground">Base Capital:</span>
+              <span className="text-foreground">${fundData.lot_base_capital.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
-              <span>Base Lot:</span>
-              <span>{fundData.lot_base_lot} lot</span>
+              <span className="text-foreground">Base Lot:</span>
+              <span className="text-foreground">{fundData.lot_base_lot} lot</span>
             </div>
           </div>
         </div>
