@@ -236,6 +236,19 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_profiles_by_email: {
+        Args: { email_param: string }
+        Returns: {
+          id: string
+          user_id: string
+          full_name: string
+          trader_name: string
+          role: string
+          is_active: boolean
+          created_at: string
+          registration_status: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
