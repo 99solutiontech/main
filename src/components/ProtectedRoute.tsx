@@ -19,9 +19,13 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        setLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) {
+          setUser(null);
+          setSession(null);
+          setIsAuthorized(false);
           setLoading(false);
           return;
         }
@@ -39,6 +43,9 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
         if (error || !profile) {
           console.error('Profile error:', error);
           await supabase.auth.signOut();
+          setUser(null);
+          setSession(null);
+          setIsAuthorized(false);
           setLoading(false);
           return;
         }
@@ -51,6 +58,9 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
             variant: "destructive",
           });
           await supabase.auth.signOut();
+          setUser(null);
+          setSession(null);
+          setIsAuthorized(false);
           setLoading(false);
           return;
         }
@@ -63,6 +73,9 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
             variant: "destructive",
           });
           await supabase.auth.signOut();
+          setUser(null);
+          setSession(null);
+          setIsAuthorized(false);
           setLoading(false);
           return;
         }
@@ -74,36 +87,41 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
             description: "You don't have permission to access this page",
             variant: "destructive",
           });
+          setIsAuthorized(false);
           setLoading(false);
           return;
         }
 
         setIsAuthorized(true);
+        setLoading(false);
       } catch (error) {
         console.error('Auth check error:', error);
         await supabase.auth.signOut();
-      } finally {
+        setUser(null);
+        setSession(null);
+        setIsAuthorized(false);
         setLoading(false);
       }
     };
 
-    checkAuth();
-
-    // Set up auth state listener
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT' || !session?.user) {
         setUser(null);
         setSession(null);
         setIsAuthorized(false);
+        setLoading(false);
         return;
       }
-
-      setSession(session);
-      setUser(session.user);
       
-      // Re-check authorization when auth state changes
-      await checkAuth();
+      // Only check auth for signed in users, avoid duplicate calls
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        await checkAuth();
+      }
     });
+
+    // Initial auth check
+    checkAuth();
 
     return () => subscription.unsubscribe();
   }, [requiredRole, toast]);
