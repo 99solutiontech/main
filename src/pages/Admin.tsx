@@ -365,6 +365,30 @@ const Admin = () => {
 
   const approveUser = async (userId: string) => {
     try {
+      // First, update the user's email confirmation status using our edge function
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('No active session');
+      }
+
+      // Call edge function to confirm email and approve user
+      const response = await fetch(`https://fnnoxdrkslfuuuuyltsr.supabase.co/functions/v1/approve-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZubm94ZHJrc2xmdXV1dXlsdHNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwMzk0MjEsImV4cCI6MjA2OTYxNTQyMX0.fp7qbkoU9PTwm227-u9tQbVhEIsldE9vPgb_NHJUpis',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.error || 'Failed to approve user');
+      }
+
+      // Update profile status
       const { error } = await (supabase as any)
         .from('profiles')
         .update({ 
@@ -375,7 +399,7 @@ const Admin = () => {
 
       if (error) throw error;
       
-      // Create notification (will work after migration)
+      // Mark notification as read
       try {
         await (supabase as any)
           .from('admin_notifications')
