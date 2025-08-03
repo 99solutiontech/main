@@ -43,10 +43,12 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
     // Listen for refresh events
     window.addEventListener('refreshTransactions', handleRefresh);
     window.addEventListener('refreshFundData', handleRefresh);
+    window.addEventListener('refreshTradingData', handleRefresh);
     
     return () => {
       window.removeEventListener('refreshTransactions', handleRefresh);
       window.removeEventListener('refreshFundData', handleRefresh);
+      window.removeEventListener('refreshTradingData', handleRefresh);
     };
   }, []);
 

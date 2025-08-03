@@ -44,10 +44,6 @@ const CapitalGrowthChart = ({ userId, mode, subUserName }: CapitalGrowthChartPro
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
 
-  useEffect(() => {
-    loadChartData();
-  }, [userId, mode, subUserName]);
-
   const loadChartData = async () => {
     try {
       const query = supabase
@@ -97,6 +93,22 @@ const CapitalGrowthChart = ({ userId, mode, subUserName }: CapitalGrowthChartPro
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadChartData();
+  }, [userId, mode, subUserName]);
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      loadChartData();
+    };
+
+    window.addEventListener('refreshTradingData', handleRefresh);
+    
+    return () => {
+      window.removeEventListener('refreshTradingData', handleRefresh);
+    };
+  }, []);
 
   const options: ChartOptions<'line'> = {
     responsive: true,

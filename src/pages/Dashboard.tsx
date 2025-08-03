@@ -120,6 +120,83 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Real-time listeners for data updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channels: any[] = [];
+
+    // Listen for fund_data changes
+    const fundDataChannel = supabase
+      .channel('fund_data_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'fund_data',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          if (user) {
+            loadFundData(user.id, currentMode, selectedSubUser?.name);
+          }
+        }
+      )
+      .subscribe();
+
+    channels.push(fundDataChannel);
+
+    // Listen for trading_history changes
+    const tradingHistoryChannel = supabase
+      .channel('trading_history_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'trading_history',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          // Trigger refresh for all trading-related components
+          window.dispatchEvent(new CustomEvent('refreshTradingData'));
+        }
+      )
+      .subscribe();
+
+    channels.push(tradingHistoryChannel);
+
+    // Listen for fund_transactions changes
+    const fundTransactionsChannel = supabase
+      .channel('fund_transactions_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'fund_transactions',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          // Trigger refresh for fund-related components
+          window.dispatchEvent(new CustomEvent('refreshFundData'));
+          if (user) {
+            loadFundData(user.id, currentMode, selectedSubUser?.name);
+          }
+        }
+      )
+      .subscribe();
+
+    channels.push(fundTransactionsChannel);
+
+    return () => {
+      channels.forEach(channel => {
+        supabase.removeChannel(channel);
+      });
+    };
+  }, [user, currentMode, selectedSubUser]);
+
   const loadUserProfile = async (userId: string) => {
     try {
       console.log('Loading profile for user:', userId);

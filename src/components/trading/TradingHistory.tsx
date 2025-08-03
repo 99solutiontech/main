@@ -28,10 +28,6 @@ const TradingHistory = ({ userId, mode, subUserName }: TradingHistoryProps) => {
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
 
-  useEffect(() => {
-    loadHistory();
-  }, [userId, mode, subUserName]);
-
   const loadHistory = async () => {
     try {
       const query = supabase
@@ -58,6 +54,22 @@ const TradingHistory = ({ userId, mode, subUserName }: TradingHistoryProps) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadHistory();
+  }, [userId, mode, subUserName]);
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      loadHistory();
+    };
+
+    window.addEventListener('refreshTradingData', handleRefresh);
+    
+    return () => {
+      window.removeEventListener('refreshTradingData', handleRefresh);
+    };
+  }, []);
 
   const formatCurrency = (amount: number) => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

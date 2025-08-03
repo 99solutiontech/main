@@ -48,6 +48,18 @@ const MonthlyGrowthChart = ({ userId, mode, subUserName }: MonthlyGrowthChartPro
     loadChartData();
   }, [userId, mode, selectedYear, subUserName]);
 
+  useEffect(() => {
+    const handleRefresh = () => {
+      loadChartData();
+    };
+
+    window.addEventListener('refreshTradingData', handleRefresh);
+    
+    return () => {
+      window.removeEventListener('refreshTradingData', handleRefresh);
+    };
+  }, []);
+
   const loadChartData = async () => {
     setLoading(true);
     try {
