@@ -5,8 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Users, DollarSign, TrendingUp, LogOut, User as UserIcon } from 'lucide-react';
+import { Shield, Users, DollarSign, TrendingUp, LogOut, User as UserIcon, Search, Filter, Bell, AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { User, Session } from '@supabase/supabase-js';
 
 interface Profile {
@@ -17,6 +20,9 @@ interface Profile {
   role: string;
   is_active: boolean;
   created_at: string;
+  registration_status?: string;
+  last_login?: string;
+  failed_login_attempts?: number;
 }
 
 interface UserStats {
@@ -28,13 +34,39 @@ interface UserStats {
   last_active: string;
 }
 
+interface AdminNotification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  user_id?: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+interface UserSession {
+  id: string;
+  user_id: string;
+  trader_name: string;
+  ip_address: string;
+  device_info: string;
+  last_activity: string;
+  is_active: boolean;
+}
+
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [users, setUsers] = useState<Profile[]>([]);
   const [userStats, setUserStats] = useState<UserStats[]>([]);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const [pendingUsers, setPendingUsers] = useState<Profile[]>([]);
+  const [activeSessions, setActiveSessions] = useState<UserSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -80,7 +112,13 @@ const Admin = () => {
         return;
       }
       
-      await Promise.all([loadAllUsers(), loadUserStats()]);
+      await Promise.all([
+        loadAllUsers(), 
+        loadUserStats(), 
+        loadNotifications(), 
+        loadPendingUsers(), 
+        loadActiveSessions()
+      ]);
     } catch (error: any) {
       console.error('Error loading profile:', error);
       toast({
@@ -207,6 +245,21 @@ const Admin = () => {
       if (error) throw error;
       
       await loadAllUsers();
+      
+      // Log admin action (this will work after migration approval)
+      try {
+        await (supabase as any)
+          .from('admin_actions')
+          .insert({
+            admin_id: user?.id,
+            action_type: 'role_change',
+            target_user_id: userId,
+            details: `Role changed to ${newRole}`,
+          });
+      } catch (actionError) {
+        console.log('Admin action logging not available yet');
+      }
+
       toast({
         title: "Success",
         description: "User role updated successfully",
@@ -214,6 +267,170 @@ const Admin = () => {
     } catch (error: any) {
       toast({
         title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const loadNotifications = async () => {
+    try {
+      // This will work after migration approval
+      const { data, error } = await (supabase as any)
+        .from('admin_notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (!error && data) {
+        setNotifications(data);
+      }
+    } catch (error) {
+      console.log('Notifications not available yet - will be enabled after migration');
+    }
+  };
+
+  const loadPendingUsers = async () => {
+    try {
+      const { data, error } = await (supabase as any)
+        .from('profiles')
+        .select('*')
+        .eq('registration_status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        setPendingUsers(data);
+      }
+    } catch (error) {
+      console.log('Registration status not available yet - will be enabled after migration');
+    }
+  };
+
+  const loadActiveSessions = async () => {
+    try {
+      // This will work after migration approval
+      const { data, error } = await (supabase as any)
+        .from('user_sessions')
+        .select('*, profiles(trader_name)')
+        .eq('is_active', true)
+        .order('last_activity', { ascending: false });
+
+      if (!error && data) {
+        setActiveSessions(data.map((session: any) => ({
+          ...session,
+          trader_name: session.profiles?.trader_name || 'Unknown'
+        })));
+      }
+    } catch (error) {
+      console.log('User sessions not available yet - will be enabled after migration');
+    }
+  };
+
+  const approveUser = async (userId: string) => {
+    try {
+      const { error } = await (supabase as any)
+        .from('profiles')
+        .update({ 
+          registration_status: 'approved',
+          is_active: true 
+        })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      
+      // Create notification (will work after migration)
+      try {
+        await (supabase as any)
+          .from('admin_notifications')
+          .update({ is_read: true })
+          .eq('user_id', userId)
+          .eq('type', 'registration');
+      } catch (notificationError) {
+        console.log('Notification update not available yet');
+      }
+
+      await Promise.all([loadPendingUsers(), loadAllUsers(), loadNotifications()]);
+      
+      toast({
+        title: "Success",
+        description: "User approved successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const rejectUser = async (userId: string) => {
+    try {
+      const { error } = await (supabase as any)
+        .from('profiles')
+        .update({ 
+          registration_status: 'rejected',
+          is_active: false 
+        })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      
+      // Create notification (will work after migration)
+      try {
+        await (supabase as any)
+          .from('admin_notifications')
+          .update({ is_read: true })
+          .eq('user_id', userId)
+          .eq('type', 'registration');
+      } catch (notificationError) {
+        console.log('Notification update not available yet');
+      }
+
+      await Promise.all([loadPendingUsers(), loadAllUsers(), loadNotifications()]);
+      
+      toast({
+        title: "Success", 
+        description: "User rejected successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const markNotificationRead = async (notificationId: string) => {
+    try {
+      await (supabase as any)
+        .from('admin_notifications')
+        .update({ is_read: true })
+        .eq('id', notificationId);
+      
+      await loadNotifications();
+    } catch (error) {
+      console.log('Notification marking not available yet');
+    }
+  };
+
+  const terminateSession = async (sessionId: string) => {
+    try {
+      await (supabase as any)
+        .from('user_sessions')
+        .update({ is_active: false })
+        .eq('id', sessionId);
+      
+      await loadActiveSessions();
+      
+      toast({
+        title: "Success",
+        description: "Session terminated successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error", 
         description: error.message,
         variant: "destructive",
       });
@@ -244,6 +461,21 @@ const Admin = () => {
   const activeUsers = users.filter(u => u.is_active).length;
   const totalCapital = userStats.reduce((sum, stat) => sum + stat.diamond_capital + stat.gold_capital, 0);
   const totalTrades = userStats.reduce((sum, stat) => sum + stat.total_trades, 0);
+  const unreadNotifications = notifications.filter(n => !n.is_read).length;
+
+  // Filter users based on search and filters
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.trader_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.user_id.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'active' && user.is_active) ||
+                         (statusFilter === 'inactive' && !user.is_active);
+    
+    return matchesSearch && matchesRole && matchesStatus;
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -261,6 +493,14 @@ const Admin = () => {
             </div>
             
             <div className="flex items-center gap-4">
+              {unreadNotifications > 0 && (
+                <div className="relative">
+                  <Bell className="h-5 w-5 text-primary" />
+                  <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                    {unreadNotifications}
+                  </Badge>
+                </div>
+              )}
               <Button variant="outline" onClick={() => navigate('/')}>
                 <UserIcon className="h-4 w-4 mr-2" />
                 User Dashboard
@@ -276,7 +516,7 @@ const Admin = () => {
 
       <main className="container mx-auto px-4 py-8">
         {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -330,17 +570,86 @@ const Admin = () => {
               </p>
             </CardContent>
           </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{pendingUsers.length}</div>
+              <p className="text-xs text-muted-foreground">
+                Awaiting approval
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* User Management Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>User Management</CardTitle>
-            <CardDescription>
-              Manage user accounts, roles, and permissions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        {/* Main Admin Tabs */}
+        <Tabs defaultValue="users" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="users">User Management</TabsTrigger>
+            <TabsTrigger value="registrations">
+              Registration Queue {pendingUsers.length > 0 && <Badge className="ml-1">{pendingUsers.length}</Badge>}
+            </TabsTrigger>
+            <TabsTrigger value="sessions">Active Sessions</TabsTrigger>
+            <TabsTrigger value="notifications">
+              Notifications {unreadNotifications > 0 && <Badge className="ml-1">{unreadNotifications}</Badge>}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="users" className="space-y-6">
+            {/* Search and Filter Controls */}
+            <Card>
+              <CardHeader>
+                <CardTitle>User Management</CardTitle>
+                <CardDescription>
+                  Manage user accounts, roles, and permissions
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search users..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  
+                  <Select value={roleFilter} onValueChange={setRoleFilter}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Roles</SelectItem>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="super_admin">Super Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* User Table */}
+            <Card>
+              <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -356,7 +665,7 @@ const Admin = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => {
+                {filteredUsers.map((user) => {
                   const stats = userStats.find(s => s.user_id === user.user_id);
                   return (
                     <TableRow key={user.id}>
@@ -407,6 +716,182 @@ const Admin = () => {
             </Table>
           </CardContent>
         </Card>
+      </TabsContent>
+
+      <TabsContent value="registrations" className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Registration Queue</CardTitle>
+            <CardDescription>
+              Review and approve pending user registrations
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {pendingUsers.length === 0 ? (
+              <div className="text-center py-8">
+                <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No pending registrations</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Trader Name</TableHead>
+                    <TableHead>Full Name</TableHead>
+                    <TableHead>Registration Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.trader_name}</TableCell>
+                      <TableCell>{user.full_name || '-'}</TableCell>
+                      <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          Pending Approval
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => approveUser(user.user_id)}
+                            className="text-green-600 hover:text-green-700"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => rejectUser(user.user_id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="sessions" className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Active User Sessions</CardTitle>
+            <CardDescription>
+              Monitor and manage active user sessions
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {activeSessions.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No active sessions</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>IP Address</TableHead>
+                    <TableHead>Device</TableHead>
+                    <TableHead>Last Activity</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {activeSessions.map((session) => (
+                    <TableRow key={session.id}>
+                      <TableCell className="font-medium">{session.trader_name}</TableCell>
+                      <TableCell>{session.ip_address}</TableCell>
+                      <TableCell>{session.device_info}</TableCell>
+                      <TableCell>{new Date(session.last_activity).toLocaleString()}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => terminateSession(session.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Terminate
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="notifications" className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Admin Notifications</CardTitle>
+            <CardDescription>
+              System alerts and security notifications
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {notifications.length === 0 ? (
+              <div className="text-center py-8">
+                <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No notifications</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`p-4 border rounded-lg ${
+                      notification.is_read ? 'bg-muted/50' : 'bg-card border-primary/20'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          {notification.type === 'security' && <AlertTriangle className="h-4 w-4 text-red-500" />}
+                          {notification.type === 'registration' && <UserIcon className="h-4 w-4 text-blue-500" />}
+                          {notification.type === 'system' && <Shield className="h-4 w-4 text-green-500" />}
+                          <h4 className="font-semibold">{notification.title}</h4>
+                          {!notification.is_read && <Badge variant="default" className="text-xs">New</Badge>}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">{notification.message}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(notification.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                      {!notification.is_read && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => markNotificationRead(notification.id)}
+                        >
+                          Mark as read
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
       </main>
     </div>
   );
