@@ -13,6 +13,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Users, DollarSign, TrendingUp, LogOut, User as UserIcon, Search, Filter, Bell, AlertTriangle, CheckCircle, XCircle, Clock, Settings, Edit, Trash2, ChevronDown } from 'lucide-react';
 import { User, Session } from '@supabase/supabase-js';
+import { UserRegistrationPieChart } from '@/components/admin/UserRegistrationPieChart';
+import { MonthlyFundChart } from '@/components/admin/MonthlyFundChart';
+import { MonthlyTradesChart } from '@/components/admin/MonthlyTradesChart';
 
 interface Profile {
   id: string;
@@ -476,6 +479,10 @@ const Admin = () => {
     }
   };
 
+  const handleNotificationClick = (notificationId: string) => {
+    markNotificationRead(notificationId);
+  };
+
   const terminateSession = async (sessionId: string) => {
     try {
       await (supabase as any)
@@ -653,20 +660,29 @@ const Admin = () => {
                     </div>
                   ) : (
                     notifications.slice(0, 5).map((notification) => (
-                      <div key={notification.id} className="p-3 border-b last:border-b-0">
+                      <div 
+                        key={notification.id} 
+                        className={`p-3 border-b last:border-b-0 cursor-pointer transition-colors hover:bg-muted/50 ${
+                          !notification.is_read ? 'bg-primary/5 border-l-4 border-l-primary' : ''
+                        }`}
+                        onClick={() => handleNotificationClick(notification.id)}
+                      >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               {notification.type === 'registration' && <UserIcon className="h-3 w-3 text-blue-500" />}
-                              <span className="text-sm font-medium">{notification.title}</span>
-                              {!notification.is_read && <div className="h-2 w-2 bg-primary rounded-full"></div>}
+                              {notification.type === 'security' && <AlertTriangle className="h-3 w-3 text-red-500" />}
+                              <span className={`text-sm ${!notification.is_read ? 'font-bold' : 'font-medium'}`}>
+                                {notification.title}
+                              </span>
+                              {!notification.is_read && <div className="h-2 w-2 bg-primary rounded-full animate-pulse"></div>}
                             </div>
                             <p className="text-xs text-muted-foreground mb-2">{notification.message}</p>
                             <p className="text-xs text-muted-foreground">
                               {new Date(notification.created_at).toLocaleString()}
                             </p>
                             {notification.type === 'registration' && notification.user_id && (
-                              <div className="flex gap-1 mt-2">
+                              <div className="flex gap-1 mt-2" onClick={(e) => e.stopPropagation()}>
                                 <Button
                                   size="sm"
                                   variant="outline"
@@ -774,6 +790,16 @@ const Admin = () => {
               </p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <UserRegistrationPieChart users={users} userStats={userStats} />
+          <MonthlyFundChart />
+        </div>
+        
+        <div className="mb-8">
+          <MonthlyTradesChart />
         </div>
 
         {/* Main Admin Tabs */}
