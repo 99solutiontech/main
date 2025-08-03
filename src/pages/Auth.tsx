@@ -63,13 +63,26 @@ const Auth = () => {
         setTimeout(() => reject(new Error('Request timeout - please check your connection')), 15000)
       );
 
-      const { error } = await Promise.race([signUpPromise, timeoutPromise]) as any;
+      const { data: authData, error } = await Promise.race([signUpPromise, timeoutPromise]) as any;
 
       if (error) throw error;
 
+      // For now, set is_active to false to require admin approval
+      // Once the admin_notifications table is created, this will be enhanced
+      if (authData?.user) {
+        try {
+          await supabase
+            .from('profiles')
+            .update({ is_active: false })
+            .eq('user_id', authData.user.id);
+        } catch (profileError) {
+          console.error('Error updating profile:', profileError);
+        }
+      }
+
       toast({
         title: t('success'),
-        description: t('checkEmail'),
+        description: 'Registration submitted! Your account is pending admin approval. You will be notified once approved.',
       });
     } catch (error: any) {
       console.error('Sign up error:', error);
