@@ -120,7 +120,7 @@ const Auth = () => {
         }
       }
 
-      // Create user without email confirmation requirement
+      // Create user with disabled email confirmation
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
