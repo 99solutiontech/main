@@ -355,6 +355,8 @@ const Admin = () => {
       }
     } catch (error) {
       console.log('User sessions not available yet - will be enabled after migration');
+      // Set empty array to prevent loading issues
+      setActiveSessions([]);
     }
   };
 
