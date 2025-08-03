@@ -48,6 +48,33 @@ const Auth = () => {
         throw error;
       }
 
+      // Check if user account is active
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_active, registration_status')
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      if (profile && !profile.is_active) {
+        await supabase.auth.signOut();
+        toast({
+          title: "Account Suspended",
+          description: "Please contact admin your account was suspended",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (profile && profile.registration_status === 'pending') {
+        await supabase.auth.signOut();
+        toast({
+          title: "Account Pending",
+          description: "Your account is still waiting for admin approval. Please wait for confirmation.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Success",
         description: "Signed in successfully!",
@@ -69,6 +96,52 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('registration_status, trader_name')
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+      // Check if email is already registered by attempting to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: 'dummy_password'
+      });
+
+      if (signInError && signInError.message !== 'Invalid login credentials') {
+        // If it's not a credential error, the email might already exist
+        const { data: authData } = await supabase.auth.signUp({
+          email,
+          password: 'dummy_check',
+        });
+
+        if (authData.user && !authData.session) {
+          toast({
+            title: "Account Exists",
+            description: "An account with this email already exists. Please sign in or use a different email.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      // Check for existing pending registration
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+      const existingProfile = profiles?.find(p => p.registration_status === 'pending');
+      
+      if (existingProfile) {
+        toast({
+          title: "Registration Pending",
+          description: "Your registration is already submitted and waiting for admin approval. Please wait for confirmation.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Create user without email confirmation requirement
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -96,16 +169,16 @@ const Auth = () => {
           })
           .eq('user_id', data.user.id);
 
-        // Send admin notification about new registration
-        await supabase.functions.invoke('send-admin-notification', {
-          body: {
+        // Create admin notification in database
+        await supabase
+          .from('admin_notifications')
+          .insert({
             type: 'registration',
             title: 'New User Registration',
             message: `New user "${traderName}" has registered and is waiting for approval.`,
             trader_name: traderName,
             user_id: data.user.id,
-          }
-        });
+          });
 
         // Sign out the user immediately since they need admin approval
         await supabase.auth.signOut();

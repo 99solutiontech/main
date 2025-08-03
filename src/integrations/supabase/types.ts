@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          title: string
+          trader_name: string | null
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          title: string
+          trader_name?: string | null
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          title?: string
+          trader_name?: string | null
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       fund_data: {
         Row: {
           active_fund: number
@@ -80,6 +113,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_active: boolean | null
+          registration_status: string | null
           role: string | null
           trader_name: string
           updated_at: string
@@ -90,6 +124,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_active?: boolean | null
+          registration_status?: string | null
           role?: string | null
           trader_name: string
           updated_at?: string
@@ -100,6 +135,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_active?: boolean | null
+          registration_status?: string | null
           role?: string | null
           trader_name?: string
           updated_at?: string
