@@ -97,9 +97,10 @@ const Auth = () => {
 
     try {
       // First check if a profile with this email already exists
-      const { data: existingProfiles } = await supabase.rpc('get_profiles_by_email', { email_param: email });
+      const { data: existingProfiles, error: profileError } = await supabase
+        .rpc('get_profiles_by_email', { email_param: email });
       
-      if (existingProfiles && existingProfiles.length > 0) {
+      if (!profileError && existingProfiles && existingProfiles.length > 0) {
         const profile = existingProfiles[0];
         
         if (profile.registration_status === 'pending') {
