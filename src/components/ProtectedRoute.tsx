@@ -104,7 +104,10 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
       }
     };
 
-    // Set up auth state listener first
+    // Initial auth check only
+    checkAuth();
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT' || !session?.user) {
         setUser(null);
@@ -114,14 +117,11 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
         return;
       }
       
-      // Only check auth for signed in users, avoid duplicate calls
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      // Re-check auth on token refresh but not on initial sign in to avoid duplicate calls
+      if (event === 'TOKEN_REFRESHED') {
         await checkAuth();
       }
     });
-
-    // Initial auth check
-    checkAuth();
 
     return () => subscription.unsubscribe();
   }, [requiredRole, toast]);

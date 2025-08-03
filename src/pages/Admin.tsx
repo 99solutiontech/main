@@ -352,6 +352,9 @@ const Admin = () => {
           ...session,
           trader_name: session.profiles?.trader_name || 'Unknown'
         })));
+      } else {
+        // Always set empty array if there's an error
+        setActiveSessions([]);
       }
     } catch (error) {
       console.log('User sessions not available yet - will be enabled after migration');
