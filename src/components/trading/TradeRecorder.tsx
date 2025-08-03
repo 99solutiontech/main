@@ -78,14 +78,18 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
         updatedFundData.reserve_fund += profitToReserve;
         updatedFundData.profit_fund += profitToProfit;
       } else if (pnl < 0) {
-        // Loss: active fund should be topped up from reserve fund to maintain trading capital
-        const lossAmount = Math.abs(pnl);
-        const transferFromReserve = Math.min(lossAmount, updatedFundData.reserve_fund);
+        // Loss: record the actual end balance first
+        updatedFundData.active_fund = newActiveFund;
         
-        // Set active fund to entered amount plus any top-up from reserve
-        updatedFundData.active_fund = newActiveFund + transferFromReserve;
-        // Reduce reserve fund by how much we transferred
-        updatedFundData.reserve_fund -= transferFromReserve;
+        // Try to top up from reserve to get back to initial active fund allocation if possible
+        const initialActiveFundAllocation = (fundData.initial_capital * (fundData.profit_dist_active || 40)) / 100;
+        const shortfall = Math.max(0, initialActiveFundAllocation - newActiveFund);
+        const transferFromReserve = Math.min(shortfall, updatedFundData.reserve_fund);
+        
+        if (transferFromReserve > 0) {
+          updatedFundData.active_fund += transferFromReserve;
+          updatedFundData.reserve_fund -= transferFromReserve;
+        }
       } else {
         // No profit/loss
         updatedFundData.active_fund = newActiveFund;
@@ -160,14 +164,18 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
         updatedFundData.reserve_fund += profitToReserve;
         updatedFundData.profit_fund += profitToProfit;
       } else if (pnl < 0) {
-        // Loss: active fund should be topped up from reserve fund to maintain trading capital
-        const lossAmount = Math.abs(pnl);
-        const transferFromReserve = Math.min(lossAmount, updatedFundData.reserve_fund);
+        // Loss: record the actual end balance first
+        updatedFundData.active_fund = newActiveFund;
         
-        // Set active fund to entered amount plus any top-up from reserve
-        updatedFundData.active_fund = newActiveFund + transferFromReserve;
-        // Reduce reserve fund by how much we transferred
-        updatedFundData.reserve_fund -= transferFromReserve;
+        // Try to top up from reserve to get back to initial active fund allocation if possible
+        const initialActiveFundAllocation = (fundData.initial_capital * (fundData.profit_dist_active || 40)) / 100;
+        const shortfall = Math.max(0, initialActiveFundAllocation - newActiveFund);
+        const transferFromReserve = Math.min(shortfall, updatedFundData.reserve_fund);
+        
+        if (transferFromReserve > 0) {
+          updatedFundData.active_fund += transferFromReserve;
+          updatedFundData.reserve_fund -= transferFromReserve;
+        }
       } else {
         // No profit/loss
         updatedFundData.active_fund = newActiveFund;

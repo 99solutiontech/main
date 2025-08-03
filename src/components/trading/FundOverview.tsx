@@ -71,11 +71,19 @@ const FundOverview = ({ fundData }: FundOverviewProps) => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(fundData.active_fund)}</div>
-            {fundData.active_fund < fundData.initial_capital && (
-              <div className="mt-2 text-sm text-red-500 font-medium">
-                ⚠️ {t('lowActiveFundWarning')}
-              </div>
-            )}
+            {(() => {
+              // Calculate the initial active fund allocation based on profit distribution settings
+              const initialActiveFundAllocation = (fundData.initial_capital * (fundData.profit_dist_active || 40)) / 100;
+              // Check if there's not enough reserve fund to maintain the initial active fund allocation
+              const shortfall = Math.max(0, initialActiveFundAllocation - fundData.active_fund);
+              const shouldShowWarning = shortfall > 0 && fundData.reserve_fund < shortfall;
+              
+              return shouldShowWarning && (
+                <div className="mt-2 text-sm text-red-500 font-medium">
+                  ⚠️ {t('lowActiveFundWarning')}
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
 
