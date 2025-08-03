@@ -377,11 +377,6 @@ const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate
             {t('fundManagement')}
           </div>
           <div className="flex items-center gap-2">
-            <DepositSettings 
-              fundData={fundData}
-              subUserName={subUserName}
-              onUpdate={onUpdate}
-            />
             <ProfitManagementSettings 
               fundData={fundData}
               subUserName={subUserName}
@@ -420,9 +415,16 @@ const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate
                   {...depositForm.register('amount', { required: true, min: 0.01 })}
                   placeholder="1000.00"
                 />
-                <p className="text-sm text-muted-foreground">
-                  {t('willBeSplit')}: {fundData.profit_dist_active || 40}% {t('toActiveFund')}, {100 - (fundData.profit_dist_active || 40)}% {t('toReserveFund')}
-                </p>
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>
+                    {t('willBeSplit')}: {fundData.profit_dist_active || 40}% {t('toActiveFund')}, {100 - (fundData.profit_dist_active || 40)}% {t('toReserveFund')}
+                  </span>
+                  <DepositSettings 
+                    fundData={fundData}
+                    subUserName={subUserName}
+                    onUpdate={onUpdate}
+                  />
+                </div>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? t('processing') : t('deposit')}

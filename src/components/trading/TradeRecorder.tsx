@@ -78,13 +78,13 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
         updatedFundData.reserve_fund += profitToReserve;
         updatedFundData.profit_fund += profitToProfit;
       } else if (pnl < 0) {
-        // Loss: the new active fund should be exactly what was entered, and reserve covers what it can
+        // Loss: active fund should be topped up from reserve fund to maintain trading capital
         const lossAmount = Math.abs(pnl);
         const transferFromReserve = Math.min(lossAmount, updatedFundData.reserve_fund);
         
-        // Set active fund to the actual entered amount (newActiveFund)
-        updatedFundData.active_fund = newActiveFund;
-        // Reduce reserve fund by how much we could transfer
+        // Set active fund to entered amount plus any top-up from reserve
+        updatedFundData.active_fund = newActiveFund + transferFromReserve;
+        // Reduce reserve fund by how much we transferred
         updatedFundData.reserve_fund -= transferFromReserve;
       } else {
         // No profit/loss
@@ -160,13 +160,13 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
         updatedFundData.reserve_fund += profitToReserve;
         updatedFundData.profit_fund += profitToProfit;
       } else if (pnl < 0) {
-        // Loss: the new active fund should be exactly what was entered, and reserve covers what it can
+        // Loss: active fund should be topped up from reserve fund to maintain trading capital
         const lossAmount = Math.abs(pnl);
         const transferFromReserve = Math.min(lossAmount, updatedFundData.reserve_fund);
         
-        // Set active fund to the actual entered amount (newActiveFund)
-        updatedFundData.active_fund = newActiveFund;
-        // Reduce reserve fund by how much we could transfer
+        // Set active fund to entered amount plus any top-up from reserve
+        updatedFundData.active_fund = newActiveFund + transferFromReserve;
+        // Reduce reserve fund by how much we transferred
         updatedFundData.reserve_fund -= transferFromReserve;
       } else {
         // No profit/loss
