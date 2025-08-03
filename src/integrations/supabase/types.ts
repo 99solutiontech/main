@@ -243,10 +243,11 @@ export type Database = {
           user_id: string
           full_name: string
           trader_name: string
-          role: string
-          is_active: boolean
-          created_at: string
           registration_status: string
+          is_active: boolean
+          role: string
+          created_at: string
+          updated_at: string
         }[]
       }
     }
