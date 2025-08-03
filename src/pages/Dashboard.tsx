@@ -154,7 +154,6 @@ const Dashboard = () => {
           description: 'Using offline mode. Some features may be limited.',
           variant: "destructive",
         });
-        setLoading(false);
         return;
       }
       
@@ -169,13 +168,13 @@ const Dashboard = () => {
           is_active: true,
           full_name: 'New User'
         });
-        setLoading(false);
         return;
       }
       
       setProfile(data);
       
       if (data?.role === 'super_admin') {
+        console.log('Super admin detected, redirecting to /admin');
         navigate('/admin');
         return;
       }
