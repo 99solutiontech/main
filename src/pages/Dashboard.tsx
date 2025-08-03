@@ -167,15 +167,15 @@ const Dashboard = () => {
 
     channels.push(tradingHistoryChannel);
 
-    // Listen for fund_transactions changes
-    const fundTransactionsChannel = supabase
-      .channel('fund_transactions_changes')
+    // Listen for transaction_history changes
+    const transactionHistoryChannel = supabase
+      .channel('transaction_history_changes')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'fund_transactions',
+          table: 'transaction_history',
           filter: `user_id=eq.${user.id}`
         },
         () => {
@@ -188,7 +188,7 @@ const Dashboard = () => {
       )
       .subscribe();
 
-    channels.push(fundTransactionsChannel);
+    channels.push(transactionHistoryChannel);
 
     return () => {
       channels.forEach(channel => {
