@@ -503,8 +503,28 @@ const Admin = () => {
 
   const deleteUser = async (userId: string) => {
     try {
-      const { error } = await supabase.auth.admin.deleteUser(userId);
-      if (error) throw error;
+      // Call our edge function to delete the user with proper permissions
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('No active session');
+      }
+
+      const response = await fetch(`https://fnnoxdrkslfuuuuyltsr.supabase.co/functions/v1/delete-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZubm94ZHJrc2xmdXV1dXlsdHNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwMzk0MjEsImV4cCI6MjA2OTYxNTQyMX0.fp7qbkoU9PTwm227-u9tQbVhEIsldE9vPgb_NHJUpis',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete user');
+      }
 
       await loadAllUsers();
       
@@ -513,9 +533,10 @@ const Admin = () => {
         description: "User deleted successfully",
       });
     } catch (error: any) {
+      console.error('Delete user error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to delete user",
         variant: "destructive",
       });
     }
