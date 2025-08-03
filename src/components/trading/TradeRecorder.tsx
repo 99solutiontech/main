@@ -61,11 +61,18 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
   const recordDiamondTrade = async (data: DiamondForm) => {
     setLoading(true);
     try {
-      const currentActiveFund = fundData.active_fund;
-      const newActiveFund = data.end_of_week_balance;
+      const currentActiveFund = Number(fundData.active_fund);
+      const newActiveFund = Number(data.end_of_week_balance);
       const pnl = newActiveFund - currentActiveFund;
       
-      let updatedFundData = { ...fundData };
+      let updatedFundData = { 
+        ...fundData,
+        active_fund: Number(fundData.active_fund),
+        reserve_fund: Number(fundData.reserve_fund),
+        profit_fund: Number(fundData.profit_fund),
+        total_capital: Number(fundData.total_capital),
+        initial_capital: Number(fundData.initial_capital)
+      };
       
       if (pnl > 0) {
         // Profit: distribute according to profit distribution settings
@@ -147,11 +154,18 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
   const recordGoldTrade = async (data: GoldForm) => {
     setLoading(true);
     try {
-      const currentActiveFund = fundData.active_fund;
-      const newActiveFund = data.end_balance;
+      const currentActiveFund = Number(fundData.active_fund);
+      const newActiveFund = Number(data.end_balance);
       const pnl = newActiveFund - currentActiveFund;
       
-      let updatedFundData = { ...fundData };
+      let updatedFundData = { 
+        ...fundData,
+        active_fund: Number(fundData.active_fund),
+        reserve_fund: Number(fundData.reserve_fund),
+        profit_fund: Number(fundData.profit_fund),
+        total_capital: Number(fundData.total_capital),
+        initial_capital: Number(fundData.initial_capital)
+      };
       
       if (pnl > 0) {
         // Profit: distribute according to profit distribution settings
