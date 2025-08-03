@@ -96,50 +96,27 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Check if user already exists
-      const { data: existingUser } = await supabase
-        .from('profiles')
-        .select('registration_status, trader_name')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
-
-      // Check if email is already registered by attempting to sign in
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password: 'dummy_password'
-      });
-
-      if (signInError && signInError.message !== 'Invalid login credentials') {
-        // If it's not a credential error, the email might already exist
-        const { data: authData } = await supabase.auth.signUp({
-          email,
-          password: 'dummy_check',
-        });
-
-        if (authData.user && !authData.session) {
+      // First check if a profile with this email already exists
+      const { data: existingProfiles } = await supabase.rpc('get_profiles_by_email', { email_param: email });
+      
+      if (existingProfiles && existingProfiles.length > 0) {
+        const profile = existingProfiles[0];
+        
+        if (profile.registration_status === 'pending') {
+          toast({
+            title: "Registration Pending",
+            description: "You already signed up, waiting for approval. Please contact admin.",
+            variant: "destructive",
+          });
+          return;
+        } else if (profile.registration_status === 'approved' || profile.registration_status === 'rejected') {
           toast({
             title: "Account Exists",
-            description: "An account with this email already exists. Please sign in or use a different email.",
+            description: "User already exists. Please use another email or sign in to the account if you have access.",
             variant: "destructive",
           });
           return;
         }
-      }
-
-      // Check for existing pending registration
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
-
-      const existingProfile = profiles?.find(p => p.registration_status === 'pending');
-      
-      if (existingProfile) {
-        toast({
-          title: "Registration Pending",
-          description: "Your registration is already submitted and waiting for admin approval. Please wait for confirmation.",
-          variant: "destructive",
-        });
-        return;
       }
 
       // Create user without email confirmation requirement

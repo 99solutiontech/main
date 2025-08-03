@@ -8,8 +8,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Users, DollarSign, TrendingUp, LogOut, User as UserIcon, Search, Filter, Bell, AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Shield, Users, DollarSign, TrendingUp, LogOut, User as UserIcon, Search, Filter, Bell, AlertTriangle, CheckCircle, XCircle, Clock, Settings, Edit, Trash2, ChevronDown } from 'lucide-react';
 import { User, Session } from '@supabase/supabase-js';
 
 interface Profile {
@@ -62,11 +64,14 @@ const Admin = () => {
   const [userStats, setUserStats] = useState<UserStats[]>([]);
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [pendingUsers, setPendingUsers] = useState<Profile[]>([]);
+  const [rejectedUsers, setRejectedUsers] = useState<Profile[]>([]);
   const [activeSessions, setActiveSessions] = useState<UserSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<Profile | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -116,7 +121,8 @@ const Admin = () => {
         loadAllUsers(), 
         loadUserStats(), 
         loadNotifications(), 
-        loadPendingUsers(), 
+        loadPendingUsers(),
+        loadRejectedUsers(), 
         loadActiveSessions()
       ]);
     } catch (error: any) {
@@ -316,6 +322,22 @@ const Admin = () => {
     }
   };
 
+  const loadRejectedUsers = async () => {
+    try {
+      const { data, error } = await (supabase as any)
+        .from('profiles')
+        .select('*')
+        .eq('registration_status', 'rejected')
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        setRejectedUsers(data);
+      }
+    } catch (error) {
+      console.log('Registration status not available yet - will be enabled after migration');
+    }
+  };
+
   const loadActiveSessions = async () => {
     try {
       // This will work after migration approval
@@ -359,7 +381,7 @@ const Admin = () => {
         console.log('Notification update not available yet');
       }
 
-      await Promise.all([loadPendingUsers(), loadAllUsers(), loadNotifications()]);
+      await Promise.all([loadPendingUsers(), loadRejectedUsers(), loadAllUsers(), loadNotifications()]);
       
       toast({
         title: "Success",
@@ -397,7 +419,7 @@ const Admin = () => {
         console.log('Notification update not available yet');
       }
 
-      await Promise.all([loadPendingUsers(), loadAllUsers(), loadNotifications()]);
+      await Promise.all([loadPendingUsers(), loadRejectedUsers(), loadAllUsers(), loadNotifications()]);
       
       toast({
         title: "Success", 
@@ -447,6 +469,65 @@ const Admin = () => {
     }
   };
 
+  const reApproveUser = async (userId: string) => {
+    try {
+      const { error } = await (supabase as any)
+        .from('profiles')
+        .update({ 
+          registration_status: 'pending',
+          is_active: false 
+        })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      
+      await Promise.all([loadPendingUsers(), loadRejectedUsers(), loadAllUsers()]);
+      
+      toast({
+        title: "Success",
+        description: "User moved back to pending approval",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    try {
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+      if (error) throw error;
+
+      await loadAllUsers();
+      
+      toast({
+        title: "Success",
+        description: "User deleted successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const approveFromNotification = async (userId: string, notificationId: string) => {
+    await approveUser(userId);
+    await markNotificationRead(notificationId);
+    setNotificationDropdownOpen(false);
+  };
+
+  const rejectFromNotification = async (userId: string, notificationId: string) => {
+    await rejectUser(userId);
+    await markNotificationRead(notificationId);
+    setNotificationDropdownOpen(false);
+  };
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/auth');
@@ -473,7 +554,7 @@ const Admin = () => {
   const totalTrades = userStats.reduce((sum, stat) => sum + stat.total_trades, 0);
   const unreadNotifications = notifications.filter(n => !n.is_read).length;
 
-  // Filter users based on search and filters
+  // Filter users based on search and filters - include all status users in main list
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.trader_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -481,8 +562,9 @@ const Admin = () => {
     
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'active' && user.is_active) ||
-                         (statusFilter === 'inactive' && !user.is_active);
+                         (statusFilter === 'active' && user.is_active && user.registration_status !== 'pending') ||
+                         (statusFilter === 'inactive' && !user.is_active) ||
+                         (statusFilter === 'pending' && user.registration_status === 'pending');
     
     return matchesSearch && matchesRole && matchesStatus;
   });
@@ -503,14 +585,63 @@ const Admin = () => {
             </div>
             
             <div className="flex items-center gap-4">
-              {unreadNotifications > 0 && (
-                <div className="relative">
-                  <Bell className="h-5 w-5 text-primary" />
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
-                    {unreadNotifications}
-                  </Badge>
-                </div>
-              )}
+              <DropdownMenu open={notificationDropdownOpen} onOpenChange={setNotificationDropdownOpen}>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative p-2">
+                    <Bell className="h-5 w-5 text-primary" />
+                    {unreadNotifications > 0 && (
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                        {unreadNotifications}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-80 max-h-96 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-muted-foreground">
+                      No notifications
+                    </div>
+                  ) : (
+                    notifications.slice(0, 5).map((notification) => (
+                      <div key={notification.id} className="p-3 border-b last:border-b-0">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              {notification.type === 'registration' && <UserIcon className="h-3 w-3 text-blue-500" />}
+                              <span className="text-sm font-medium">{notification.title}</span>
+                              {!notification.is_read && <div className="h-2 w-2 bg-primary rounded-full"></div>}
+                            </div>
+                            <p className="text-xs text-muted-foreground mb-2">{notification.message}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(notification.created_at).toLocaleString()}
+                            </p>
+                            {notification.type === 'registration' && notification.user_id && (
+                              <div className="flex gap-1 mt-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => approveFromNotification(notification.user_id!, notification.id)}
+                                  className="text-xs h-6 px-2 text-green-600 hover:text-green-700"
+                                >
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => rejectFromNotification(notification.user_id!, notification.id)}
+                                  className="text-xs h-6 px-2 text-red-600 hover:text-red-700"
+                                >
+                                  Reject
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="outline" onClick={() => navigate('/')}>
                 <UserIcon className="h-4 w-4 mr-2" />
                 User Dashboard
@@ -597,10 +728,13 @@ const Admin = () => {
 
         {/* Main Admin Tabs */}
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="registrations">
               Registration Queue {pendingUsers.length > 0 && <Badge className="ml-1">{pendingUsers.length}</Badge>}
+            </TabsTrigger>
+            <TabsTrigger value="rejected">
+              Rejected Users {rejectedUsers.length > 0 && <Badge className="ml-1">{rejectedUsers.length}</Badge>}
             </TabsTrigger>
             <TabsTrigger value="sessions">Active Sessions</TabsTrigger>
             <TabsTrigger value="notifications">
@@ -651,6 +785,7 @@ const Admin = () => {
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -687,9 +822,16 @@ const Admin = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={user.is_active ? 'default' : 'secondary'}>
-                          {user.is_active ? 'Active' : 'Inactive'}
-                        </Badge>
+                        <div className="flex flex-col gap-1">
+                          <Badge variant={user.is_active ? 'default' : 'secondary'}>
+                            {user.is_active ? 'Active' : 'Inactive'}
+                          </Badge>
+                          {user.registration_status && (
+                            <Badge variant={user.registration_status === 'pending' ? 'outline' : user.registration_status === 'rejected' ? 'destructive' : 'default'}>
+                              {user.registration_status}
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>${(stats?.diamond_capital || 0).toLocaleString()}</TableCell>
                       <TableCell>${(stats?.gold_capital || 0).toLocaleString()}</TableCell>
@@ -699,24 +841,85 @@ const Admin = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => toggleUserStatus(user.user_id, user.is_active)}
-                            disabled={user.role === 'super_admin'}
-                          >
-                            {user.is_active ? 'Deactivate' : 'Activate'}
-                          </Button>
-                          <select
-                            value={user.role}
-                            onChange={(e) => updateUserRole(user.user_id, e.target.value)}
-                            disabled={user.role === 'super_admin'}
-                            className="px-2 py-1 border rounded text-sm"
-                          >
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
-                            <option value="super_admin">Super Admin</option>
-                          </select>
+                          {user.registration_status === 'pending' && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => approveUser(user.user_id)}
+                                className="text-green-600 hover:text-green-700"
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => rejectUser(user.user_id)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <XCircle className="h-4 w-4 mr-1" />
+                                Reject
+                              </Button>
+                            </>
+                          )}
+                          {user.registration_status !== 'pending' && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => toggleUserStatus(user.user_id, user.is_active)}
+                                disabled={user.role === 'super_admin'}
+                              >
+                                {user.is_active ? 'Deactivate' : 'Activate'}
+                              </Button>
+                              <select
+                                value={user.role}
+                                onChange={(e) => updateUserRole(user.user_id, e.target.value)}
+                                disabled={user.role === 'super_admin'}
+                                className="px-2 py-1 border rounded text-sm"
+                              >
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                                <option value="super_admin">Super Admin</option>
+                              </select>
+                            </>
+                          )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                <Settings className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem onClick={() => setEditingUser(user)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Profile
+                              </DropdownMenuItem>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete User
+                                  </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete the user account and all associated data.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => deleteUser(user.user_id)}>
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -785,6 +988,62 @@ const Admin = () => {
                             Reject
                           </Button>
                         </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="rejected" className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Rejected Users</CardTitle>
+            <CardDescription>
+              Users who have been rejected and can be re-approved
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {rejectedUsers.length === 0 ? (
+              <div className="text-center py-8">
+                <XCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No rejected users</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Trader Name</TableHead>
+                    <TableHead>Full Name</TableHead>
+                    <TableHead>Registration Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rejectedUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.trader_name}</TableCell>
+                      <TableCell>{user.full_name || '-'}</TableCell>
+                      <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <Badge variant="destructive">
+                          Rejected
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => reApproveUser(user.user_id)}
+                          className="text-green-600 hover:text-green-700"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Re-approve
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -885,13 +1144,37 @@ const Admin = () => {
                         </p>
                       </div>
                       {!notification.is_read && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => markNotificationRead(notification.id)}
-                        >
-                          Mark as read
-                        </Button>
+                        <div className="flex gap-2">
+                          {notification.type === 'registration' && notification.user_id && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => approveUser(notification.user_id!)}
+                                className="text-green-600 hover:text-green-700"
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => rejectUser(notification.user_id!)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <XCircle className="h-4 w-4 mr-1" />
+                                Reject
+                              </Button>
+                            </>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => markNotificationRead(notification.id)}
+                          >
+                            Mark as read
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>
