@@ -147,15 +147,22 @@ const Admin = () => {
 
   const loadUserStats = async () => {
     try {
-      // Get fund data for all users
-      const { data: fundData, error: fundError } = await (supabase as any)
+      // Get all users first
+      const { data: allUsers, error: usersError } = await supabase
+        .from('profiles')
+        .select('user_id, trader_name, created_at');
+
+      if (usersError) throw usersError;
+
+      // Get fund data for all users - sum total capital by user across both modes
+      const { data: fundData, error: fundError } = await supabase
         .from('fund_data')
-        .select('user_id, mode, total_capital');
+        .select('user_id, mode, total_capital, active_fund, reserve_fund, profit_fund');
 
       if (fundError) throw fundError;
 
       // Get trading history count for all users
-      const { data: historyData, error: historyError } = await (supabase as any)
+      const { data: historyData, error: historyError } = await supabase
         .from('trading_history')
         .select('user_id, created_at')
         .order('created_at', { ascending: false });
@@ -165,8 +172,8 @@ const Admin = () => {
       // Combine data by user
       const statsMap = new Map<string, UserStats>();
       
-      // Initialize with profiles
-      users.forEach(user => {
+      // Initialize with all users
+      allUsers?.forEach(user => {
         statsMap.set(user.user_id, {
           user_id: user.user_id,
           trader_name: user.trader_name,
@@ -177,19 +184,19 @@ const Admin = () => {
         });
       });
 
-      // Add fund data
+      // Add fund data - aggregate by user
       fundData?.forEach((fund: any) => {
         const stats = statsMap.get(fund.user_id);
         if (stats) {
           if (fund.mode === 'diamond') {
-            stats.diamond_capital = fund.total_capital;
-          } else {
-            stats.gold_capital = fund.total_capital;
+            stats.diamond_capital += fund.total_capital || 0;
+          } else if (fund.mode === 'gold') {
+            stats.gold_capital += fund.total_capital || 0;
           }
         }
       });
 
-      // Add trading history
+      // Add trading history count and last activity
       const tradeCountMap = new Map<string, number>();
       const lastActiveMap = new Map<string, string>();
       
@@ -203,7 +210,10 @@ const Admin = () => {
       // Update stats with counts and last active
       statsMap.forEach((stats, userId) => {
         stats.total_trades = tradeCountMap.get(userId) || 0;
-        stats.last_active = lastActiveMap.get(userId) || stats.last_active;
+        const lastTradeActivity = lastActiveMap.get(userId);
+        if (lastTradeActivity) {
+          stats.last_active = lastTradeActivity;
+        }
       });
 
       setUserStats(Array.from(statsMap.values()));

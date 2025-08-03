@@ -69,6 +69,7 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Create user without email confirmation requirement
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -83,39 +84,36 @@ const Auth = () => {
 
       if (error) throw error;
 
-      // Set user as inactive pending admin approval
+      // Update user profile to pending status and inactive
       if (data?.user) {
-        try {
-          await supabase
-            .from('profiles')
-            .update({ 
-              is_active: false,
-              registration_status: 'pending' 
-            })
-            .eq('user_id', data.user.id);
-        } catch (profileError) {
-          console.log('Profile update not available yet - will work after migration');
-        }
-      }
+        await supabase
+          .from('profiles')
+          .update({ 
+            is_active: false,
+            registration_status: 'pending',
+            full_name: fullName,
+            trader_name: traderName
+          })
+          .eq('user_id', data.user.id);
 
-      // Send admin notification about new registration
-      try {
+        // Send admin notification about new registration
         await supabase.functions.invoke('send-admin-notification', {
           body: {
             type: 'registration',
             title: 'New User Registration',
-            message: `A new user has registered and is waiting for approval.`,
+            message: `New user "${traderName}" has registered and is waiting for approval.`,
             trader_name: traderName,
-            user_id: data.user?.id,
+            user_id: data.user.id,
           }
         });
-      } catch (notificationError) {
-        console.log('Admin notification not available yet');
+
+        // Sign out the user immediately since they need admin approval
+        await supabase.auth.signOut();
       }
 
       toast({
         title: "Registration Successful",
-        description: "Your account has been created and is pending admin approval. You'll receive an email once approved.",
+        description: "Your account has been created and is pending admin approval. Please wait for admin confirmation before signing in.",
       });
       
       setActiveTab('signin');
