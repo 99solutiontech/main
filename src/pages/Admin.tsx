@@ -804,7 +804,7 @@ const Admin = () => {
 
         {/* Main Admin Tabs */}
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="registrations">
               Registration Queue {pendingUsers.length > 0 && <Badge className="ml-1">{pendingUsers.length}</Badge>}
@@ -812,7 +812,6 @@ const Admin = () => {
             <TabsTrigger value="rejected">
               Rejected Users {rejectedUsers.length > 0 && <Badge className="ml-1">{rejectedUsers.length}</Badge>}
             </TabsTrigger>
-            <TabsTrigger value="sessions">Active Sessions</TabsTrigger>
             <TabsTrigger value="notifications">
               Notifications {unreadNotifications > 0 && <Badge className="ml-1">{unreadNotifications}</Badge>}
             </TabsTrigger>
@@ -843,25 +842,25 @@ const Admin = () => {
                   
                   <Select value={roleFilter} onValueChange={setRoleFilter}>
                     <SelectTrigger className="w-40">
-                      <SelectValue />
+                      <SelectValue className="text-foreground" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Roles</SelectItem>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="super_admin">Super Admin</SelectItem>
+                    <SelectContent className="bg-background border border-border z-50">
+                      <SelectItem value="all" className="text-foreground">All Roles</SelectItem>
+                      <SelectItem value="user" className="text-foreground">User</SelectItem>
+                      <SelectItem value="admin" className="text-foreground">Admin</SelectItem>
+                      <SelectItem value="super_admin" className="text-foreground">Super Admin</SelectItem>
                     </SelectContent>
                   </Select>
                   
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger className="w-40">
-                      <SelectValue />
+                      <SelectValue className="text-foreground" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
+                    <SelectContent className="bg-background border border-border z-50">
+                      <SelectItem value="all" className="text-foreground">All Status</SelectItem>
+                      <SelectItem value="active" className="text-foreground">Active</SelectItem>
+                      <SelectItem value="inactive" className="text-foreground">Inactive</SelectItem>
+                      <SelectItem value="pending" className="text-foreground">Pending</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1130,57 +1129,6 @@ const Admin = () => {
         </Card>
       </TabsContent>
 
-      <TabsContent value="sessions" className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Active User Sessions</CardTitle>
-            <CardDescription>
-              Monitor and manage active user sessions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {activeSessions.length === 0 ? (
-              <div className="text-center py-8">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No active sessions</p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>IP Address</TableHead>
-                    <TableHead>Device</TableHead>
-                    <TableHead>Last Activity</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {activeSessions.map((session) => (
-                    <TableRow key={session.id}>
-                      <TableCell className="font-medium">{session.trader_name}</TableCell>
-                      <TableCell>{session.ip_address}</TableCell>
-                      <TableCell>{session.device_info}</TableCell>
-                      <TableCell>{new Date(session.last_activity).toLocaleString()}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => terminateSession(session.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <XCircle className="h-4 w-4 mr-1" />
-                          Terminate
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-      </TabsContent>
 
       <TabsContent value="notifications" className="space-y-6">
         <Card>
