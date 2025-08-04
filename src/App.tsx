@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import Installation from "./pages/Installation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
                 <Admin />
               </ProtectedRoute>
             } />
+            <Route path="/installation" element={<Installation />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
