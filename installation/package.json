@@ -1,0 +1,33 @@
+{
+  "name": "trading-fund-management-installer",
+  "version": "1.0.0",
+  "description": "Installation package for Trading Fund Management System",
+  "main": "update-app-config.js",
+  "scripts": {
+    "install-db": "echo 'Please run database-setup.sql in your Supabase SQL editor'",
+    "configure": "node update-app-config.js",
+    "deploy-functions": "./edge-functions-deploy.sh",
+    "create-admin": "echo 'Please run create-super-admin.sql after updating the email'",
+    "install-system": "npm run install-db && npm run deploy-functions && npm run configure && npm run create-admin"
+  },
+  "keywords": [
+    "supabase",
+    "trading",
+    "fund-management",
+    "installation"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "files": [
+    "database-setup.sql",
+    "create-super-admin.sql",
+    "edge-functions-deploy.sh",
+    "config-template.ts",
+    "update-app-config.js",
+    "README.md"
+  ]
+}
