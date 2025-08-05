@@ -476,6 +476,14 @@ const Admin = () => {
 
     if (error) {
       console.error('Error marking notification as read:', error);
+      // Revert local state on error
+      setNotifications(prev => 
+        prev.map(notification => 
+          notification.id === notificationId 
+            ? { ...notification, is_read: false }
+            : notification
+        )
+      );
       toast({
         title: "Error",
         description: "Failed to mark notification as read",
@@ -483,14 +491,6 @@ const Admin = () => {
       });
     } else {
       console.log('Notification marked as read successfully');
-      setNotifications(prev => 
-        prev.map(notification => 
-          notification.id === notificationId 
-            ? { ...notification, is_read: true }
-            : notification
-        )
-      );
-      loadNotifications(); // Refresh notifications
       toast({
         title: "Success",
         description: "Notification marked as read",
@@ -499,6 +499,14 @@ const Admin = () => {
   };
 
   const handleNotificationClick = (notificationId: string) => {
+    // Update local state immediately for instant UI response
+    setNotifications(prev => 
+      prev.map(notif => 
+        notif.id === notificationId 
+          ? { ...notif, is_read: true }
+          : notif
+      )
+    );
     markNotificationRead(notificationId);
   };
 

@@ -85,17 +85,26 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
         updatedFundData.reserve_fund += profitToReserve;
         updatedFundData.profit_fund += profitToProfit;
       } else if (pnl < 0) {
-        // Loss: use reserve fund to backup the loss, keep active fund at current level
+        // Loss: deduct from total available funds (active + reserve)
         const lossAmount = Math.abs(pnl);
-        const transferFromReserve = Math.min(lossAmount, updatedFundData.reserve_fund);
+        const totalAvailable = currentActiveFund + updatedFundData.reserve_fund;
+        const remainingTotal = totalAvailable - lossAmount;
         
-        if (transferFromReserve > 0) {
-          // Transfer from reserve to cover the loss
-          updatedFundData.active_fund = currentActiveFund;  // Keep active fund at current level
-          updatedFundData.reserve_fund -= transferFromReserve;
-        } else {
-          // No reserve to cover, active fund takes the full loss
+        if (remainingTotal >= 0) {
+          // Set active fund to the new balance entered
           updatedFundData.active_fund = newActiveFund;
+          // Remaining goes to reserve fund
+          updatedFundData.reserve_fund = remainingTotal - newActiveFund;
+          
+          // Ensure reserve fund doesn't go negative
+          if (updatedFundData.reserve_fund < 0) {
+            updatedFundData.active_fund = remainingTotal;
+            updatedFundData.reserve_fund = 0;
+          }
+        } else {
+          // Total loss exceeds available funds
+          updatedFundData.active_fund = 0;
+          updatedFundData.reserve_fund = 0;
         }
       } else {
         // No profit/loss
@@ -178,17 +187,26 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
         updatedFundData.reserve_fund += profitToReserve;
         updatedFundData.profit_fund += profitToProfit;
       } else if (pnl < 0) {
-        // Loss: use reserve fund to backup the loss, keep active fund at current level
+        // Loss: deduct from total available funds (active + reserve)
         const lossAmount = Math.abs(pnl);
-        const transferFromReserve = Math.min(lossAmount, updatedFundData.reserve_fund);
+        const totalAvailable = currentActiveFund + updatedFundData.reserve_fund;
+        const remainingTotal = totalAvailable - lossAmount;
         
-        if (transferFromReserve > 0) {
-          // Transfer from reserve to cover the loss
-          updatedFundData.active_fund = currentActiveFund;  // Keep active fund at current level
-          updatedFundData.reserve_fund -= transferFromReserve;
-        } else {
-          // No reserve to cover, active fund takes the full loss
+        if (remainingTotal >= 0) {
+          // Set active fund to the new balance entered
           updatedFundData.active_fund = newActiveFund;
+          // Remaining goes to reserve fund
+          updatedFundData.reserve_fund = remainingTotal - newActiveFund;
+          
+          // Ensure reserve fund doesn't go negative
+          if (updatedFundData.reserve_fund < 0) {
+            updatedFundData.active_fund = remainingTotal;
+            updatedFundData.reserve_fund = 0;
+          }
+        } else {
+          // Total loss exceeds available funds
+          updatedFundData.active_fund = 0;
+          updatedFundData.reserve_fund = 0;
         }
       } else {
         // No profit/loss
