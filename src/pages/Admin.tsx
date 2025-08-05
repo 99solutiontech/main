@@ -476,14 +476,6 @@ const Admin = () => {
 
     if (error) {
       console.error('Error marking notification as read:', error);
-      // Revert local state on error
-      setNotifications(prev => 
-        prev.map(notification => 
-          notification.id === notificationId 
-            ? { ...notification, is_read: false }
-            : notification
-        )
-      );
       toast({
         title: "Error",
         description: "Failed to mark notification as read",
@@ -499,6 +491,7 @@ const Admin = () => {
   };
 
   const handleNotificationClick = (notificationId: string) => {
+    markNotificationRead(notificationId);
     // Update local state immediately for instant UI response
     setNotifications(prev => 
       prev.map(notif => 
@@ -507,7 +500,6 @@ const Admin = () => {
           : notif
       )
     );
-    markNotificationRead(notificationId);
   };
 
   const terminateSession = async (sessionId: string) => {
