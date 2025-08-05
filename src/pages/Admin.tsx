@@ -593,9 +593,7 @@ const Admin = () => {
   };
 
   const approveFromNotification = async (userId: string, notificationId: string) => {
-    await approveUser(userId);
-    await markNotificationRead(notificationId);
-    // Set notification as processed
+    // Set notification as processed immediately to hide buttons
     setNotifications(prev => 
       prev.map(notification => 
         notification.id === notificationId 
@@ -603,13 +601,14 @@ const Admin = () => {
           : notification
       )
     );
+    
+    await approveUser(userId);
+    await markNotificationRead(notificationId);
     setNotificationDropdownOpen(false);
   };
 
   const rejectFromNotification = async (userId: string, notificationId: string) => {
-    await rejectUser(userId);
-    await markNotificationRead(notificationId);
-    // Set notification as processed
+    // Set notification as processed immediately to hide buttons
     setNotifications(prev => 
       prev.map(notification => 
         notification.id === notificationId 
@@ -617,6 +616,9 @@ const Admin = () => {
           : notification
       )
     );
+    
+    await rejectUser(userId);
+    await markNotificationRead(notificationId);
     setNotificationDropdownOpen(false);
   };
 
@@ -1213,39 +1215,49 @@ const Admin = () => {
                           {new Date(notification.created_at).toLocaleString()}
                         </p>
                       </div>
-                      {!notification.is_read && (
-                        <div className="flex gap-2">
-                          {notification.type === 'registration' && notification.user_id && (
-                            <>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => approveUser(notification.user_id!)}
-                                className="text-green-600 hover:text-green-700"
-                              >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Approve
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => rejectUser(notification.user_id!)}
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <XCircle className="h-4 w-4 mr-1" />
-                                Reject
-                              </Button>
-                            </>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => markNotificationRead(notification.id)}
-                          >
-                            Mark as read
-                          </Button>
-                        </div>
-                      )}
+                      <div className="flex gap-2">
+                        {/* Show action buttons only if not processed and not read */}
+                        {!notification.is_read && !(notification as any).processed && (
+                          <>
+                            {notification.type === 'registration' && notification.user_id && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => approveFromNotification(notification.user_id!, notification.id)}
+                                  className="text-green-600 hover:text-green-700"
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => rejectFromNotification(notification.user_id!, notification.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <XCircle className="h-4 w-4 mr-1" />
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => markNotificationRead(notification.id)}
+                            >
+                              Mark as read
+                            </Button>
+                          </>
+                        )}
+                        
+                        {/* Show status if processed */}
+                        {(notification as any).processed && (
+                          <Badge variant={(notification as any).action === 'approved' ? 'default' : 'destructive'}>
+                            {(notification as any).action === 'approved' ? 'Approved' : 'Rejected'}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
