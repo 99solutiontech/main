@@ -31,6 +31,7 @@ interface FundData {
   profit_dist_profit: number;
   lot_base_capital: number;
   lot_base_lot: number;
+  risk_percent?: number;
 }
 
 interface LotSizeSettingsProps {
@@ -41,6 +42,7 @@ interface LotSizeSettingsProps {
 interface SettingsForm {
   lot_base_capital: number;
   lot_base_lot: number;
+  risk_percent: number;
 }
 
 const LotSizeSettings = ({ fundData, onUpdate }: LotSizeSettingsProps) => {
@@ -51,8 +53,9 @@ const LotSizeSettings = ({ fundData, onUpdate }: LotSizeSettingsProps) => {
 
   const form = useForm<SettingsForm>({
     defaultValues: {
-      lot_base_capital: fundData.lot_base_capital,
-      lot_base_lot: fundData.lot_base_lot,
+      lot_base_capital: fundData.lot_base_capital || 1000,
+      lot_base_lot: fundData.lot_base_lot || 0.4,
+      risk_percent: fundData.risk_percent || 40,
     },
   });
 
@@ -64,6 +67,7 @@ const LotSizeSettings = ({ fundData, onUpdate }: LotSizeSettingsProps) => {
         .update({
           lot_base_capital: data.lot_base_capital,
           lot_base_lot: data.lot_base_lot,
+          risk_percent: data.risk_percent,
         })
         .eq('id', fundData.id);
 
@@ -96,9 +100,9 @@ const LotSizeSettings = ({ fundData, onUpdate }: LotSizeSettingsProps) => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-foreground">{t('lotSizeSettings')}</DialogTitle>
+          <DialogTitle className="text-foreground">Risk and Lot Size Settings</DialogTitle>
           <DialogDescription>
-            {t('configureBaseCapitalLotSize')}
+            Configure the base capital, lot size, and risk percentage for calculations
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(updateSettings)} className="space-y-4">
@@ -122,12 +126,31 @@ const LotSizeSettings = ({ fundData, onUpdate }: LotSizeSettingsProps) => {
               placeholder="0.40"
             />
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="risk_percent" className="text-foreground">Base Risk Percent of Active Fund (%)</Label>
+            <Input
+              id="risk_percent"
+              type="number"
+              step="0.1"
+              min="1"
+              max="100"
+              {...form.register('risk_percent', { 
+                required: true, 
+                valueAsNumber: true,
+                min: 1,
+                max: 100
+              })}
+              placeholder="40"
+            />
+          </div>
+
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">
-              {t('cancel')}
+              Cancel
             </Button>
             <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? t('updating') : t('update')}
+              {loading ? 'Updating...' : 'Update'}
             </Button>
           </div>
         </form>

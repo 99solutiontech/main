@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calculator } from 'lucide-react';
+import { Calculator, TrendingUp } from 'lucide-react';
 import LotSizeSettings from './LotSizeSettings';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -19,6 +19,7 @@ interface FundData {
   profit_dist_profit: number;
   lot_base_capital: number;
   lot_base_lot: number;
+  risk_percent?: number;
 }
 
 interface LotCalculatorProps {
@@ -36,27 +37,53 @@ const LotCalculator = ({ fundData, onUpdate }: LotCalculatorProps) => {
     return ratio * fundData.lot_base_lot;
   };
 
+  const calculateRiskAmount = () => {
+    const riskPercent = fundData.risk_percent || 40; // Default 40%
+    return (fundData.active_fund * riskPercent) / 100;
+  };
+
   const recommendedLot = calculateRecommendedLot();
+  const riskAmount = calculateRiskAmount();
+  const riskPercent = fundData.risk_percent || 40;
 
   return (
     <Card className="relative">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-foreground">
           <Calculator className="h-5 w-5" />
-          {t('lotCalculator')}
+          Risk and Lot Size Calculator
         </CardTitle>
         <CardDescription>
-          Recommended lot size based on current active fund
+          Recommended lot size and risk amount based on current active fund
         </CardDescription>
         <LotSizeSettings fundData={fundData} onUpdate={onUpdate} />
       </CardHeader>
-      <CardContent className="text-center space-y-4">
-        <div>
+      <CardContent className="text-center space-y-6">
+        {/* Lot Size Section */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Calculator className="h-4 w-4" />
+            Recommended Lot Size
+          </div>
           <div className="text-3xl font-bold text-primary">
             {recommendedLot.toFixed(2)} lot
           </div>
-          <div className="text-sm text-muted-foreground mt-2">
+          <div className="text-sm text-muted-foreground">
             Base: {fundData.lot_base_lot} lot per ${fundData.lot_base_capital.toLocaleString()}
+          </div>
+        </div>
+        
+        {/* Risk Amount Section */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <TrendingUp className="h-4 w-4" />
+            Risk Amount ({riskPercent}% of Active Fund)
+          </div>
+          <div className="text-2xl font-bold text-destructive">
+            ${riskAmount.toFixed(2)}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Maximum recommended risk per trade
           </div>
         </div>
         
@@ -73,6 +100,10 @@ const LotCalculator = ({ fundData, onUpdate }: LotCalculatorProps) => {
             <div className="flex justify-between">
               <span className="text-foreground">Base Lot:</span>
               <span className="text-foreground">{fundData.lot_base_lot} lot</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-foreground">Risk Percentage:</span>
+              <span className="text-foreground">{riskPercent}%</span>
             </div>
           </div>
         </div>

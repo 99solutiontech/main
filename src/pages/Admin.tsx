@@ -467,15 +467,34 @@ const Admin = () => {
   };
 
   const markNotificationRead = async (notificationId: string) => {
-    try {
-      await (supabase as any)
-        .from('admin_notifications')
-        .update({ is_read: true })
-        .eq('id', notificationId);
-      
-      await loadNotifications();
-    } catch (error) {
-      console.log('Notification marking not available yet');
+    console.log('Marking notification as read:', notificationId);
+    
+    const { error } = await supabase
+      .from('admin_notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId);
+
+    if (error) {
+      console.error('Error marking notification as read:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark notification as read",
+        variant: "destructive",
+      });
+    } else {
+      console.log('Notification marked as read successfully');
+      setNotifications(prev => 
+        prev.map(notification => 
+          notification.id === notificationId 
+            ? { ...notification, is_read: true }
+            : notification
+        )
+      );
+      loadNotifications(); // Refresh notifications
+      toast({
+        title: "Success",
+        description: "Notification marked as read",
+      });
     }
   };
 
@@ -576,12 +595,28 @@ const Admin = () => {
   const approveFromNotification = async (userId: string, notificationId: string) => {
     await approveUser(userId);
     await markNotificationRead(notificationId);
+    // Set notification as processed
+    setNotifications(prev => 
+      prev.map(notification => 
+        notification.id === notificationId 
+          ? { ...notification, processed: true, action: 'approved' }
+          : notification
+      )
+    );
     setNotificationDropdownOpen(false);
   };
 
   const rejectFromNotification = async (userId: string, notificationId: string) => {
     await rejectUser(userId);
     await markNotificationRead(notificationId);
+    // Set notification as processed
+    setNotifications(prev => 
+      prev.map(notification => 
+        notification.id === notificationId 
+          ? { ...notification, processed: true, action: 'rejected' }
+          : notification
+      )
+    );
     setNotificationDropdownOpen(false);
   };
 
@@ -678,10 +713,21 @@ const Admin = () => {
                               {!notification.is_read && <div className="h-2 w-2 bg-primary rounded-full animate-pulse"></div>}
                             </div>
                             <p className="text-xs text-muted-foreground mb-2">{notification.message}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(notification.created_at).toLocaleString()}
-                            </p>
-                            {notification.type === 'registration' && notification.user_id && (
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(notification.created_at).toLocaleString()}
+                              </p>
+                              {(notification as any).processed && (
+                                <span className={`text-xs px-2 py-1 rounded ${
+                                  (notification as any).action === 'approved' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {(notification as any).action === 'approved' ? 'Approved' : 'Rejected'}
+                                </span>
+                              )}
+                            </div>
+                            {notification.type === 'registration' && notification.user_id && !(notification as any).processed && (
                               <div className="flex gap-1 mt-2" onClick={(e) => e.stopPropagation()}>
                                 <Button
                                   size="sm"
