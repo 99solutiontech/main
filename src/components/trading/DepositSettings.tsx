@@ -16,6 +16,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Settings } from 'lucide-react';
+import NewDepositAllocation from './NewDepositAllocation';
 
 interface FundData {
   id: string;
@@ -230,6 +231,21 @@ const DepositSettings = ({ fundData, subUserName, onUpdate }: DepositSettingsPro
                 {t('totalAvailable')}: {formatCurrency(fundData.active_fund + fundData.reserve_fund)}
               </div>
             </div>
+          </div>
+
+          {/* New Deposit Settings Section */}
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium">New Deposit Settings</h4>
+              <NewDepositAllocation 
+                userId={fundData.user_id} 
+                mode={fundData.mode} 
+                onUpdate={() => {}} 
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Configure how new deposits will be allocated between Active and Reserve funds.
+            </p>
           </div>
 
           <DialogFooter>

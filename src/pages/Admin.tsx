@@ -157,13 +157,14 @@ const Admin = () => {
       } = await supabase.from('fund_data').select('user_id, mode, total_capital, active_fund, reserve_fund, profit_fund');
       if (fundError) throw fundError;
 
-      // Get trading history count for all users
+      // Get trading history count for all users - limit to recent data for better performance
       const {
         data: historyData,
         error: historyError
-      } = await supabase.from('trading_history').select('user_id, created_at').order('created_at', {
-        ascending: false
-      });
+      } = await supabase.from('trading_history')
+        .select('user_id, created_at')
+        .order('created_at', { ascending: false })
+        .limit(10000); // Limit to recent 10k trades for better performance
       if (historyError) throw historyError;
 
       // Combine data by user
