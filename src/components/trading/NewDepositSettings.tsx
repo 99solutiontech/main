@@ -153,6 +153,7 @@ const NewDepositSettings = ({ userId, mode, fundData, subUserName, onUpdate }: N
             userId={userId} 
             mode={mode} 
             onUpdate={() => {
+              // Force reload settings after update
               const savedSettings = localStorage.getItem(`depositSettings_${userId}_${mode}`);
               if (savedSettings) {
                 const parsed = JSON.parse(savedSettings);

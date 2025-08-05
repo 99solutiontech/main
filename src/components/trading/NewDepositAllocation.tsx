@@ -50,6 +50,7 @@ const NewDepositAllocation = ({ userId, mode, onUpdate }: NewDepositAllocationPr
 
   const handleSave = () => {
     setOpen(false);
+    onUpdate?.(); // Trigger update after saving
   };
 
   return (
