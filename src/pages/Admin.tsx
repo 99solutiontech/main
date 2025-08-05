@@ -1025,7 +1025,7 @@ const Admin = () => {
                 <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">No notifications</p>
               </div> : <div className="space-y-4">
-                {notifications.map(notification => <div key={notification.id} className={`p-4 border rounded-lg ${notification.is_read ? 'bg-muted/50' : 'bg-card border-primary/20'}`}>
+                {notifications.map(notification => <div key={notification.id} className={`p-4 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${notification.is_read ? 'bg-muted/50' : 'bg-card border-primary/20'}`} onClick={() => handleNotificationClick(notification.id)}>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
@@ -1041,21 +1041,21 @@ const Admin = () => {
                         </p>
                       </div>
                       <div className="flex gap-2">
-                        {/* Show action buttons only if not processed and not read */}
-                        {!notification.is_read && !(notification as any).processed && <>
+                        {/* Show action buttons only if not processed */}
+                        {!(notification as any).processed && <>
                             {notification.type === 'registration' && notification.user_id && <>
-                                <Button variant="outline" size="sm" onClick={() => approveFromNotification(notification.user_id!, notification.id)} className="text-green-600 hover:text-green-700">
+                                <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); approveFromNotification(notification.user_id!, notification.id); }} className="text-green-600 hover:text-green-700">
                                   <CheckCircle className="h-4 w-4 mr-1" />
                                   Approve
                                 </Button>
-                                <Button variant="outline" size="sm" onClick={() => rejectFromNotification(notification.user_id!, notification.id)} className="text-red-600 hover:text-red-700">
+                                <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); rejectFromNotification(notification.user_id!, notification.id); }} className="text-red-600 hover:text-red-700">
                                   <XCircle className="h-4 w-4 mr-1" />
                                   Reject
                                 </Button>
                               </>}
-                            <Button variant="ghost" size="sm" onClick={() => markNotificationRead(notification.id)}>
+                            {!notification.is_read && <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); markNotificationRead(notification.id); }}>
                               Mark as read
-                            </Button>
+                            </Button>}
                           </>}
                         
                         {/* Show status if processed */}
