@@ -91,14 +91,14 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
         const actualLoss = currentActiveFund - activeFundAfterLoss; // Actual loss amount
         const transferFromReserve = Math.min(actualLoss, updatedFundData.reserve_fund);
         
-        // Set active fund to the new balance entered by user
-        updatedFundData.active_fund = activeFundAfterLoss;
+        // Add the reserve transfer back to active fund to cover the loss
+        updatedFundData.active_fund = activeFundAfterLoss + transferFromReserve;
         
         // Deduct the transfer amount from reserve fund
         updatedFundData.reserve_fund -= transferFromReserve;
         
-        // If reserve couldn't cover the full loss, the remaining loss is absorbed
-        // The total capital will reflect the actual loss
+        // The actual loss to total capital is only what reserve couldn't cover
+        const uncoveredLoss = actualLoss - transferFromReserve;
       } else {
         // No profit/loss
         updatedFundData.active_fund = newActiveFund;
@@ -186,14 +186,14 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
         const actualLoss = currentActiveFund - activeFundAfterLoss; // Actual loss amount
         const transferFromReserve = Math.min(actualLoss, updatedFundData.reserve_fund);
         
-        // Set active fund to the new balance entered by user
-        updatedFundData.active_fund = activeFundAfterLoss;
+        // Add the reserve transfer back to active fund to cover the loss
+        updatedFundData.active_fund = activeFundAfterLoss + transferFromReserve;
         
         // Deduct the transfer amount from reserve fund
         updatedFundData.reserve_fund -= transferFromReserve;
         
-        // If reserve couldn't cover the full loss, the remaining loss is absorbed
-        // The total capital will reflect the actual loss
+        // The actual loss to total capital is only what reserve couldn't cover
+        const uncoveredLoss = actualLoss - transferFromReserve;
       } else {
         // No profit/loss
         updatedFundData.active_fund = newActiveFund;

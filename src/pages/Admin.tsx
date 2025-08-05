@@ -491,7 +491,6 @@ const Admin = () => {
   };
 
   const handleNotificationClick = (notificationId: string) => {
-    markNotificationRead(notificationId);
     // Update local state immediately for instant UI response
     setNotifications(prev => 
       prev.map(notif => 
@@ -500,6 +499,7 @@ const Admin = () => {
           : notif
       )
     );
+    markNotificationRead(notificationId);
   };
 
   const terminateSession = async (sessionId: string) => {
