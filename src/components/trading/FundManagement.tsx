@@ -12,7 +12,6 @@ import { DollarSign } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import DepositSettings from './DepositSettings';
 import ProfitManagementSettings from './ProfitManagementSettings';
-import NewDepositSettings from './NewDepositSettings';
 
 interface FundData {
   id: string;
@@ -416,9 +415,10 @@ const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate
                   placeholder="1000.00"
                 />
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <NewDepositSettings 
-                    userId={userId}
-                    mode={fundData.mode}
+                  <span>
+                    {t('willBeSplit')}: {fundData.profit_dist_active || 40}% {t('toActiveFund')}, {100 - (fundData.profit_dist_active || 40)}% {t('toReserveFund')}
+                  </span>
+                  <DepositSettings 
                     fundData={fundData}
                     subUserName={subUserName}
                     onUpdate={onUpdate}
