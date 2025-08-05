@@ -889,8 +889,8 @@ const Admin = () => {
                   </div>
                   
                   <Select value={roleFilter} onValueChange={setRoleFilter}>
-                    <SelectTrigger className="w-40">
-                      <SelectValue className="text-foreground" />
+                    <SelectTrigger className="w-40 bg-green-600 text-white border-green-700 hover:bg-green-700">
+                      <SelectValue className="text-white placeholder:text-green-100" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border border-border z-50">
                       <SelectItem value="all" className="text-foreground">All Roles</SelectItem>
