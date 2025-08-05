@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import NewDepositAllocation from './NewDepositAllocation';
 
 interface FundData {
   id: string;
@@ -146,7 +147,20 @@ const NewDepositSettings = ({ userId, mode, fundData, subUserName, onUpdate }: N
   return (
     <Card>
       <CardHeader>
-        <CardTitle>New Deposit</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>New Deposit</CardTitle>
+          <NewDepositAllocation 
+            userId={userId} 
+            mode={mode} 
+            onUpdate={() => {
+              const savedSettings = localStorage.getItem(`depositSettings_${userId}_${mode}`);
+              if (savedSettings) {
+                const parsed = JSON.parse(savedSettings);
+                setAllocationSettings(parsed);
+              }
+            }} 
+          />
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Allocation Settings */}

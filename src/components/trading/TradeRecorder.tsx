@@ -76,9 +76,9 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
       
       if (pnl > 0) {
         // Profit: distribute according to profit distribution settings
-        const profitToActive = (pnl * (fundData.profit_dist_active || 50)) / 100;
-        const profitToReserve = (pnl * (fundData.profit_dist_reserve || 25)) / 100;
-        const profitToProfit = (pnl * (fundData.profit_dist_profit || 25)) / 100;
+        const profitToActive = (pnl * (fundData.profit_dist_active ?? 50)) / 100;
+        const profitToReserve = (pnl * (fundData.profit_dist_reserve ?? 25)) / 100;
+        const profitToProfit = (pnl * (fundData.profit_dist_profit ?? 25)) / 100;
         
         // Distribute the profit
         updatedFundData.active_fund = currentActiveFund + profitToActive;
@@ -171,9 +171,9 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
       
       if (pnl > 0) {
         // Profit: distribute according to profit distribution settings
-        const profitToActive = (pnl * (fundData.profit_dist_active || 50)) / 100;
-        const profitToReserve = (pnl * (fundData.profit_dist_reserve || 25)) / 100;
-        const profitToProfit = (pnl * (fundData.profit_dist_profit || 25)) / 100;
+        const profitToActive = (pnl * (fundData.profit_dist_active ?? 50)) / 100;
+        const profitToReserve = (pnl * (fundData.profit_dist_reserve ?? 25)) / 100;
+        const profitToProfit = (pnl * (fundData.profit_dist_profit ?? 25)) / 100;
         
         // Distribute the profit
         updatedFundData.active_fund = currentActiveFund + profitToActive;
