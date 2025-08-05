@@ -61,6 +61,7 @@ export type Database = {
           profit_dist_reserve: number | null
           profit_fund: number
           reserve_fund: number
+          risk_percent: number | null
           sub_user_name: string | null
           target_reserve_fund: number
           total_capital: number
@@ -80,6 +81,7 @@ export type Database = {
           profit_dist_reserve?: number | null
           profit_fund?: number
           reserve_fund?: number
+          risk_percent?: number | null
           sub_user_name?: string | null
           target_reserve_fund?: number
           total_capital?: number
@@ -99,6 +101,7 @@ export type Database = {
           profit_dist_reserve?: number | null
           profit_fund?: number
           reserve_fund?: number
+          risk_percent?: number | null
           sub_user_name?: string | null
           target_reserve_fund?: number
           total_capital?: number
