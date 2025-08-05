@@ -542,24 +542,30 @@ const Admin = () => {
   };
   const approveFromNotification = async (userId: string, notificationId: string) => {
     // Set notification as processed immediately to hide buttons
-    setNotifications(prev => prev.map(notification => notification.id === notificationId ? {
-      ...notification,
-      processed: true,
-      action: 'approved'
-    } : notification));
+    setNotifications(prev => prev.map(notification => 
+      notification.id === notificationId ? {
+        ...notification,
+        processed: true,
+        action: 'approved',
+        is_read: true
+      } : notification
+    ));
     await approveUser(userId);
-    await markNotificationRead(notificationId);
+    // Don't call markNotificationRead separately since we already marked it as read above
     setNotificationDropdownOpen(false);
   };
   const rejectFromNotification = async (userId: string, notificationId: string) => {
     // Set notification as processed immediately to hide buttons
-    setNotifications(prev => prev.map(notification => notification.id === notificationId ? {
-      ...notification,
-      processed: true,
-      action: 'rejected'
-    } : notification));
+    setNotifications(prev => prev.map(notification => 
+      notification.id === notificationId ? {
+        ...notification,
+        processed: true,
+        action: 'rejected',
+        is_read: true
+      } : notification
+    ));
     await rejectUser(userId);
-    await markNotificationRead(notificationId);
+    // Don't call markNotificationRead separately since we already marked it as read above
     setNotificationDropdownOpen(false);
   };
   const handleSignOut = async () => {
