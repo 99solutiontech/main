@@ -38,7 +38,6 @@ interface DepositSettingsProps {
   fundData: FundData;
   subUserName?: string;
   onUpdate: () => void;
-  onClose?: () => void;
 }
 
 interface SettingsForm {
@@ -46,15 +45,16 @@ interface SettingsForm {
   reservePercentage: number;
 }
 
-const DepositSettings = ({ fundData, subUserName, onUpdate, onClose }: DepositSettingsProps) => {
+const DepositSettings = ({ fundData, subUserName, onUpdate }: DepositSettingsProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  // Calculate current percentages based on active and reserve fund distribution
-  const currentActivePercentage = 40; // Default from current logic
-  const currentReservePercentage = 60; // Default from current logic
+  // Calculate current percentages based on existing funds
+  const totalExistingFunds = fundData.active_fund + fundData.reserve_fund;
+  const currentActivePercentage = totalExistingFunds > 0 ? Math.round((fundData.active_fund / totalExistingFunds) * 100) : 40;
+  const currentReservePercentage = totalExistingFunds > 0 ? Math.round((fundData.reserve_fund / totalExistingFunds) * 100) : 60;
 
   const form = useForm<SettingsForm>({
     defaultValues: {
@@ -174,9 +174,9 @@ const DepositSettings = ({ fundData, subUserName, onUpdate, onClose }: DepositSe
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{t('depositAllocationSettings')}</DialogTitle>
+          <DialogTitle>Existing Fund Rebalancing</DialogTitle>
           <DialogDescription>
-            {t('adjustHowDepositsAreSplit')}
+            Adjust the distribution of your existing funds between Active and Reserve funds.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(handleUpdateSettings)} className="space-y-4">

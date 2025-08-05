@@ -53,10 +53,15 @@ const ProfitManagementSettings = ({ fundData, subUserName, onUpdate }: ProfitMan
   });
 
   const watchedValues = watch();
-  const total = watchedValues.profit_dist_active + watchedValues.profit_dist_reserve + watchedValues.profit_dist_profit;
+  const total = Number(watchedValues.profit_dist_active || 0) + Number(watchedValues.profit_dist_reserve || 0) + Number(watchedValues.profit_dist_profit || 0);
 
   const updateSettings = async (data: SettingsForm) => {
-    if (total !== 100) {
+    const activePercent = Number(data.profit_dist_active) || 0;
+    const reservePercent = Number(data.profit_dist_reserve) || 0;
+    const profitPercent = Number(data.profit_dist_profit) || 0;
+    const totalPercent = activePercent + reservePercent + profitPercent;
+
+    if (totalPercent !== 100) {
       toast({
         title: "Error",
         description: "Total profit distribution must equal 100%",
@@ -70,9 +75,9 @@ const ProfitManagementSettings = ({ fundData, subUserName, onUpdate }: ProfitMan
       const { error } = await supabase
         .from('fund_data')
         .update({
-          profit_dist_active: data.profit_dist_active,
-          profit_dist_reserve: data.profit_dist_reserve,
-          profit_dist_profit: data.profit_dist_profit,
+          profit_dist_active: activePercent,
+          profit_dist_reserve: reservePercent,
+          profit_dist_profit: profitPercent,
           updated_at: new Date().toISOString(),
         })
         .eq('id', fundData.id);
@@ -87,7 +92,7 @@ const ProfitManagementSettings = ({ fundData, subUserName, onUpdate }: ProfitMan
         amount: 0,
         balance_before: fundData.total_capital,
         balance_after: fundData.total_capital,
-        description: `Updated profit distribution: Active ${data.profit_dist_active}%, Reserve ${data.profit_dist_reserve}%, Profit ${data.profit_dist_profit}%`,
+        description: `Updated profit distribution: Active ${activePercent}%, Reserve ${reservePercent}%, Profit ${profitPercent}%`,
         sub_user_name: subUserName,
       });
 
@@ -138,8 +143,7 @@ const ProfitManagementSettings = ({ fundData, subUserName, onUpdate }: ProfitMan
                 {...register('profit_dist_active', { 
                   required: true, 
                   min: 0, 
-                  max: 100,
-                  valueAsNumber: true 
+                  max: 100
                 })}
               />
             </div>
@@ -156,8 +160,7 @@ const ProfitManagementSettings = ({ fundData, subUserName, onUpdate }: ProfitMan
                 {...register('profit_dist_reserve', { 
                   required: true, 
                   min: 0, 
-                  max: 100,
-                  valueAsNumber: true 
+                  max: 100
                 })}
               />
             </div>
@@ -174,8 +177,7 @@ const ProfitManagementSettings = ({ fundData, subUserName, onUpdate }: ProfitMan
                 {...register('profit_dist_profit', { 
                   required: true, 
                   min: 0, 
-                  max: 100,
-                  valueAsNumber: true 
+                  max: 100
                 })}
               />
             </div>
@@ -185,7 +187,7 @@ const ProfitManagementSettings = ({ fundData, subUserName, onUpdate }: ProfitMan
                 {t('total')}: {total}% {total !== 100 && '(Must equal 100%)'}
               </p>
               <div className="mt-2 text-muted-foreground">
-                <p>{t('current')}: Active {watchedValues.profit_dist_active}%, Reserve {watchedValues.profit_dist_reserve}%, Profit {watchedValues.profit_dist_profit}%</p>
+                <p>{t('current')}: Active {Number(watchedValues.profit_dist_active || 0)}%, Reserve {Number(watchedValues.profit_dist_reserve || 0)}%, Profit {Number(watchedValues.profit_dist_profit || 0)}%</p>
               </div>
             </div>
           </div>

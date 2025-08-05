@@ -392,7 +392,6 @@ const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate
               fundData={fundData} 
               subUserName={subUserName}
               onUpdate={onUpdate}
-              onClose={() => setShowSettings(false)}
             />
           </div>
         )}
