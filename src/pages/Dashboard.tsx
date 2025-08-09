@@ -102,17 +102,17 @@ const Dashboard = () => {
       }
     };
 
-    // Set up auth state listener for real-time updates
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Set up auth state listener for real-time updates (no async inside)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Dashboard: Auth state changed:', event);
-      
+
       if (event === 'SIGNED_OUT' || !session?.user) {
         navigate('/auth');
         return;
       }
-      
-      setSession(session);
-      setUser(session.user);
+
+      setSession(session ?? null);
+      setUser(session?.user ?? null);
     });
 
     initializeDashboard();
@@ -318,8 +318,19 @@ const Dashboard = () => {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/auth');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.warn('Sign out error (ignoring):', error.message);
+      }
+    } catch (err: any) {
+      console.warn('Sign out exception (ignoring):', err?.message);
+    } finally {
+      // Ensure navigation regardless of server response
+      navigate('/auth', { replace: true });
+      // Force a hard reload to clear any cached state
+      setTimeout(() => window.location.assign('/auth'), 0);
+    }
   };
 
   const initializeFundData = async (initialCapital: number) => {
@@ -421,6 +432,9 @@ const Dashboard = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">{t('loading')}</p>
+          <Button variant="ghost" className="mt-4" onClick={handleSignOut}>
+            {t('signOut')}
+          </Button>
         </div>
       </div>
     );

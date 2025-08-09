@@ -138,17 +138,17 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
         return;
       }
 
-      // If no special role is required, authorize immediately on sign-in
-      if (session?.user && !requiredRole) {
-        setSession(session);
-        setUser(session.user);
-        setIsAuthorized(true);
-        setLoading(false);
-        return;
-      }
-
-      // Defer re-checks to avoid deadlocks
-      if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+      // Update state on sign-in/initial
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setSession(session ?? null);
+        setUser(session?.user ?? null);
+        // If no role required, authorize immediately to avoid blocking UI
+        if (!requiredRole) {
+          setIsAuthorized(true);
+          setLoading(false);
+          return;
+        }
+        // Defer full check
         setTimeout(() => {
           checkAuth();
         }, 0);

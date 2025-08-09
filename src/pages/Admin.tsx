@@ -556,8 +556,17 @@ const Admin = () => {
     setNotificationDropdownOpen(false);
   };
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/auth');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.warn('Admin sign out error (ignoring):', error.message);
+      }
+    } catch (err: any) {
+      console.warn('Admin sign out exception (ignoring):', err?.message);
+    } finally {
+      navigate('/auth', { replace: true });
+      setTimeout(() => window.location.assign('/auth'), 0);
+    }
   };
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
