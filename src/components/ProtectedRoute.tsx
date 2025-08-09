@@ -33,12 +33,21 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
         setSession(session);
         setUser(session.user);
 
-        // Check user profile and status
-        const { data: profile, error } = await supabase
+        // Check user profile and status with timeout to avoid hanging
+        const profilePromise = supabase
           .from('profiles')
           .select('*')
           .eq('user_id', session.user.id)
-          .single();
+          .maybeSingle();
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
+        );
+
+        const { data: profile, error } = await Promise.race([
+          profilePromise as any,
+          timeoutPromise
+        ]) as any;
 
         if (error || !profile) {
           console.error('Profile error:', error);
@@ -124,7 +133,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     });
 
     return () => subscription.unsubscribe();
-  }, [requiredRole, toast]);
+  }, [requiredRole]);
 
   if (loading) {
     return (
