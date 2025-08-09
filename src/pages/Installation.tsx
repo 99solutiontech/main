@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,39 @@ const Installation = () => {
     resendApiKey: "",
     adminNotificationEmail: ""
   });
+
+  // Auto-fill from URL query params and optionally auto-run connection test
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const url = params.get('supabaseUrl') || '';
+    let key = params.get('anonKey') || '';
+    const pid = params.get('projectId') || '';
+
+    // If anonKey came as NEXT_PUBLIC_SUPABASE_ANON_KEY=..., extract the value
+    if (key && key.includes('=')) {
+      const parts = key.split('=');
+      key = parts[parts.length - 1];
+    }
+    // Remove any spaces/newlines from anon key
+    key = key.replace(/\s+/g, '');
+
+    if (url || key || pid) {
+      setConfig((prev) => ({
+        ...prev,
+        supabaseUrl: url || prev.supabaseUrl,
+        supabaseAnonKey: key || prev.supabaseAnonKey,
+        projectId: pid || prev.projectId,
+      }));
+
+      // If we have all 3, auto-run the test once
+      if (url && key && pid) {
+        // Delay to ensure state is applied
+        setTimeout(() => {
+          testDatabaseConnection();
+        }, 50);
+      }
+    }
+  }, []);
 
   const steps: InstallationStep[] = [
     {
