@@ -81,9 +81,28 @@ const Auth = () => {
       });
     } catch (error: any) {
       console.error('Sign in error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        status: error.status,
+        statusText: error.statusText,
+        details: error
+      });
+      
+      // More specific error messages
+      let errorMessage = "Failed to sign in. Please check your credentials.";
+      if (error.message?.includes("Invalid login credentials")) {
+        errorMessage = "Invalid email or password. Please check your credentials and try again.";
+      } else if (error.message?.includes("Email not confirmed")) {
+        errorMessage = "Please confirm your email address before signing in.";
+      } else if (error.message?.includes("Too many requests")) {
+        errorMessage = "Too many login attempts. Please wait a moment and try again.";
+      } else if (error.message?.includes("Network")) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      }
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to sign in. Please check your credentials.",
+        description: error.message || errorMessage,
         variant: "destructive",
       });
     } finally {
