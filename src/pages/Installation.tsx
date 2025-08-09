@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { createClient } from '@supabase/supabase-js';
 import { useToast } from "@/hooks/use-toast";
 
 interface InstallationStep {
@@ -30,44 +29,6 @@ const Installation = () => {
     resendApiKey: "",
     adminNotificationEmail: ""
   });
-
-  // CORS test state
-  const [corsTestResult, setCorsTestResult] = useState<string | null>(null);
-  const [corsLoading, setCorsLoading] = useState(false);
-  const [corsError, setCorsError] = useState<string | null>(null);
-
-  // Auto-fill from URL query params and optionally auto-run connection test
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const url = params.get('supabaseUrl') || '';
-    let key = params.get('anonKey') || '';
-    const pid = params.get('projectId') || '';
-
-    // If anonKey came as NEXT_PUBLIC_SUPABASE_ANON_KEY=..., extract the value
-    if (key && key.includes('=')) {
-      const parts = key.split('=');
-      key = parts[parts.length - 1];
-    }
-    // Remove any spaces/newlines from anon key
-    key = key.replace(/\s+/g, '');
-
-    if (url || key || pid) {
-      setConfig((prev) => ({
-        ...prev,
-        supabaseUrl: url || prev.supabaseUrl,
-        supabaseAnonKey: key || prev.supabaseAnonKey,
-        projectId: pid || prev.projectId,
-      }));
-
-      // If we have all 3, auto-run the test once
-      if (url && key && pid) {
-        // Delay to ensure state is applied
-        setTimeout(() => {
-          testDatabaseConnection();
-        }, 50);
-      }
-    }
-  }, []);
 
   const steps: InstallationStep[] = [
     {
@@ -101,23 +62,15 @@ const Installation = () => {
     setLoading(true);
     setError("");
     try {
-      // Create a dynamic client using the form configuration
-      const testClient = createClient(config.supabaseUrl, config.supabaseAnonKey);
-      
-      // Test the connection by trying to query the auth endpoint
-      const { data: sessionData, error: sessionError } = await testClient.auth.getSession();
-      
-      if (sessionError && sessionError.message !== 'No session found') {
-        throw new Error(`Connection failed: ${sessionError.message}`);
-      }
+      const response = await supabase.functions.invoke('test-installation-connection', {
+        body: {
+          supabaseUrl: config.supabaseUrl,
+          supabaseAnonKey: config.supabaseAnonKey,
+          projectId: config.projectId
+        }
+      });
 
-      // Additional test: Try to query the database
-      try {
-        await testClient.from('profiles').select('count').limit(1);
-      } catch (dbError: any) {
-        // If profiles table doesn't exist, that's fine for a fresh installation
-        console.log('Profiles table test (expected to fail on fresh install):', dbError.message);
-      }
+      if (response.error) throw response.error;
 
       setSuccess("Database connection successful!");
       setTimeout(() => setCurrentStep(1), 1000);
@@ -125,45 +78,6 @@ const Installation = () => {
       setError(err.message || "Failed to connect to database");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const testCORS = async () => {
-    setCorsLoading(true);
-    setCorsError(null);
-    setCorsTestResult(null);
-
-    try {
-      if (!config.supabaseUrl || !config.supabaseAnonKey) {
-        throw new Error("Please fill in Supabase URL and Anon Key first");
-      }
-
-      // Make a direct client-side request to test CORS
-      const response = await fetch(`${config.supabaseUrl}/rest/v1/`, {
-        method: 'GET',
-        headers: {
-          'apikey': config.supabaseAnonKey,
-          'Authorization': `Bearer ${config.supabaseAnonKey}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        setCorsTestResult("✅ CORS is properly configured! Browser can make requests to your self-hosted Supabase.");
-      } else {
-        // If we get a response but it's not ok, CORS is working but there might be other issues
-        setCorsTestResult("✅ CORS is working (got response), but server returned: " + response.status);
-      }
-    } catch (err: any) {
-      if (err.message.includes('CORS') || err.message.includes('Cross-Origin')) {
-        setCorsError(`❌ CORS Error: ${err.message}\n\nYour self-hosted Supabase needs to be configured to allow requests from this domain (${window.location.origin}).\n\nPlease check your Kong configuration or Docker Compose settings.`);
-      } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-        setCorsError(`❌ Network Error: Cannot reach ${config.supabaseUrl}\n\nThis could be:\n• CORS not configured\n• Server not accessible\n• Wrong URL\n\nPlease verify your Supabase URL and CORS settings.`);
-      } else {
-        setCorsError(`❌ Error: ${err.message}`);
-      }
-    } finally {
-      setCorsLoading(false);
     }
   };
 
@@ -289,54 +203,10 @@ const Installation = () => {
                 onChange={(e) => setConfig({...config, projectId: e.target.value})}
               />
             </div>
-            <div className="space-y-3">
-              <Button onClick={testDatabaseConnection} disabled={loading} className="w-full">
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Test Connection (Server-Side)
-              </Button>
-              
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">CORS Test</span>
-                </div>
-              </div>
-              
-              <Button 
-                onClick={testCORS} 
-                disabled={corsLoading} 
-                variant="outline" 
-                className="w-full"
-              >
-                {corsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Test CORS (Browser)
-              </Button>
-              
-              {corsTestResult && (
-                <Alert className="border-green-200 bg-green-50 dark:bg-green-950">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-800 dark:text-green-200 whitespace-pre-line">
-                    {corsTestResult}
-                  </AlertDescription>
-                </Alert>
-              )}
-              
-              {corsError && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="whitespace-pre-line">
-                    {corsError}
-                  </AlertDescription>
-                </Alert>
-              )}
-              
-              <div className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg">
-                <p className="font-medium mb-1">What is CORS?</p>
-                <p>Cross-Origin Resource Sharing (CORS) allows your browser to make requests to your self-hosted Supabase from this domain. Without proper CORS configuration, browser requests will be blocked.</p>
-              </div>
-            </div>
+            <Button onClick={testDatabaseConnection} disabled={loading} className="w-full">
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Test Connection
+            </Button>
           </div>
         );
 
