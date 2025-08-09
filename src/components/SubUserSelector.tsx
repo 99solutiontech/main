@@ -81,6 +81,33 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserChange
     }
   };
 
+  useEffect(() => {
+    if (!userId) return;
+    const channels: any[] = [];
+
+    const fundChannel = supabase
+      .channel('subuser_fund_rt')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'fund_data', filter: `user_id=eq.${userId}` },
+        () => loadSubUsers()
+      )
+      .subscribe();
+    channels.push(fundChannel);
+
+    const txChannel = supabase
+      .channel('subuser_tx_rt')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'transaction_history', filter: `user_id=eq.${userId}` },
+        () => loadSubUsers()
+      )
+      .subscribe();
+    channels.push(txChannel);
+
+    return () => { channels.forEach(ch => supabase.removeChannel(ch)); };
+  }, [userId, currentMode]);
+
   const handleSubUserChange = (value: string) => {
     if (value === 'main') {
       onSubUserChange(null);

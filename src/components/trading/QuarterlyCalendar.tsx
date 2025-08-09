@@ -63,6 +63,25 @@ const QuarterlyCalendar = ({ userId, mode, subUserName }: QuarterlyCalendarProps
     }
   };
 
+  useEffect(() => {
+    const channel = supabase
+      .channel('quarterly_trading_rt')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'trading_history', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          const rec: any = (payload as any).new || (payload as any).old;
+          if (!rec) { loadTradingData(); return; }
+          if (rec.mode !== mode) return;
+          if ((subUserName || null) !== (rec.sub_user_name || null)) return;
+          loadTradingData();
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [userId, mode, subUserName, currentQuarter]);
+
   const formatCurrency = (amount: number) => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };

@@ -110,6 +110,21 @@ const CapitalGrowthChart = ({ userId, mode, subUserName }: CapitalGrowthChartPro
     };
   }, []);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel('capital_growth_rt')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'trading_history', filter: `user_id=eq.${userId}` },
+        () => {
+          loadChartData();
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [userId, mode, subUserName]);
+
   const options: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,

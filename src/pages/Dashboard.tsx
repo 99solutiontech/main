@@ -366,6 +366,7 @@ const Dashboard = () => {
           type: 'Initialize',
           details: `Initial capital set to $${initialCapital.toLocaleString()}`,
           end_balance: initialCapital,
+          sub_user_name: selectedSubUser?.name || null,
         });
         
         const historyTimeoutPromise = new Promise((_, reject) => 
@@ -442,7 +443,7 @@ const Dashboard = () => {
                   <Gem className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold tracking-wider">MoneyX v8.2</h1>
+                  <h1 className="text-2xl font-bold tracking-wider">Moneyx 8.8</h1>
                   <p className="text-sm text-muted-foreground">
                     {t('welcome')}, {profile.trader_name}
                   </p>

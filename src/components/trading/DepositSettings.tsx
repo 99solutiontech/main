@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Settings } from 'lucide-react';
-import NewDepositAllocation from './NewDepositAllocation';
-
 interface FundData {
   id: string;
   user_id: string;
@@ -63,6 +61,27 @@ const DepositSettings = ({ fundData, subUserName, onUpdate }: DepositSettingsPro
       reservePercentage: currentReservePercentage,
     }
   });
+
+  // New Deposit allocation settings (persisted per user/mode)
+  const [allocationSettings, setAllocationSettings] = useState({
+    activePercentage: 40,
+    reservePercentage: 60,
+  });
+
+  useEffect(() => {
+    const key = `depositSettings_${fundData.user_id}_${fundData.mode}`;
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      try { setAllocationSettings(JSON.parse(saved)); } catch {}
+    }
+  }, [fundData.user_id, fundData.mode]);
+
+  const updateAllocationSettings = (activePercent: number) => {
+    const reservePercent = 100 - activePercent;
+    const newSettings = { activePercentage: activePercent, reservePercentage: reservePercent };
+    setAllocationSettings(newSettings);
+    localStorage.setItem(`depositSettings_${fundData.user_id}_${fundData.mode}`, JSON.stringify(newSettings));
+  };
 
   const formatCurrency = (amount: number) => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -233,19 +252,45 @@ const DepositSettings = ({ fundData, subUserName, onUpdate }: DepositSettingsPro
             </div>
           </div>
 
-          {/* New Deposit Settings Section */}
-          <div className="border-t pt-4">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium">New Deposit Settings</h4>
-              <NewDepositAllocation 
-                userId={fundData.user_id} 
-                mode={fundData.mode} 
-                onUpdate={() => {}} 
-              />
-            </div>
+          {/* New Deposit Settings Section (separate inputs) */}
+          <div className="border-t pt-4 space-y-3">
+            <h4 className="font-medium">New Deposit Settings</h4>
             <p className="text-sm text-muted-foreground">
-              Configure how new deposits will be allocated between Active and Reserve funds.
+              Set how future deposits will be split. This does NOT move existing money; it only applies when you add new funds.
             </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="newActivePercent">Active Fund %</Label>
+                <Input
+                  id="newActivePercent"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={allocationSettings.activePercentage}
+                  onChange={(e) => {
+                    const value = Number(e.target.value) || 0;
+                    if (value >= 0 && value <= 100) updateAllocationSettings(value);
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="newReservePercent">Reserve Fund %</Label>
+                <Input
+                  id="newReservePercent"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={allocationSettings.reservePercentage}
+                  onChange={(e) => {
+                    const value = Number(e.target.value) || 0;
+                    if (value >= 0 && value <= 100) updateAllocationSettings(100 - value);
+                  }}
+                />
+              </div>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Current setting: {allocationSettings.activePercentage}% to Active, {allocationSettings.reservePercentage}% to Reserve
+            </div>
           </div>
 
           <DialogFooter>

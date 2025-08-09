@@ -62,6 +62,21 @@ const WeeklyCalendar = ({ userId, mode, subUserName }: WeeklyCalendarProps) => {
     }
   };
 
+  useEffect(() => {
+    const channel = supabase
+      .channel('weekly_trading_rt')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'trading_history', filter: `user_id=eq.${userId}` },
+        () => {
+          loadTradingData();
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [userId, mode, subUserName, currentDate]);
+
   const formatCurrency = (amount: number) => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
