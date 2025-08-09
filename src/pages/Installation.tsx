@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { createClient } from '@supabase/supabase-js';
 import { useToast } from "@/hooks/use-toast";
 
 interface InstallationStep {
@@ -100,7 +101,10 @@ const Installation = () => {
     setLoading(true);
     setError("");
     try {
-      const response = await supabase.functions.invoke('test-installation-connection', {
+      // Create a dynamic client using the form configuration
+      const dynamicClient = createClient(config.supabaseUrl, config.supabaseAnonKey);
+      
+      const response = await dynamicClient.functions.invoke('test-installation-connection', {
         body: {
           supabaseUrl: config.supabaseUrl,
           supabaseAnonKey: config.supabaseAnonKey,
