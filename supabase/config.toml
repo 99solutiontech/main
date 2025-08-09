@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.complete-installation]
 verify_jwt = false
+
+[functions.test-installation-connection]
+verify_jwt = false
