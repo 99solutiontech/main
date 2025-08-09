@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useSecurityMonitor } from '@/hooks/useSecurityMonitor';
 import { Eye, EyeOff, Shield } from 'lucide-react';
+import { DatabaseReset } from '@/components/DatabaseReset';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -18,6 +19,7 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('signin');
+  const [showReset, setShowReset] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { trackFailedLogin } = useSecurityMonitor();
@@ -340,6 +342,22 @@ const Auth = () => {
             </Tabs>
           </CardContent>
         </Card>
+        
+        {showReset && (
+          <div className="mt-4">
+            <DatabaseReset />
+          </div>
+        )}
+        
+        <div className="mt-4 text-center">
+          <Button
+            variant="link"
+            onClick={() => setShowReset(!showReset)}
+            className="text-sm text-muted-foreground hover:text-destructive"
+          >
+            {showReset ? "Hide Reset Options" : "Database Reset (Admin Only)"}
+          </Button>
+        </div>
       </div>
     </div>
   );
