@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -77,6 +77,33 @@ const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate
   const withdrawForm = useForm<WithdrawForm>();
   const transferForm = useForm<TransferForm>();
 
+  // New Deposit Settings (persisted per user/mode)
+  const [depositActivePct, setDepositActivePct] = useState<number>(50);
+  const [depositReservePct, setDepositReservePct] = useState<number>(50);
+
+  const loadDepositSettings = () => {
+    const key = `depositSettings_${fundData.user_id}_${fundData.mode}`;
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        if (typeof s.activePercentage === 'number' && typeof s.reservePercentage === 'number') {
+          setDepositActivePct(s.activePercentage);
+          setDepositReservePct(s.reservePercentage);
+          return;
+        }
+      } catch {}
+    }
+    setDepositActivePct(50);
+    setDepositReservePct(50);
+  };
+
+  useEffect(() => {
+    loadDepositSettings();
+    const handler = () => loadDepositSettings();
+    window.addEventListener('depositSettingsUpdated', handler);
+    return () => window.removeEventListener('depositSettingsUpdated', handler);
+  }, [fundData.user_id, fundData.mode]);
   const formatCurrency = (amount: number) => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
@@ -85,9 +112,9 @@ const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate
     setLoading(true);
     try {
       const amount = Number(data.amount);
-      // Use stored deposit percentages or default 40/60 split
-      const activePercentage = fundData.profit_dist_active || 40;
-      const reservePercentage = 100 - activePercentage;
+      // Use New Deposit Settings (local)
+      const activePercentage = depositActivePct;
+      const reservePercentage = depositReservePct;
       const toActive = amount * (activePercentage / 100);
       const toReserve = amount * (reservePercentage / 100);
 
@@ -416,7 +443,7 @@ const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate
                 />
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <span>
-                    {t('willBeSplit')}: {fundData.profit_dist_active || 40}% {t('toActiveFund')}, {100 - (fundData.profit_dist_active || 40)}% {t('toReserveFund')}
+                    {t('willBeSplit')}: {depositActivePct}% {t('toActiveFund')}, {depositReservePct}% {t('toReserveFund')}
                   </span>
                   <DepositSettings 
                     fundData={fundData}

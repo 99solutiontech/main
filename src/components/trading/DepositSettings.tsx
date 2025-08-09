@@ -81,8 +81,9 @@ const DepositSettings = ({ fundData, subUserName, onUpdate }: DepositSettingsPro
     const newSettings = { activePercentage: activePercent, reservePercentage: reservePercent };
     setAllocationSettings(newSettings);
     localStorage.setItem(`depositSettings_${fundData.user_id}_${fundData.mode}`, JSON.stringify(newSettings));
+    // Notify other components in this tab to refresh their preview
+    window.dispatchEvent(new Event('depositSettingsUpdated'));
   };
-
   const formatCurrency = (amount: number) => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };

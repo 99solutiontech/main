@@ -116,6 +116,7 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
       await (supabase as any).from('trading_history').insert({
         user_id: userId,
         mode: data.mode,
+        sub_user_name: data.name,
         type: 'Initialize',
         details: `Initial capital set to $${data.initial_capital.toLocaleString()} for ${data.name}`,
         end_balance: data.initial_capital,
