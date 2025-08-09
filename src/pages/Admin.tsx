@@ -319,22 +319,8 @@ const Admin = () => {
   };
   const loadActiveSessions = async () => {
     try {
-      // This will work after migration approval
-      const {
-        data,
-        error
-      } = await (supabase as any).from('user_sessions').select('*, profiles(trader_name)').eq('is_active', true).order('last_activity', {
-        ascending: false
-      });
-      if (!error && data) {
-        setActiveSessions(data.map((session: any) => ({
-          ...session,
-          trader_name: session.profiles?.trader_name || 'Unknown'
-        })));
-      } else {
-        // Always set empty array if there's an error
-        setActiveSessions([]);
-      }
+      // For now, just set empty array since user_sessions table doesn't exist yet
+      setActiveSessions([]);
     } catch (error) {
       console.log('User sessions not available yet - will be enabled after migration');
       // Set empty array to prevent loading issues
