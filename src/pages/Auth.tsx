@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSecurityMonitor } from '@/hooks/useSecurityMonitor';
 import { Eye, EyeOff, Shield } from 'lucide-react';
 import { DatabaseReset } from '@/components/DatabaseReset';
+import { SuperAdminSetup } from '@/components/SuperAdminSetup';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -54,14 +55,13 @@ const Auth = () => {
         throw error;
       }
 
-      // Check if user account is active
       const { data: profile } = await supabase
-        .from('profiles')
+        .from('user_profiles' as any)
         .select('is_active, registration_status')
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
         .single();
 
-      if (profile && !profile.is_active) {
+      if (profile && !(profile as any).is_active) {
         await supabase.auth.signOut();
         toast({
           title: "Account Suspended",
@@ -71,7 +71,7 @@ const Auth = () => {
         return;
       }
 
-      if (profile && profile.registration_status === 'pending') {
+      if (profile && (profile as any).registration_status === 'pending') {
         await supabase.auth.signOut();
         toast({
           title: "Account Pending",
@@ -121,12 +121,11 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // First check if a profile with this email already exists
       const { data: existingProfiles, error: profileError } = await supabase
-        .rpc('get_profiles_by_email', { email_param: email });
+        .rpc('get_user_profiles_by_email' as any, { email_param: email });
       
       if (!profileError && existingProfiles && existingProfiles.length > 0) {
-        const profile = existingProfiles[0];
+        const profile = existingProfiles[0] as any;
         
         if (profile.registration_status === 'pending') {
           toast({
@@ -163,7 +162,7 @@ const Auth = () => {
       // Update user profile to pending status and inactive
       if (data?.user) {
         await supabase
-          .from('profiles')
+          .from('user_profiles' as any)
           .update({ 
             is_active: false,
             registration_status: 'pending',
@@ -172,9 +171,8 @@ const Auth = () => {
           })
           .eq('user_id', data.user.id);
 
-        // Create admin notification in database
         await supabase
-          .from('admin_notifications')
+          .from('system_notifications' as any)
           .insert({
             type: 'registration',
             title: 'New User Registration',
@@ -344,7 +342,8 @@ const Auth = () => {
         </Card>
         
         {showReset && (
-          <div className="mt-4">
+          <div className="mt-4 space-y-4">
+            <SuperAdminSetup />
             <DatabaseReset />
           </div>
         )}
@@ -355,7 +354,7 @@ const Auth = () => {
             onClick={() => setShowReset(!showReset)}
             className="text-sm text-muted-foreground hover:text-destructive"
           >
-            {showReset ? "Hide Reset Options" : "Database Reset (Admin Only)"}
+            {showReset ? "Hide Admin Options" : "Admin Setup Options"}
           </Button>
         </div>
       </div>

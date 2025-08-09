@@ -55,8 +55,8 @@ export const DatabaseReset = () => {
     }
   };
 
-  if (!showConfirm) {
-    return (
+  return (
+    <div className="space-y-4">
       <Card className="w-full max-w-md border-destructive">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-destructive">
@@ -77,59 +77,59 @@ export const DatabaseReset = () => {
           </Button>
         </CardContent>
       </Card>
-    );
-  }
 
-  return (
-    <Card className="w-full max-w-md border-destructive">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-destructive">
-          <RefreshCw className="h-5 w-5" />
-          Confirm Database Reset
-        </CardTitle>
-        <CardDescription>
-          Enter credentials for the new super admin user:
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="admin-email">Admin Email</Label>
-          <Input
-            id="admin-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="admin@example.com"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="admin-password">Admin Password</Label>
-          <Input
-            id="admin-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Strong password"
-          />
-        </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={() => setShowConfirm(false)}
-            variant="outline"
-            className="flex-1"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleReset}
-            variant="destructive"
-            className="flex-1"
-            disabled={isLoading}
-          >
-            {isLoading ? "Resetting..." : "Confirm Reset"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      {showConfirm && (
+        <Card className="w-full max-w-md border-destructive">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <RefreshCw className="h-5 w-5" />
+              Confirm Database Reset
+            </CardTitle>
+            <CardDescription>
+              Enter credentials for the new super admin user:
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="admin-email">Admin Email</Label>
+              <Input
+                id="admin-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@example.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="admin-password">Admin Password</Label>
+              <Input
+                id="admin-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Strong password"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowConfirm(false)}
+                variant="outline"
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleReset}
+                variant="destructive"
+                className="flex-1"
+                disabled={isLoading}
+              >
+                {isLoading ? "Resetting..." : "Confirm Reset"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };

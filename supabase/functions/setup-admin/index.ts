@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Starting database reset process...')
+    console.log('Creating super admin user...')
 
     // Create admin client using service role key
     const supabaseAdmin = createClient(
@@ -27,41 +27,10 @@ serve(async (req) => {
       }
     )
 
-    const { adminEmail, adminPassword } = await req.json()
-    
-    if (!adminEmail || !adminPassword) {
-      return new Response(
-        JSON.stringify({ error: 'Admin email and password are required' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    console.log('Deleting all existing data...')
-
-    // Delete all data from new tables (in correct order due to foreign keys)
-    await supabaseAdmin.from('system_notifications').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    await supabaseAdmin.from('fund_transactions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    await supabaseAdmin.from('trade_records').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    await supabaseAdmin.from('trading_funds').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    await supabaseAdmin.from('user_profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-
-    // Delete all users from auth.users
-    const { data: users } = await supabaseAdmin.auth.admin.listUsers()
-    if (users?.users && users.users.length > 0) {
-      for (const user of users.users) {
-        await supabaseAdmin.auth.admin.deleteUser(user.id)
-      }
-    }
-
-    console.log('Creating new super admin user...')
-
     // Create new super admin user
     const { data: newUser, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
-      email: adminEmail,
-      password: adminPassword,
+      email: 'ceoserd@gmail.com',
+      password: 'Mis@478992',
       email_confirm: true,
       user_metadata: {
         full_name: 'Super Administrator',
@@ -80,9 +49,9 @@ serve(async (req) => {
       )
     }
 
-    // Create profile for the admin user in new table
+    console.log('Creating admin profile...')
 
-    // Create profile for the admin user
+    // Create profile for the admin user in new table
     const { error: profileError } = await supabaseAdmin
       .from('user_profiles')
       .insert({
@@ -107,7 +76,7 @@ serve(async (req) => {
 
     console.log('Creating initial fund data...')
 
-    // Create initial fund data
+    // Create initial fund data in new table
     const { error: fundError } = await supabaseAdmin
       .from('trading_funds')
       .insert({
@@ -139,13 +108,13 @@ serve(async (req) => {
       )
     }
 
-    console.log('Database reset completed successfully!')
+    console.log('Super admin created successfully!')
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Database reset successfully. Fresh super admin user created.',
-        adminEmail: adminEmail
+        message: 'Super admin user created successfully with fresh tables.',
+        adminEmail: 'ceoserd@gmail.com'
       }),
       { 
         status: 200, 
@@ -154,7 +123,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Database reset error:', error)
+    console.error('Setup error:', error)
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: error.message }),
       { 
