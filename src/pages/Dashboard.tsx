@@ -331,7 +331,6 @@ const Dashboard = () => {
         });
       } catch {}
       navigate('/auth', { replace: true });
-      setTimeout(() => window.location.assign('/auth'), 0);
     }
   };
 

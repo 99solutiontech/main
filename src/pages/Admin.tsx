@@ -565,7 +565,6 @@ const Admin = () => {
       console.warn('Admin sign out exception (ignoring):', err?.message);
     } finally {
       navigate('/auth', { replace: true });
-      setTimeout(() => window.location.assign('/auth'), 0);
     }
   };
   if (loading) {
