@@ -31,32 +31,43 @@ const UserManagement = ({ userId, currentMode, fundData, onReset }: UserManageme
     if (!userId) return;
     
     try {
-      // Delete ALL data for this user and mode (including sub-accounts)
-      
-      // 1. Delete all trading history for current mode (main + sub accounts)
+      // Reset ONLY the main account (sub_user_name is NULL) for the current mode
+      // 1. Delete trading history for main account in this mode
       await supabase
         .from('trading_history')
         .delete()
         .eq('user_id', userId)
-        .eq('mode', currentMode);
+        .eq('mode', currentMode)
+        .is('sub_user_name', null);
 
-      // 2. Delete all transaction history for current mode (main + sub accounts)
+      // 2. Delete transaction history for main account in this mode
       await supabase
         .from('transaction_history')
         .delete()
         .eq('user_id', userId)
-        .eq('mode', currentMode);
+        .eq('mode', currentMode)
+        .is('sub_user_name', null);
 
-      // 3. Delete ALL fund data for current mode (main + sub accounts)
-      await supabase
+      // 3. Reset balances in fund_data but KEEP the main account record
+      const { error: updateError } = await supabase
         .from('fund_data')
-        .delete()
+        .update({
+          initial_capital: 0,
+          total_capital: 0,
+          active_fund: 0,
+          reserve_fund: 0,
+          profit_fund: 0,
+          target_reserve_fund: 0,
+        })
         .eq('user_id', userId)
-        .eq('mode', currentMode);
+        .eq('mode', currentMode)
+        .is('sub_user_name', null);
+
+      if (updateError) throw updateError;
 
       toast({
         title: t('success'),
-        description: `All ${currentMode} mode data has been completely reset. Please set up initial fund again.`,
+        description: `Main account in ${currentMode} mode has been reset. Balances cleared, account kept.`,
       });
 
       // Trigger refresh of all components
@@ -90,7 +101,7 @@ const UserManagement = ({ userId, currentMode, fundData, onReset }: UserManageme
             {t('resetDataConfirm')}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            This will completely erase ALL data for {currentMode} mode including trading history, transaction history, and fund setup. You will need to set up initial fund again. This action cannot be undone.
+            This will clear all data for the MAIN account in {currentMode} mode (trading history, transaction history) and set all balances to 0. The account will be kept. This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
