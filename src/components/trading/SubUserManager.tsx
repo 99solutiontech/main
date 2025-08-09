@@ -174,21 +174,19 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
 
   const resetSubUserData = async (subUserName: string) => {
     try {
-      // Get the sub user's mode for proper deletion
+      // Get the sub user's mode for proper operations
       const { data: subUserFund, error: fundError } = await supabase
         .from('fund_data')
         .select('mode')
         .eq('user_id', userId)
         .eq('sub_user_name', subUserName)
-        .single();
+        .maybeSingle();
 
       if (fundError || !subUserFund) {
         throw new Error('Sub user fund data not found');
       }
 
-      // Delete ALL data for this sub user
-      
-      // 1. Delete trading history for this sub user
+      // 1) Delete trading history for this sub user
       await supabase
         .from('trading_history')
         .delete()
@@ -196,7 +194,7 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
         .eq('mode', subUserFund.mode)
         .eq('sub_user_name', subUserName);
 
-      // 2. Delete transaction history for this sub user
+      // 2) Delete transaction history for this sub user
       await supabase
         .from('transaction_history')
         .delete()
@@ -204,22 +202,31 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
         .eq('mode', subUserFund.mode)
         .eq('sub_user_name', subUserName);
 
-      // 3. Delete fund data for this sub user (complete wipe)
-      await supabase
+      // 3) Reset balances in fund_data but KEEP the sub account record
+      const { error: updateError } = await supabase
         .from('fund_data')
-        .delete()
+        .update({
+          initial_capital: 0,
+          total_capital: 0,
+          active_fund: 0,
+          reserve_fund: 0,
+          profit_fund: 0,
+          target_reserve_fund: 0,
+        })
         .eq('user_id', userId)
+        .eq('mode', subUserFund.mode)
         .eq('sub_user_name', subUserName);
+
+      if (updateError) throw updateError;
 
       toast({
         title: t('success'),
-        description: `Sub account "${subUserName}" has been completely reset and deleted.`,
+        description: `Sub account "${subUserName}" has been reset. Balances cleared, account kept.`,
       });
 
       // Trigger refresh of transaction history and components
       window.dispatchEvent(new Event('refreshTransactions'));
       window.dispatchEvent(new Event('refreshFundData'));
-      
       loadSubUsers();
     } catch (error: any) {
       toast({
@@ -285,7 +292,7 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (confirm(`Are you sure you want to completely reset "${subUser.name}"? This will delete ALL data including trading history, transaction history, and fund setup. This action cannot be undone.`)) {
+                              if (confirm(`Reset all data for "${subUser.name}"? This will clear trading history, transaction history, and set all balances to 0. The sub account will be kept.`)) {
                                 resetSubUserData(subUser.name);
                               }
                             }}
