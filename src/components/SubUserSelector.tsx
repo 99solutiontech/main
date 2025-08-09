@@ -235,6 +235,7 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserChange
               onSubUserSelect={() => {}}
               selectedSubUserName={selectedSubUser}
               onResetSubUser={handleResetSubUser}
+              onCreated={() => setIsManagerOpen(false)}
             />
           </DialogContent>
         </Dialog>

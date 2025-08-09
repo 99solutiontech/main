@@ -31,6 +31,7 @@ interface SubUserManagerProps {
   selectedSubUser: SubUser | null;
   selectedSubUserName?: string | null;
   onResetSubUser?: (subUserName: string) => void;
+  onCreated?: () => void;
 }
 
 interface CreateSubUserForm {
@@ -39,7 +40,7 @@ interface CreateSubUserForm {
   initial_capital: number;
 }
 
-const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser, selectedSubUserName, onResetSubUser }: SubUserManagerProps) => {
+const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser, selectedSubUserName, onResetSubUser, onCreated }: SubUserManagerProps) => {
   const [subUsers, setSubUsers] = useState<SubUser[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -129,6 +130,7 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
 
       form.reset();
       loadSubUsers();
+      onCreated?.();
     } catch (error: any) {
       toast({
         title: t('error'),
