@@ -320,15 +320,17 @@ const Dashboard = () => {
   const handleSignOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.warn('Sign out error (ignoring):', error.message);
-      }
+      if (error) console.warn('Sign out error (ignoring):', error.message);
     } catch (err: any) {
       console.warn('Sign out exception (ignoring):', err?.message);
     } finally {
-      // Ensure navigation regardless of server response
+      // Hard clear any cached Supabase auth keys
+      try {
+        Object.keys(localStorage).forEach((k) => {
+          if (k.startsWith('sb-')) localStorage.removeItem(k);
+        });
+      } catch {}
       navigate('/auth', { replace: true });
-      // Force a hard reload to clear any cached state
       setTimeout(() => window.location.assign('/auth'), 0);
     }
   };
