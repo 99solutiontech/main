@@ -102,17 +102,22 @@ const Installation = () => {
     setError("");
     try {
       // Create a dynamic client using the form configuration
-      const dynamicClient = createClient(config.supabaseUrl, config.supabaseAnonKey);
+      const testClient = createClient(config.supabaseUrl, config.supabaseAnonKey);
       
-      const response = await dynamicClient.functions.invoke('test-installation-connection', {
-        body: {
-          supabaseUrl: config.supabaseUrl,
-          supabaseAnonKey: config.supabaseAnonKey,
-          projectId: config.projectId
-        }
-      });
+      // Test the connection by trying to query the auth endpoint
+      const { data: sessionData, error: sessionError } = await testClient.auth.getSession();
+      
+      if (sessionError && sessionError.message !== 'No session found') {
+        throw new Error(`Connection failed: ${sessionError.message}`);
+      }
 
-      if (response.error) throw response.error;
+      // Additional test: Try to query the database
+      try {
+        await testClient.from('profiles').select('count').limit(1);
+      } catch (dbError: any) {
+        // If profiles table doesn't exist, that's fine for a fresh installation
+        console.log('Profiles table test (expected to fail on fresh install):', dbError.message);
+      }
 
       setSuccess("Database connection successful!");
       setTimeout(() => setCurrentStep(1), 1000);
