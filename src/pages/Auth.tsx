@@ -37,10 +37,14 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Attempting sign in with:', { email, url: 'https://31.97.189.98:8443' });
+      
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+
+      console.log('Sign in response:', { error, data });
 
       if (error) {
         // Track failed login attempt
