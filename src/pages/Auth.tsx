@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useSecurityMonitor } from '@/hooks/useSecurityMonitor';
-import { Eye, EyeOff, Shield } from 'lucide-react';
+import { Eye, EyeOff, Shield, Settings } from 'lucide-react';
+import { SelfHostedConfiguration } from '@/components/SelfHostedConfiguration';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -18,6 +19,7 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('signin');
+  const [showConfiguration, setShowConfiguration] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { trackFailedLogin } = useSecurityMonitor();
@@ -203,9 +205,42 @@ const Auth = () => {
     }
   };
 
+  if (showConfiguration) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
+        <div className="w-full max-w-4xl space-y-8">
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Shield className="h-8 w-8 text-primary" />
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                MoneyX Setup
+              </h1>
+            </div>
+            <p className="text-muted-foreground mt-2">Configure your self-hosted Supabase instance</p>
+          </div>
+          <SelfHostedConfiguration onSuccess={() => {
+            setShowConfiguration(false);
+            toast({
+              title: "Configuration Complete",
+              description: "You can now sign in with your admin credentials.",
+            });
+          }} />
+          <div className="text-center">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowConfiguration(false)}
+            >
+              Back to Sign In
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md space-y-6">
         <Card className="w-full max-w-md shadow-xl border-0 bg-card/95 backdrop-blur">
           <CardHeader className="space-y-1 text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
@@ -340,6 +375,18 @@ const Auth = () => {
             </Tabs>
           </CardContent>
         </Card>
+        
+        <div className="text-center">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowConfiguration(true)}
+            className="flex items-center gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            Configure Self-Hosted Supabase
+          </Button>
+        </div>
       </div>
     </div>
   );
