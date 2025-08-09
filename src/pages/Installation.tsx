@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,53 +29,6 @@ const Installation = () => {
     resendApiKey: "",
     adminNotificationEmail: ""
   });
-
-  // Helper to persist step across reloads
-  const goToStep = (n: number) => {
-    setCurrentStep(n);
-    try { localStorage.setItem('installation_current_step', String(n)); } catch {}
-  };
-
-  // Load saved config and step if present
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('supabase_config');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        setConfig((c) => ({
-          ...c,
-          supabaseUrl: parsed.supabaseUrl ?? c.supabaseUrl,
-          supabaseAnonKey: parsed.supabaseAnonKey ?? c.supabaseAnonKey,
-          projectId: parsed.projectId ?? c.projectId,
-        }));
-      }
-      const savedStep = localStorage.getItem('installation_current_step');
-      if (savedStep) {
-        setCurrentStep(parseInt(savedStep, 10));
-      }
-    } catch {}
-  }, []);
-
-  const applyDatabaseConfig = async () => {
-    setLoading(true);
-    setError("");
-    setSuccess("");
-    try {
-      localStorage.setItem('supabase_config', JSON.stringify({
-        supabaseUrl: config.supabaseUrl,
-        supabaseAnonKey: config.supabaseAnonKey,
-        projectId: config.projectId,
-      }));
-      // Continue to next step after reload
-      localStorage.setItem('installation_current_step', '1');
-      setSuccess("Configuration saved. Reloading with new connection...");
-      setTimeout(() => window.location.reload(), 800);
-    } catch (e) {
-      setError("Failed to save configuration");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const steps: InstallationStep[] = [
     {
@@ -120,7 +73,7 @@ const Installation = () => {
       if (response.error) throw response.error;
 
       setSuccess("Database connection successful!");
-      setTimeout(() => goToStep(1), 1000);
+      setTimeout(() => setCurrentStep(1), 1000);
     } catch (err: any) {
       setError(err.message || "Failed to connect to database");
     } finally {
@@ -139,7 +92,7 @@ const Installation = () => {
       if (response.error) throw response.error;
 
       setSuccess("Database setup completed successfully!");
-      setTimeout(() => goToStep(2), 1000);
+      setTimeout(() => setCurrentStep(2), 1000);
     } catch (err: any) {
       setError(err.message || "Failed to setup database");
     } finally {
@@ -161,7 +114,7 @@ const Installation = () => {
       if (response.error) throw response.error;
 
       setSuccess("Admin account created successfully! Check your email for login details.");
-      setTimeout(() => goToStep(3), 1000);
+      setTimeout(() => setCurrentStep(3), 1000);
     } catch (err: any) {
       setError(err.message || "Failed to create admin account");
     } finally {
@@ -184,7 +137,7 @@ const Installation = () => {
       if (response.error) throw response.error;
 
       setSuccess("Email service configured successfully!");
-      setTimeout(() => goToStep(4), 1000);
+      setTimeout(() => setCurrentStep(4), 1000);
     } catch (err: any) {
       setError(err.message || "Failed to configure email service");
     } finally {
@@ -224,10 +177,10 @@ const Installation = () => {
         return (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="supabaseUrl">Supabase URL or IP</Label>
+              <Label htmlFor="supabaseUrl">Supabase URL</Label>
               <Input
                 id="supabaseUrl"
-                placeholder="http://192.168.1.10:8000"
+                placeholder="https://your-project.supabase.co"
                 value={config.supabaseUrl}
                 onChange={(e) => setConfig({...config, supabaseUrl: e.target.value})}
               />
@@ -250,9 +203,9 @@ const Installation = () => {
                 onChange={(e) => setConfig({...config, projectId: e.target.value})}
               />
             </div>
-            <Button onClick={applyDatabaseConfig} disabled={loading} className="w-full">
+            <Button onClick={testDatabaseConnection} disabled={loading} className="w-full">
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Save & Continue
+              Test Connection
             </Button>
           </div>
         );

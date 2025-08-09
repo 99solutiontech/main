@@ -2,22 +2,8 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const DEFAULT_SUPABASE_URL = "https://fnnoxdrkslfuuuuyltsr.supabase.co";
-const DEFAULT_SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZubm94ZHJrc2xmdXV1dXlsdHNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwMzk0MjEsImV4cCI6MjA2OTYxNTQyMX0.fp7qbkoU9PTwm227-u9tQbVhEIsldE9vPgb_NHJUpis";
-
-let SUPABASE_URL = DEFAULT_SUPABASE_URL;
-let SUPABASE_PUBLISHABLE_KEY = DEFAULT_SUPABASE_PUBLISHABLE_KEY;
-
-try {
-  const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('supabase_config') : null;
-  if (raw) {
-    const parsed = JSON.parse(raw);
-    if (parsed.supabaseUrl) SUPABASE_URL = parsed.supabaseUrl;
-    if (parsed.supabaseAnonKey) SUPABASE_PUBLISHABLE_KEY = parsed.supabaseAnonKey;
-  }
-} catch (_) {
-  // ignore parsing errors and fall back to defaults
-}
+const SUPABASE_URL = "https://fnnoxdrkslfuuuuyltsr.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZubm94ZHJrc2xmdXV1dXlsdHNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwMzk0MjEsImV4cCI6MjA2OTYxNTQyMX0.fp7qbkoU9PTwm227-u9tQbVhEIsldE9vPgb_NHJUpis";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
