@@ -65,11 +65,22 @@ const TradingHistory = ({ userId, mode, subUserName }: TradingHistoryProps) => {
     };
 
     window.addEventListener('refreshTradingData', handleRefresh);
+
+    // Direct realtime subscription to ensure instant updates
+    const channel = supabase
+      .channel(`trading_history_rt_${userId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'trading_history', filter: `user_id=eq.${userId}` },
+        () => handleRefresh()
+      )
+      .subscribe();
     
     return () => {
       window.removeEventListener('refreshTradingData', handleRefresh);
+      supabase.removeChannel(channel);
     };
-  }, []);
+  }, [userId]);
 
   const formatCurrency = (amount: number) => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

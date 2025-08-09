@@ -40,17 +40,27 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
       loadTransactions();
     };
 
-    // Listen for refresh events
+    // Listen for refresh events and also subscribe directly to realtime
     window.addEventListener('refreshTransactions', handleRefresh);
     window.addEventListener('refreshFundData', handleRefresh);
     window.addEventListener('refreshTradingData', handleRefresh);
+
+    const channel = supabase
+      .channel(`transaction_history_rt_${userId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'transaction_history', filter: `user_id=eq.${userId}` },
+        () => handleRefresh()
+      )
+      .subscribe();
     
     return () => {
       window.removeEventListener('refreshTransactions', handleRefresh);
       window.removeEventListener('refreshFundData', handleRefresh);
       window.removeEventListener('refreshTradingData', handleRefresh);
+      supabase.removeChannel(channel);
     };
-  }, []);
+  }, [userId]);
 
   const loadTransactions = async () => {
     setLoading(true);
