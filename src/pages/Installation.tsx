@@ -25,6 +25,9 @@ const Installation = () => {
     supabaseUrl: "",
     supabaseAnonKey: "",
     projectId: "",
+    dbName: "",
+    dbUser: "",
+    dbPassword: "",
     adminEmail: "",
     resendApiKey: "",
     adminNotificationEmail: ""
@@ -58,35 +61,20 @@ const Installation = () => {
     }
   ];
 
-  const testDatabaseConnection = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const response = await supabase.functions.invoke('test-installation-connection', {
-        body: {
-          supabaseUrl: config.supabaseUrl,
-          supabaseAnonKey: config.supabaseAnonKey,
-          projectId: config.projectId
-        }
-      });
-
-      if (response.error) throw response.error;
-
-      setSuccess("Database connection successful!");
-      setTimeout(() => setCurrentStep(1), 1000);
-    } catch (err: any) {
-      setError(err.message || "Failed to connect to database");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Test connection removed; proceed directly to setup during installation.
 
   const setupDatabase = async () => {
     setLoading(true);
     setError("");
     try {
       const response = await supabase.functions.invoke('setup-installation-database', {
-        body: { projectId: config.projectId }
+        body: { 
+          projectId: config.projectId,
+          supabaseUrl: config.supabaseUrl,
+          dbName: config.dbName,
+          dbUser: config.dbUser,
+          dbPassword: config.dbPassword
+        }
       });
 
       if (response.error) throw response.error;
@@ -160,6 +148,13 @@ const Installation = () => {
         description: "Your Trading Fund Management System is ready to use.",
       });
 
+      // Persist configuration for runtime client
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('CUSTOM_SUPABASE_URL', config.supabaseUrl);
+        localStorage.setItem('CUSTOM_SUPABASE_ANON_KEY', config.supabaseAnonKey);
+        localStorage.setItem('CUSTOM_SUPABASE_PROJECT_ID', config.projectId);
+      }
+
       // Redirect to main app after successful installation
       setTimeout(() => {
         window.location.href = "/";
@@ -177,10 +172,10 @@ const Installation = () => {
         return (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="supabaseUrl">Supabase URL</Label>
+              <Label htmlFor="supabaseUrl">Supabase URL or IP</Label>
               <Input
                 id="supabaseUrl"
-                placeholder="https://your-project.supabase.co"
+                placeholder="http://192.168.1.100:8000"
                 value={config.supabaseUrl}
                 onChange={(e) => setConfig({...config, supabaseUrl: e.target.value})}
               />
@@ -203,9 +198,9 @@ const Installation = () => {
                 onChange={(e) => setConfig({...config, projectId: e.target.value})}
               />
             </div>
-            <Button onClick={testDatabaseConnection} disabled={loading} className="w-full">
+            <Button onClick={() => setCurrentStep(1)} disabled={loading} className="w-full">
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Test Connection
+              Save & Continue
             </Button>
           </div>
         );
@@ -213,6 +208,34 @@ const Installation = () => {
       case 1:
         return (
           <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="dbName">Database Name</Label>
+              <Input
+                id="dbName"
+                placeholder="postgres"
+                value={config.dbName}
+                onChange={(e) => setConfig({...config, dbName: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dbUser">Database Username</Label>
+              <Input
+                id="dbUser"
+                placeholder="postgres"
+                value={config.dbUser}
+                onChange={(e) => setConfig({...config, dbUser: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dbPassword">Database Password</Label>
+              <Input
+                id="dbPassword"
+                type="password"
+                placeholder="********"
+                value={config.dbPassword}
+                onChange={(e) => setConfig({...config, dbPassword: e.target.value})}
+              />
+            </div>
             <p className="text-sm text-muted-foreground">
               This will create all necessary tables, functions, and security policies in your database.
             </p>
