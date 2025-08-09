@@ -70,10 +70,27 @@ const Admin = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
+  // Track in-flight actions to prevent double clicks
+  const [processingUserIds, setProcessingUserIds] = useState<Set<string>>(new Set());
+  const [processingNotifIds, setProcessingNotifIds] = useState<Set<string>>(new Set());
+
+  const setUserProcessing = (id: string, processing: boolean) => {
+    setProcessingUserIds(prev => {
+      const next = new Set(prev);
+      if (processing) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
+  const setNotifProcessing = (id: string, processing: boolean) => {
+    setProcessingNotifIds(prev => {
+      const next = new Set(prev);
+      if (processing) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
+
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   useEffect(() => {
     const {
       data: {
@@ -528,6 +545,8 @@ const Admin = () => {
     }
   };
   const approveFromNotification = async (userId: string, notificationId: string) => {
+    // Mark as processing to disable buttons
+    setNotifProcessing(notificationId, true);
     // Set notification as processed immediately to hide buttons
     setNotifications(prev => prev.map(notification => 
       notification.id === notificationId ? {
@@ -537,11 +556,19 @@ const Admin = () => {
         is_read: true
       } : notification
     ));
+    // Persist read state for this specific notification
+    try {
+      await supabase.from('admin_notifications').update({ is_read: true }).eq('id', notificationId);
+    } catch (e) {
+      console.log('Failed to persist read status for notification', e);
+    }
     await approveUser(userId);
-    // Don't call markNotificationRead separately since we already marked it as read above
     setNotificationDropdownOpen(false);
+    setNotifProcessing(notificationId, false);
   };
   const rejectFromNotification = async (userId: string, notificationId: string) => {
+    // Mark as processing to disable buttons
+    setNotifProcessing(notificationId, true);
     // Set notification as processed immediately to hide buttons
     setNotifications(prev => prev.map(notification => 
       notification.id === notificationId ? {
@@ -551,9 +578,15 @@ const Admin = () => {
         is_read: true
       } : notification
     ));
+    // Persist read state for this specific notification
+    try {
+      await supabase.from('admin_notifications').update({ is_read: true }).eq('id', notificationId);
+    } catch (e) {
+      console.log('Failed to persist read status for notification', e);
+    }
     await rejectUser(userId);
-    // Don't call markNotificationRead separately since we already marked it as read above
     setNotificationDropdownOpen(false);
+    setNotifProcessing(notificationId, false);
   };
   const handleSignOut = async () => {
     try {
@@ -852,11 +885,11 @@ const Admin = () => {
                       <TableCell>
                         <div className="flex gap-2">
                           {user.registration_status === 'pending' && <>
-                              <Button variant="outline" size="sm" onClick={() => approveUser(user.user_id)} className="text-green-600 hover:text-green-700">
+                              <Button variant="outline" size="sm" onClick={() => { setUserProcessing(user.user_id, true); approveUser(user.user_id).finally(() => setUserProcessing(user.user_id, false)); }} disabled={processingUserIds.has(user.user_id)} className="text-green-600 hover:text-green-700">
                                 <CheckCircle className="h-4 w-4 mr-1" />
                                 Approve
                               </Button>
-                              <Button variant="outline" size="sm" onClick={() => rejectUser(user.user_id)} className="text-red-600 hover:text-red-700">
+                              <Button variant="outline" size="sm" onClick={() => { setUserProcessing(user.user_id, true); rejectUser(user.user_id).finally(() => setUserProcessing(user.user_id, false)); }} disabled={processingUserIds.has(user.user_id)} className="text-red-600 hover:text-red-700">
                                 <XCircle className="h-4 w-4 mr-1" />
                                 Reject
                               </Button>
@@ -950,11 +983,11 @@ const Admin = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => approveUser(user.user_id)} className="text-green-600 hover:text-green-700">
+                          <Button variant="outline" size="sm" onClick={() => { setUserProcessing(user.user_id, true); approveUser(user.user_id).finally(() => setUserProcessing(user.user_id, false)); }} disabled={processingUserIds.has(user.user_id)} className="text-green-600 hover:text-green-700">
                             <CheckCircle className="h-4 w-4 mr-1" />
                             Approve
                           </Button>
-                          <Button variant="outline" size="sm" onClick={() => rejectUser(user.user_id)} className="text-red-600 hover:text-red-700">
+                          <Button variant="outline" size="sm" onClick={() => { setUserProcessing(user.user_id, true); rejectUser(user.user_id).finally(() => setUserProcessing(user.user_id, false)); }} disabled={processingUserIds.has(user.user_id)} className="text-red-600 hover:text-red-700">
                             <XCircle className="h-4 w-4 mr-1" />
                             Reject
                           </Button>
