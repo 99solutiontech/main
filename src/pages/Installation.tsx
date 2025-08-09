@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { createClient } from "@supabase/supabase-js";
+
 interface InstallationStep {
   title: string;
   description: string;
@@ -30,23 +30,13 @@ const Installation = () => {
     adminNotificationEmail: ""
   });
 
-  // Create a temporary Supabase client from current inputs (no reload needed)
-  const installClient = useMemo(() => {
-    if (!config.supabaseUrl || !config.supabaseAnonKey) return null;
-    try {
-      return createClient(config.supabaseUrl, config.supabaseAnonKey, {
-        auth: { storage: localStorage, persistSession: true, autoRefreshToken: true }
-      });
-    } catch { return null; }
-  }, [config.supabaseUrl, config.supabaseAnonKey]);
-
   // Helper to persist step across reloads
   const goToStep = (n: number) => {
     setCurrentStep(n);
     try { localStorage.setItem('installation_current_step', String(n)); } catch {}
   };
 
-  // Load saved config (draft) and step if present
+  // Load saved config and step if present
   useEffect(() => {
     try {
       const raw = localStorage.getItem('supabase_config');
@@ -71,17 +61,17 @@ const Installation = () => {
     setError("");
     setSuccess("");
     try {
-      // Save as draft only; do not affect global client yet
-      localStorage.setItem('supabase_config_draft', JSON.stringify({
+      localStorage.setItem('supabase_config', JSON.stringify({
         supabaseUrl: config.supabaseUrl,
         supabaseAnonKey: config.supabaseAnonKey,
         projectId: config.projectId,
       }));
+      // Continue to next step after reload
       localStorage.setItem('installation_current_step', '1');
-      setSuccess('Configuration saved as draft. Continue to set up your database.');
-      goToStep(1);
+      setSuccess("Configuration saved. Reloading with new connection...");
+      setTimeout(() => window.location.reload(), 800);
     } catch (e) {
-      setError('Failed to save configuration');
+      setError("Failed to save configuration");
     } finally {
       setLoading(false);
     }
@@ -142,17 +132,16 @@ const Installation = () => {
     setLoading(true);
     setError("");
     try {
-      if (!installClient) throw new Error('Please provide Supabase URL and Anon Key first.');
-      const response = await installClient.functions.invoke('setup-installation-database', {
+      const response = await supabase.functions.invoke('setup-installation-database', {
         body: { projectId: config.projectId }
       });
 
       if (response.error) throw response.error;
 
-      setSuccess('Database setup completed successfully!');
+      setSuccess("Database setup completed successfully!");
       setTimeout(() => goToStep(2), 1000);
     } catch (err: any) {
-      setError(err.message || 'Failed to setup database (check your Supabase URL/Anon Key)');
+      setError(err.message || "Failed to setup database");
     } finally {
       setLoading(false);
     }
@@ -162,8 +151,7 @@ const Installation = () => {
     setLoading(true);
     setError("");
     try {
-      if (!installClient) throw new Error('Please provide Supabase URL and Anon Key first.');
-      const response = await installClient.functions.invoke('create-installation-admin', {
+      const response = await supabase.functions.invoke('create-installation-admin', {
         body: { 
           adminEmail: config.adminEmail,
           projectId: config.projectId
@@ -172,10 +160,10 @@ const Installation = () => {
 
       if (response.error) throw response.error;
 
-      setSuccess('Admin account created successfully! Check your email for login details.');
+      setSuccess("Admin account created successfully! Check your email for login details.");
       setTimeout(() => goToStep(3), 1000);
     } catch (err: any) {
-      setError(err.message || 'Failed to create admin account');
+      setError(err.message || "Failed to create admin account");
     } finally {
       setLoading(false);
     }
@@ -185,8 +173,7 @@ const Installation = () => {
     setLoading(true);
     setError("");
     try {
-      if (!installClient) throw new Error('Please provide Supabase URL and Anon Key first.');
-      const response = await installClient.functions.invoke('configure-installation-email', {
+      const response = await supabase.functions.invoke('configure-installation-email', {
         body: {
           resendApiKey: config.resendApiKey,
           adminNotificationEmail: config.adminNotificationEmail,
@@ -196,10 +183,10 @@ const Installation = () => {
 
       if (response.error) throw response.error;
 
-      setSuccess('Email service configured successfully!');
+      setSuccess("Email service configured successfully!");
       setTimeout(() => goToStep(4), 1000);
     } catch (err: any) {
-      setError(err.message || 'Failed to configure email service');
+      setError(err.message || "Failed to configure email service");
     } finally {
       setLoading(false);
     }
@@ -209,32 +196,23 @@ const Installation = () => {
     setLoading(true);
     setError("");
     try {
-      if (!installClient) throw new Error('Please provide Supabase URL and Anon Key first.');
-      const response = await installClient.functions.invoke('complete-installation', {
+      const response = await supabase.functions.invoke('complete-installation', {
         body: { projectId: config.projectId }
       });
 
       if (response.error) throw response.error;
-
-      // Commit final configuration for the whole app
-      localStorage.setItem('supabase_config', JSON.stringify({
-        supabaseUrl: config.supabaseUrl,
-        supabaseAnonKey: config.supabaseAnonKey,
-        projectId: config.projectId,
-      }));
-      localStorage.removeItem('supabase_config_draft');
-      localStorage.removeItem('installation_current_step');
 
       toast({
         title: "Installation Complete!",
         description: "Your Trading Fund Management System is ready to use.",
       });
 
+      // Redirect to main app after successful installation
       setTimeout(() => {
         window.location.href = "/";
       }, 2000);
     } catch (err: any) {
-      setError(err.message || 'Failed to complete installation');
+      setError(err.message || "Failed to complete installation");
     } finally {
       setLoading(false);
     }

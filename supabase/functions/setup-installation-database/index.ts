@@ -23,31 +23,47 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify Supabase admin access without running SQL
-    const { data: users, error: adminError } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1 });
+    // Database setup SQL - this would typically be run via direct SQL execution
+    // For now, we'll check if tables exist and create them if they don't
+    
+    const setupQueries = [
+      // Check if profiles table exists
+      `SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'profiles'
+      );`,
+    ];
 
-    if (adminError) {
-      console.error('Database setup verification failed:', adminError);
+    // Try to execute a test query to verify database access
+    const { data: tableExists, error } = await supabaseAdmin
+      .rpc('sql', { query: setupQueries[0] })
+      .single();
+
+    if (error) {
+      console.error('Database setup failed:', error);
       return new Response(
-        JSON.stringify({
-          success: false,
-          error: `Cannot verify database access: ${adminError.message}. Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables in your Edge Functions settings.`,
+        JSON.stringify({ 
+          success: false, 
+          error: `Database setup failed: ${error.message}. Please run the database-setup.sql script manually.` 
         }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
-    // Return success and guidance to apply SQL schema manually (self-hosted install)
+    // For security reasons, we'll return success but recommend manual SQL execution
     return new Response(
-      JSON.stringify({
-        success: true,
-        message: 'Database connection verified. Apply schema using installation/database-setup.sql in your Supabase SQL editor.',
-        self_hosted: true,
+      JSON.stringify({ 
+        success: true, 
+        message: 'Database connection verified. Please ensure you have run the database-setup.sql script in your Supabase SQL editor.',
+        recommendation: 'Execute the database-setup.sql file in your Supabase dashboard SQL editor for complete setup.'
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
 
   } catch (error) {
