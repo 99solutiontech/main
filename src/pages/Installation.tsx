@@ -30,6 +30,11 @@ const Installation = () => {
     adminNotificationEmail: ""
   });
 
+  // CORS test state
+  const [corsTestResult, setCorsTestResult] = useState<string | null>(null);
+  const [corsLoading, setCorsLoading] = useState(false);
+  const [corsError, setCorsError] = useState<string | null>(null);
+
   // Auto-fill from URL query params and optionally auto-run connection test
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -111,6 +116,45 @@ const Installation = () => {
       setError(err.message || "Failed to connect to database");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const testCORS = async () => {
+    setCorsLoading(true);
+    setCorsError(null);
+    setCorsTestResult(null);
+
+    try {
+      if (!config.supabaseUrl || !config.supabaseAnonKey) {
+        throw new Error("Please fill in Supabase URL and Anon Key first");
+      }
+
+      // Make a direct client-side request to test CORS
+      const response = await fetch(`${config.supabaseUrl}/rest/v1/`, {
+        method: 'GET',
+        headers: {
+          'apikey': config.supabaseAnonKey,
+          'Authorization': `Bearer ${config.supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        setCorsTestResult("✅ CORS is properly configured! Browser can make requests to your self-hosted Supabase.");
+      } else {
+        // If we get a response but it's not ok, CORS is working but there might be other issues
+        setCorsTestResult("✅ CORS is working (got response), but server returned: " + response.status);
+      }
+    } catch (err: any) {
+      if (err.message.includes('CORS') || err.message.includes('Cross-Origin')) {
+        setCorsError(`❌ CORS Error: ${err.message}\n\nYour self-hosted Supabase needs to be configured to allow requests from this domain (${window.location.origin}).\n\nPlease check your Kong configuration or Docker Compose settings.`);
+      } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+        setCorsError(`❌ Network Error: Cannot reach ${config.supabaseUrl}\n\nThis could be:\n• CORS not configured\n• Server not accessible\n• Wrong URL\n\nPlease verify your Supabase URL and CORS settings.`);
+      } else {
+        setCorsError(`❌ Error: ${err.message}`);
+      }
+    } finally {
+      setCorsLoading(false);
     }
   };
 
@@ -236,10 +280,54 @@ const Installation = () => {
                 onChange={(e) => setConfig({...config, projectId: e.target.value})}
               />
             </div>
-            <Button onClick={testDatabaseConnection} disabled={loading} className="w-full">
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Test Connection
-            </Button>
+            <div className="space-y-3">
+              <Button onClick={testDatabaseConnection} disabled={loading} className="w-full">
+                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Test Connection (Server-Side)
+              </Button>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">CORS Test</span>
+                </div>
+              </div>
+              
+              <Button 
+                onClick={testCORS} 
+                disabled={corsLoading} 
+                variant="outline" 
+                className="w-full"
+              >
+                {corsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Test CORS (Browser)
+              </Button>
+              
+              {corsTestResult && (
+                <Alert className="border-green-200 bg-green-50 dark:bg-green-950">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800 dark:text-green-200 whitespace-pre-line">
+                    {corsTestResult}
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {corsError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="whitespace-pre-line">
+                    {corsError}
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              <div className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                <p className="font-medium mb-1">What is CORS?</p>
+                <p>Cross-Origin Resource Sharing (CORS) allows your browser to make requests to your self-hosted Supabase from this domain. Without proper CORS configuration, browser requests will be blocked.</p>
+              </div>
+            </div>
           </div>
         );
 
