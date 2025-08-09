@@ -142,7 +142,7 @@ const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate
         amount: amount,
         balance_before: fundData.total_capital,
         balance_after: newTotalCapital,
-        description: `Deposited ${formatCurrency(amount)} (${activePercentage}% to Active, ${reservePercentage}% to Reserve)`,
+        description: `${t('deposited')} ${formatCurrency(amount)} (${activePercentage}% to Active, ${reservePercentage}% to Reserve)`,
         sub_user_name: subUserName,
       });
 

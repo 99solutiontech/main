@@ -127,7 +127,7 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
           user_id: userId,
           mode: mode,
           type: pnl >= 0 ? 'Win' : 'Loss',
-          details: `Weekly trading result: ${formatCurrency(pnl)}`,
+          details: `${t('weeklyTradingResult')}: ${formatCurrency(pnl)}`,
           amount: pnl,
           end_balance: updatedFundData.total_capital,
           sub_user_name: subUserName,

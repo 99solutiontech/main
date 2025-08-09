@@ -129,8 +129,8 @@ const TradingHistory = ({ userId, mode, subUserName }: TradingHistoryProps) => {
               <div key={record.id} className="border-b border-border pb-3 last:border-b-0">
                 <div className="flex justify-between items-start mb-1">
                   <div className="flex items-center gap-2">
-                    <Badge variant={record.type === 'Win' ? 'default' : record.type === 'Loss' ? 'destructive' : 'secondary'}>
-                      {record.type}
+                  <Badge variant={record.type === 'Win' ? 'default' : record.type === 'Loss' ? 'destructive' : 'secondary'}>
+                      {record.type === 'Win' ? t('win') : record.type === 'Loss' ? t('loss') : record.type}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
                       {formatDate(record.created_at)}

@@ -139,6 +139,24 @@ const updatedTranslations = {
      'createSubAccount': 'Create Sub Account',
      'week': 'Week',
      'lowActiveFundWarning': 'Be careful! Your active amount is lower than initial deposit. Please deposit more amount before trade in existing setting.',
+     
+     // New deposit and trading phrases
+     'existingFundRebalancing': 'Existing Fund Rebalancing',
+     'newDepositSettings': 'New Deposit Settings',
+     'riskAndLotSizeCalculator': 'Risk and Lot Size Calculator',
+     'recommendedLotSize': 'Recommended Lot Size',
+     'riskAmount': 'Risk Amount',
+     'maximumRecommendedRiskPerTrade': 'Maximum recommended risk per trade',
+     'activeFundLabel': 'Active Fund:',
+     'baseCapitalLabel': 'Base Capital:',
+     'baseLotLabel': 'Base Lot:',
+     'riskPercentageLabel': 'Risk Percentage:',
+     'currentSetting': 'Current setting',
+     'weeklyTradingResult': 'Weekly trading result',
+     'win': 'Win',
+     'loss': 'Loss',
+     'rebalancedFunds': 'Rebalanced funds',
+     'deposited': 'Deposited',
   },
   th: {
     // Auth page
@@ -250,6 +268,24 @@ const updatedTranslations = {
      'createSubAccount': 'สร้างบัญชีย่อย',
      'week': 'สัปดาห์',
      'lowActiveFundWarning': 'ระวัง! จำนวนเงินทุนการค้าของคุณต่ำกว่าเงินฝากเริ่มต้น กรุณาฝากเงินเพิ่มก่อนทำการเทรดในการตั้งค่าที่มีอยู่',
+    
+    // New deposit and trading phrases  
+    'existingFundRebalancing': 'การปรับสมดุลกองทุนที่มีอยู่',
+    'newDepositSettings': 'การตั้งค่าเงินฝากใหม่',
+    'riskAndLotSizeCalculator': 'เครื่องคำนวณความเสี่ยงและขนาดล็อต',
+    'recommendedLotSize': 'ขนาดล็อตที่แนะนำ',
+    'riskAmount': 'จำนวนความเสี่ยง',
+    'maximumRecommendedRiskPerTrade': 'ความเสี่ยงสูงสุดที่แนะนำต่อการเทรด',
+    'activeFundLabel': 'กองทุนการค้า:',
+    'baseCapitalLabel': 'ทุนฐาน:',
+    'baseLotLabel': 'ล็อตฐาน:',
+    'riskPercentageLabel': 'เปอร์เซ็นต์ความเสี่ยง:',
+    'currentSetting': 'การตั้งค่าปัจจุบัน',
+    'weeklyTradingResult': 'ผลการเทรดรายสัปดาห์',
+    'win': 'ชนะ',
+    'loss': 'แพ้',
+    'rebalancedFunds': 'ปรับสมดุลกองทุน',
+    'deposited': 'ฝากเงิน',
     
     // Reset functionality
     'resetData': 'รีเซ็ตข้อมูล',
@@ -379,6 +415,24 @@ const updatedTranslations = {
      'createSubAccount': 'ສ້າງບັນຊີຍ່ອຍ',
      'week': 'ອາທິດ',
      'lowActiveFundWarning': 'ລະວັງ! ຈຳນວນເງິນທຶນການຄ້າຂອງທ່ານຕ່ຳກວ່າເງິນຝາກເລີ່ມຕົ້ນ. ກະລຸນາຝາກເງິນເພີ່ມກ່ອນການເທດໃນການຕັ້ງຄ່າທີ່ມີຢູ່.',
+    
+    // New deposit and trading phrases
+    'existingFundRebalancing': 'ການປັບສົມດຸນກອງທຶນທີ່ມີຢູ່',
+    'newDepositSettings': 'ການຕັ້ງຄ່າເງິນຝາກໃໝ່',
+    'riskAndLotSizeCalculator': 'ເຄື່ອງຄິດໄລ່ຄວາມສ່ຽງແລະຂະໜາດລອດ',
+    'recommendedLotSize': 'ຂະໜາດລອດແນະນຳ',
+    'riskAmount': 'ຈຳນວນຄວາມສ່ຽງ',
+    'maximumRecommendedRiskPerTrade': 'ຄວາມສ່ຽງສູງສຸດແນະນຳຕໍ່ການເທດ',
+    'activeFundLabel': 'ກອງທຶນການຄ້າ:',
+    'baseCapitalLabel': 'ທຶນຖານ:',
+    'baseLotLabel': 'ລອດຖານ:',
+    'riskPercentageLabel': 'ເປີເຊັນຄວາມສ່ຽງ:',
+    'currentSetting': 'ການຕັ້ງຄ່າປັດຈຸບັນ',
+    'weeklyTradingResult': 'ຜົນການເທດລາຍອາທິດ',
+    'win': 'ຊະນະ',
+    'loss': 'ແພ້',
+    'rebalancedFunds': 'ປັບສົມດຸນກອງທຶນ',
+    'deposited': 'ຝາກເງິນ',
     
     // Reset functionality
     'resetData': 'ຣີເຊັດຂໍ້ມູນ',

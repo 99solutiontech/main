@@ -123,13 +123,13 @@ const DepositSettings = ({ fundData, subUserName, onUpdate }: DepositSettingsPro
         transferAmount = activeDifference;
         transferFrom = 'reserve';
         transferTo = 'active';
-        transferDescription = `Rebalanced funds: moved ${formatCurrency(transferAmount)} from reserve to active (${data.reservePercentage}% → ${data.activePercentage}%)`;
+        transferDescription = `${t('rebalancedFunds')}: moved ${formatCurrency(transferAmount)} from reserve to active (${data.reservePercentage}% → ${data.activePercentage}%)`;
       } else if (activeDifference < 0) {
         // Need to move money TO reserve fund FROM active fund
         transferAmount = Math.abs(activeDifference);
         transferFrom = 'active';
         transferTo = 'reserve';
-        transferDescription = `Rebalanced funds: moved ${formatCurrency(transferAmount)} from active to reserve (${data.activePercentage}% → ${data.reservePercentage}%)`;
+        transferDescription = `${t('rebalancedFunds')}: moved ${formatCurrency(transferAmount)} from active to reserve (${data.activePercentage}% → ${data.reservePercentage}%)`;
       }
 
       if (transferAmount > 0) {
@@ -195,7 +195,7 @@ const DepositSettings = ({ fundData, subUserName, onUpdate }: DepositSettingsPro
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Existing Fund Rebalancing</DialogTitle>
+          <DialogTitle>{t('existingFundRebalancing')}</DialogTitle>
           <DialogDescription>
             Adjust the distribution of your existing funds between Active and Reserve funds.
           </DialogDescription>
@@ -255,13 +255,13 @@ const DepositSettings = ({ fundData, subUserName, onUpdate }: DepositSettingsPro
 
           {/* New Deposit Settings Section (separate inputs) */}
           <div className="border-t pt-4 space-y-3">
-            <h4 className="font-medium">New Deposit Settings</h4>
+            <h4 className="font-medium">{t('newDepositSettings')}</h4>
             <p className="text-sm text-muted-foreground">
               Set how future deposits will be split. This does NOT move existing money; it only applies when you add new funds.
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="newActivePercent">Active Fund %</Label>
+                <Label htmlFor="newActivePercent">{t('activeFundPercent')}</Label>
                 <Input
                   id="newActivePercent"
                   type="number"
@@ -275,7 +275,7 @@ const DepositSettings = ({ fundData, subUserName, onUpdate }: DepositSettingsPro
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="newReservePercent">Reserve Fund %</Label>
+                <Label htmlFor="newReservePercent">{t('reserveFundPercent')}</Label>
                 <Input
                   id="newReservePercent"
                   type="number"
@@ -290,7 +290,7 @@ const DepositSettings = ({ fundData, subUserName, onUpdate }: DepositSettingsPro
               </div>
             </div>
             <div className="text-sm text-muted-foreground">
-              Current setting: {allocationSettings.activePercentage}% to Active, {allocationSettings.reservePercentage}% to Reserve
+              {t('currentSetting')}: {allocationSettings.activePercentage}% to Active, {allocationSettings.reservePercentage}% to Reserve
             </div>
           </div>
 

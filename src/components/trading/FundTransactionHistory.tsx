@@ -111,11 +111,11 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
   const getTransactionBadge = (type: string) => {
     switch (type) {
       case 'deposit':
-        return <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Deposit</Badge>;
+        return <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">{t('deposit')}</Badge>;
       case 'withdraw':
         return <Badge variant="destructive">Withdraw</Badge>;
       case 'transfer':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">Transfer</Badge>;
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">{t('transfer')}</Badge>;
       case 'transfer_in':
         return <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Transfer In</Badge>;
       case 'transfer_out':

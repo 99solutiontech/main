@@ -51,7 +51,7 @@ const LotCalculator = ({ fundData, onUpdate }: LotCalculatorProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-foreground">
           <Calculator className="h-5 w-5" />
-          Risk and Lot Size Calculator
+          {t('riskAndLotSizeCalculator')}
         </CardTitle>
         <CardDescription>
           Recommended lot size and risk amount based on current active fund
@@ -63,7 +63,7 @@ const LotCalculator = ({ fundData, onUpdate }: LotCalculatorProps) => {
         <div className="space-y-2">
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Calculator className="h-4 w-4" />
-            Recommended Lot Size
+            {t('recommendedLotSize')}
           </div>
           <div className="text-3xl font-bold text-primary">
             {recommendedLot.toFixed(2)} lot
@@ -77,32 +77,32 @@ const LotCalculator = ({ fundData, onUpdate }: LotCalculatorProps) => {
         <div className="space-y-2">
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <TrendingUp className="h-4 w-4" />
-            Risk Amount ({riskPercent}% of Active Fund)
+            {t('riskAmount')} ({riskPercent}% of Active Fund)
           </div>
           <div className="text-2xl font-bold text-destructive">
             ${riskAmount.toFixed(2)}
           </div>
           <div className="text-sm text-muted-foreground">
-            Maximum recommended risk per trade
+            {t('maximumRecommendedRiskPerTrade')}
           </div>
         </div>
         
         <div className="pt-4 border-t">
           <div className="text-sm space-y-1">
             <div className="flex justify-between">
-              <span className="text-foreground">Active Fund:</span>
+              <span className="text-foreground">{t('activeFundLabel')}</span>
               <span className="text-foreground">${fundData.active_fund.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-foreground">Base Capital:</span>
+              <span className="text-foreground">{t('baseCapitalLabel')}</span>
               <span className="text-foreground">${fundData.lot_base_capital.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-foreground">Base Lot:</span>
+              <span className="text-foreground">{t('baseLotLabel')}</span>
               <span className="text-foreground">{fundData.lot_base_lot} lot</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-foreground">Risk Percentage:</span>
+              <span className="text-foreground">{t('riskPercentageLabel')}</span>
               <span className="text-foreground">{riskPercent}%</span>
             </div>
           </div>
