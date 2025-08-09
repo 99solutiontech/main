@@ -38,6 +38,13 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
         setSession(session);
         setUser(session.user);
 
+        // If no role is required, allow access immediately to avoid blocking UI
+        if (!requiredRole) {
+          setIsAuthorized(true);
+          setLoading(false);
+          return;
+        }
+
         // Check user profile and status with timeout to avoid hanging
         const profilePromise = supabase
           .from('profiles')
@@ -127,6 +134,15 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
         setUser(null);
         setSession(null);
         setIsAuthorized(false);
+        setLoading(false);
+        return;
+      }
+
+      // If no special role is required, authorize immediately on sign-in
+      if (session?.user && !requiredRole) {
+        setSession(session);
+        setUser(session.user);
+        setIsAuthorized(true);
         setLoading(false);
         return;
       }
