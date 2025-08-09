@@ -20,7 +20,12 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     const checkAuth = async () => {
       try {
         setLoading(true);
-        const { data: { session } } = await supabase.auth.getSession();
+        // Avoid hanging on getSession by adding a timeout
+        const sessionResult = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout')), 5000))
+        ]) as any;
+        const { data: { session } } = sessionResult;
         
         if (!session?.user) {
           setUser(null);
@@ -116,8 +121,8 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     // Initial auth check only
     checkAuth();
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Set up auth state listener (no async operations inside)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session?.user) {
         setUser(null);
         setSession(null);
@@ -125,10 +130,12 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
         setLoading(false);
         return;
       }
-      
-      // Re-check auth on token refresh but not on initial sign in to avoid duplicate calls
-      if (event === 'TOKEN_REFRESHED') {
-        await checkAuth();
+
+      // Defer re-checks to avoid deadlocks
+      if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+        setTimeout(() => {
+          checkAuth();
+        }, 0);
       }
     });
 
