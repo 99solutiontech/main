@@ -48,7 +48,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
         // Check user profile and status with timeout to avoid hanging
         const profilePromise = supabase
           .from('profiles')
-          .select('*')
+          .select('status, role')
           .eq('user_id', session.user.id)
           .maybeSingle();
 
@@ -71,8 +71,8 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
           return;
         }
 
-        // Check if user is active
-        if (!profile.is_active) {
+        // Enforce account status
+        if (profile.status === 'suspended') {
           toast({
             title: "Account Suspended",
             description: "Please contact admin your account was suspended",
@@ -87,10 +87,10 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
         }
 
         // Check registration status
-        if (profile.registration_status === 'pending') {
+        if (profile.status === 'pending') {
           toast({
             title: "Account Pending",
-            description: "Your account is still waiting for admin approval. Please wait for confirmation.",
+            description: "Your account is waiting for super admin approval. Please contact the administrator.",
             variant: "destructive",
           });
           await supabase.auth.signOut();
