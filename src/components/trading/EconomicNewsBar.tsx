@@ -19,6 +19,28 @@ interface EconomicEvent {
 
 const SUPPORTED = ["USD", "EUR", "JPY", "GBP", "CAD"] as const;
 
+function parseNumber(v?: string | null): number | null {
+  if (v == null) return null;
+  const s = String(v).replace(/,/g, "").trim();
+  const m = s.match(/-?\d+(\.\d+)?/);
+  return m ? parseFloat(m[0]) : null;
+}
+
+function trend(a?: string | null, b?: string | null): "up" | "down" | "same" | "na" {
+  const n1 = parseNumber(a);
+  const n2 = parseNumber(b);
+  if (n1 == null || n2 == null) return "na";
+  if (n1 > n2) return "up";
+  if (n1 < n2) return "down";
+  return "same";
+}
+
+function clsForTrend(t: "up" | "down" | "same" | "na") {
+  if (t === "up") return "text-success";
+  if (t === "down") return "text-destructive";
+  return "text-muted-foreground";
+}
+
 function formatBangkokTime(iso: string) {
   const d = new Date(iso);
   return d.toLocaleTimeString("en-GB", {
@@ -158,11 +180,19 @@ export default function EconomicNewsBar() {
                     </div>
                   </div>
                 </div>
-                <div className="text-right text-xs text-muted-foreground">
-                  {ev.forecast && <div>Fcst: {ev.forecast}</div>}
-                  {ev.previous && <div>Prev: {ev.previous}</div>}
-                  {ev.actual && <div>Actual: {ev.actual}</div>}
-                </div>
+<div className="text-right text-xs">
+  {ev.previous && <div className="text-muted-foreground">Prev: {ev.previous}</div>}
+  {ev.forecast && (
+    <div className={clsForTrend(trend(ev.forecast ?? null, ev.previous ?? null))}>
+      Forecast: {ev.forecast}
+    </div>
+  )}
+  {ev.actual && (
+    <div className={clsForTrend(trend(ev.actual ?? null, (ev.forecast ?? ev.previous) ?? null))}>
+      Actual: {ev.actual}
+    </div>
+  )}
+</div>
               </li>
             ))}
           </ul>

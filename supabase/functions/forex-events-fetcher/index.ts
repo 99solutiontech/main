@@ -30,21 +30,29 @@ function normalizeImpact(v: any): "high" | "medium" | "low" {
 }
 
 function toIsoFromEvent(ev: any): string | null {
-  // Prefer unix timestamp fields
-  const ts = ev.timestamp || ev.unixTimestamp || ev.time_ms;
+  // Prefer unix/epoch timestamp fields when available
+  const ts = ev.timestamp || ev.unixTimestamp || ev.time_ms || ev.time_ms_epoch || ev.time_epoch;
   if (ts) {
     const n = Number(ts);
     const ms = n > 1e12 ? n : n * 1000; // handle sec vs ms
     return new Date(ms).toISOString();
   }
-  const dateStr = ev.date || ev.event_date || ev.pubDate;
-  const timeStr = ev.time || ev.event_time;
+
+  // Many feeds include RFC2822 dates in pubDate. Parse directly (it already encodes TZ)
+  if (ev.pubDate) {
+    const parsed = Date.parse(String(ev.pubDate));
+    if (!isNaN(parsed)) return new Date(parsed).toISOString();
+  }
+
+  // Try generic date + time combinations without forcing UTC
+  const dateStr = ev.date || ev.event_date || ev.datetime || ev.dateTime;
+  const timeStr = ev.time || ev.event_time || ev.time24 || ev.time_utc;
   if (dateStr && timeStr) {
-    const parsed = Date.parse(`${dateStr} ${timeStr} UTC`);
+    const parsed = Date.parse(`${dateStr} ${timeStr}`);
     if (!isNaN(parsed)) return new Date(parsed).toISOString();
   }
   if (dateStr) {
-    const parsed = Date.parse(`${dateStr} UTC`);
+    const parsed = Date.parse(String(dateStr));
     if (!isNaN(parsed)) return new Date(parsed).toISOString();
   }
   return null;
