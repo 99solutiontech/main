@@ -130,7 +130,7 @@ export default function EconomicNewsBar() {
     <Card className="mb-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
-          <Bell className="h-5 w-5" /> Economic Calendar (UTC+7)
+          <Bell className="h-5 w-5" /> Economic Calendar (GMT+07:00)
         </CardTitle>
         <div className="flex items-center gap-2">
           <Button size="icon" variant="outline" onClick={() => changeDay(-1)} aria-label="Previous day">
@@ -187,11 +187,9 @@ export default function EconomicNewsBar() {
       Forecast: {ev.forecast}
     </div>
   )}
-  {ev.actual && (
-    <div className={clsForTrend(trend(ev.actual ?? null, (ev.forecast ?? ev.previous) ?? null))}>
-      Actual: {ev.actual}
-    </div>
-  )}
+  <div className={clsForTrend(trend(ev.actual ?? null, (ev.forecast ?? ev.previous) ?? null))}>
+    Actual: {ev.actual ?? "-"}
+  </div>
 </div>
               </li>
             ))}

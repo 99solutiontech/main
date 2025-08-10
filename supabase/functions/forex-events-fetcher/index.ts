@@ -44,17 +44,53 @@ function toIsoFromEvent(ev: any): string | null {
     if (!isNaN(parsed)) return new Date(parsed).toISOString();
   }
 
-  // Try generic date + time combinations without forcing UTC
-  const dateStr = ev.date || ev.event_date || ev.datetime || ev.dateTime;
-  const timeStr = ev.time || ev.event_time || ev.time24 || ev.time_utc;
-  if (dateStr && timeStr) {
-    const parsed = Date.parse(`${dateStr} ${timeStr}`);
-    if (!isNaN(parsed)) return new Date(parsed).toISOString();
+  // Enhanced parsing for ForexFactory fields
+  const dateStrRaw = ev.date || ev.event_date || ev.datetime || ev.dateTime;
+  const timeStrRaw = ev.time || ev.event_time || ev.time24 || ev.time_utc || ev.timeLocal || ev.time_local;
+
+  if (dateStrRaw) {
+    const dateOnly = new Date(String(dateStrRaw));
+
+    // If both date and time are provided, try to compose a UTC moment
+    if (!isNaN(dateOnly.getTime()) && timeStrRaw) {
+      const timeStr = String(timeStrRaw).trim();
+
+      // Handle keywords
+      if (/all\s*day|tentative|holiday/i.test(timeStr)) {
+        // Use midnight UTC for all-day type events
+        return new Date(Date.UTC(dateOnly.getUTCFullYear(), dateOnly.getUTCMonth(), dateOnly.getUTCDate(), 0, 0, 0)).toISOString();
+      }
+
+      // 12h format with am/pm, e.g., "8:30am" or "12pm"
+      const m12 = timeStr.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/i);
+      if (m12) {
+        let hour = parseInt(m12[1], 10);
+        const minute = m12[2] ? parseInt(m12[2], 10) : 0;
+        const ap = m12[3]?.toLowerCase();
+        if (ap === 'pm' && hour < 12) hour += 12;
+        if (ap === 'am' && hour === 12) hour = 0;
+        return new Date(Date.UTC(dateOnly.getUTCFullYear(), dateOnly.getUTCMonth(), dateOnly.getUTCDate(), hour, minute, 0)).toISOString();
+      }
+
+      // 24h format, e.g., "08:30" or "8:30"
+      const m24 = timeStr.match(/^(\d{1,2}):(\d{2})$/);
+      if (m24) {
+        const hour = parseInt(m24[1], 10);
+        const minute = parseInt(m24[2], 10);
+        return new Date(Date.UTC(dateOnly.getUTCFullYear(), dateOnly.getUTCMonth(), dateOnly.getUTCDate(), hour, minute, 0)).toISOString();
+      }
+
+      // Fallback generic Date.parse for combined strings if recognizable
+      const parsed = Date.parse(`${dateStrRaw} ${timeStr}`);
+      if (!isNaN(parsed)) return new Date(parsed).toISOString();
+    }
+
+    // Only date provided: return midnight UTC to avoid local-time drift
+    if (!isNaN(dateOnly.getTime())) {
+      return new Date(Date.UTC(dateOnly.getUTCFullYear(), dateOnly.getUTCMonth(), dateOnly.getUTCDate(), 0, 0, 0)).toISOString();
+    }
   }
-  if (dateStr) {
-    const parsed = Date.parse(String(dateStr));
-    if (!isNaN(parsed)) return new Date(parsed).toISOString();
-  }
+
   return null;
 }
 
