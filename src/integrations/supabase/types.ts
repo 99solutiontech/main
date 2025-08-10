@@ -14,7 +14,216 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      fund_data: {
+        Row: {
+          active_fund: number | null
+          created_at: string
+          id: string
+          initial_capital: number | null
+          mode: string
+          profit_fund: number | null
+          reserve_fund: number | null
+          sub_user_name: string | null
+          target_reserve_fund: number | null
+          total_capital: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_fund?: number | null
+          created_at?: string
+          id?: string
+          initial_capital?: number | null
+          mode: string
+          profit_fund?: number | null
+          reserve_fund?: number | null
+          sub_user_name?: string | null
+          target_reserve_fund?: number | null
+          total_capital?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_fund?: number | null
+          created_at?: string
+          id?: string
+          initial_capital?: number | null
+          mode?: string
+          profit_fund?: number | null
+          reserve_fund?: number | null
+          sub_user_name?: string | null
+          target_reserve_fund?: number | null
+          total_capital?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          role: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          role?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          role?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trading_history: {
+        Row: {
+          created_at: string
+          end_balance: number | null
+          entry_price: number | null
+          exit_price: number | null
+          id: string
+          lot_size: number | null
+          mode: string
+          notes: string | null
+          profit_loss: number | null
+          start_balance: number | null
+          sub_user_name: string | null
+          symbol: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_balance?: number | null
+          entry_price?: number | null
+          exit_price?: number | null
+          id?: string
+          lot_size?: number | null
+          mode: string
+          notes?: string | null
+          profit_loss?: number | null
+          start_balance?: number | null
+          sub_user_name?: string | null
+          symbol?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_balance?: number | null
+          entry_price?: number | null
+          exit_price?: number | null
+          id?: string
+          lot_size?: number | null
+          mode?: string
+          notes?: string | null
+          profit_loss?: number | null
+          start_balance?: number | null
+          sub_user_name?: string | null
+          symbol?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transaction_history: {
+        Row: {
+          amount: number
+          balance_after: number | null
+          balance_before: number | null
+          created_at: string
+          description: string | null
+          from_fund: string | null
+          id: string
+          mode: string
+          sub_user_name: string | null
+          to_fund: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after?: number | null
+          balance_before?: number | null
+          created_at?: string
+          description?: string | null
+          from_fund?: string | null
+          id?: string
+          mode: string
+          sub_user_name?: string | null
+          to_fund?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number | null
+          balance_before?: number | null
+          created_at?: string
+          description?: string | null
+          from_fund?: string | null
+          id?: string
+          mode?: string
+          sub_user_name?: string | null
+          to_fund?: string | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          created_at: string
+          deposit_settings: Json | null
+          id: string
+          lot_size_settings: Json | null
+          mode: string
+          profit_management_settings: Json | null
+          sub_user_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deposit_settings?: Json | null
+          id?: string
+          lot_size_settings?: Json | null
+          mode: string
+          profit_management_settings?: Json | null
+          sub_user_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deposit_settings?: Json | null
+          id?: string
+          lot_size_settings?: Json | null
+          mode?: string
+          profit_management_settings?: Json | null
+          sub_user_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
