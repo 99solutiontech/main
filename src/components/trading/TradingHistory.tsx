@@ -47,7 +47,12 @@ const TradingHistory = ({ userId, mode, subUserName }: TradingHistoryProps) => {
         .limit(10);
 
       if (error) throw error;
-      setHistory(data || []);
+      // Map the data to include details field from notes
+      const mappedData = (data || []).map(record => ({
+        ...record,
+        details: record.notes || ''
+      }));
+      setHistory(mappedData);
     } catch (error) {
       console.error('Error loading history:', error);
     } finally {

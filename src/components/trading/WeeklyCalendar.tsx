@@ -54,7 +54,13 @@ const WeeklyCalendar = ({ userId, mode, subUserName }: WeeklyCalendarProps) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setTradingData(data || []);
+      // Map the data to include details field from notes
+      const mappedData = (data || []).map(record => ({
+        ...record,
+        details: record.notes || '',
+        amount: record.profit_loss
+      }));
+      setTradingData(mappedData);
     } catch (error) {
       console.error('Error loading trading data:', error);
     } finally {

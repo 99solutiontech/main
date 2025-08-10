@@ -20,11 +20,10 @@ interface Profile {
   id: string;
   user_id: string;
   full_name?: string;
-  trader_name: string;
+  trader_name?: string;
   role: string;
-  is_active: boolean;
+  status: string;
   created_at: string;
-  registration_status?: string;
   last_login?: string;
   failed_login_attempts?: number;
 }
@@ -191,7 +190,7 @@ const Admin = () => {
       allUsers?.forEach(user => {
         statsMap.set(user.user_id, {
           user_id: user.user_id,
-          trader_name: user.trader_name,
+          trader_name: user.trader_name || 'Unknown',
           diamond_capital: 0,
           gold_capital: 0,
           total_trades: 0,
@@ -239,7 +238,7 @@ const Admin = () => {
       const {
         error
       } = await (supabase as any).from('profiles').update({
-        is_active: !currentStatus
+        status: !currentStatus ? 'approved' : 'suspended'
       }).eq('user_id', userId);
       if (error) throw error;
       await loadAllUsers();
@@ -309,9 +308,9 @@ const Admin = () => {
       const {
         data,
         error
-      } = await (supabase as any).from('profiles').select('*').eq('registration_status', 'pending').order('created_at', {
-        ascending: false
-      });
+        } = await (supabase as any).from('profiles').select('*').eq('status', 'pending').order('created_at', {
+          ascending: false
+        });
       if (!error && data) {
         setPendingUsers(data);
       }
@@ -324,9 +323,9 @@ const Admin = () => {
       const {
         data,
         error
-      } = await (supabase as any).from('profiles').select('*').eq('registration_status', 'rejected').order('created_at', {
-        ascending: false
-      });
+        } = await (supabase as any).from('profiles').select('*').eq('status', 'rejected').order('created_at', {
+          ascending: false
+        });
       if (!error && data) {
         setRejectedUsers(data);
       }
@@ -376,10 +375,9 @@ const Admin = () => {
       // Update profile status
       const {
         error
-      } = await (supabase as any).from('profiles').update({
-        registration_status: 'approved',
-        is_active: true
-      }).eq('user_id', userId);
+        } = await (supabase as any).from('profiles').update({
+          status: 'approved'
+        }).eq('user_id', userId);
       if (error) throw error;
 
       // Mark notification as read
@@ -407,10 +405,9 @@ const Admin = () => {
     try {
       const {
         error
-      } = await (supabase as any).from('profiles').update({
-        registration_status: 'rejected',
-        is_active: false
-      }).eq('user_id', userId);
+        } = await (supabase as any).from('profiles').update({
+          status: 'rejected'
+        }).eq('user_id', userId);
       if (error) throw error;
 
       // Create notification (will work after migration)
@@ -486,10 +483,9 @@ const Admin = () => {
     try {
       const {
         error
-      } = await (supabase as any).from('profiles').update({
-        registration_status: 'pending',
-        is_active: false
-      }).eq('user_id', userId);
+        } = await (supabase as any).from('profiles').update({
+          status: 'pending'
+        }).eq('user_id', userId);
       if (error) throw error;
       await Promise.all([loadPendingUsers(), loadRejectedUsers(), loadAllUsers()]);
       toast({
@@ -612,16 +608,16 @@ const Admin = () => {
     return null;
   }
   const totalUsers = users.length;
-  const activeUsers = users.filter(u => u.is_active).length;
+  const activeUsers = users.filter(u => u.status === 'approved').length;
   const totalCapital = userStats.reduce((sum, stat) => sum + stat.diamond_capital + stat.gold_capital, 0);
   const totalTrades = userStats.reduce((sum, stat) => sum + stat.total_trades, 0);
   const unreadNotifications = notifications.filter(n => !n.is_read).length;
 
   // Filter users based on search and filters - include all status users in main list
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.trader_name.toLowerCase().includes(searchTerm.toLowerCase()) || user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || user.user_id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (user.trader_name || '').toLowerCase().includes(searchTerm.toLowerCase()) || user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || user.user_id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || statusFilter === 'active' && user.is_active && user.registration_status !== 'pending' || statusFilter === 'inactive' && !user.is_active || statusFilter === 'pending' && user.registration_status === 'pending';
+    const matchesStatus = statusFilter === 'all' || statusFilter === 'active' && user.status === 'approved' || statusFilter === 'inactive' && user.status === 'suspended' || statusFilter === 'pending' && user.status === 'pending';
     return matchesSearch && matchesRole && matchesStatus;
   });
   return <div className="min-h-screen bg-background">
@@ -770,7 +766,7 @@ const Admin = () => {
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <UserRegistrationPieChart users={users} userStats={userStats} />
+          <UserRegistrationPieChart users={users.map(u => ({ ...u, is_active: u.status === 'approved', registration_status: u.status }))} userStats={userStats} />
           <MonthlyFundChart />
         </div>
         
@@ -867,14 +863,9 @@ const Admin = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <Badge variant={user.is_active ? 'default' : 'secondary'}>
-                            {user.is_active ? 'Active' : 'Inactive'}
-                          </Badge>
-                          {user.registration_status && <Badge variant={user.registration_status === 'pending' ? 'outline' : user.registration_status === 'rejected' ? 'destructive' : 'default'}>
-                              {user.registration_status}
-                            </Badge>}
-                        </div>
+                        <Badge variant={user.status === 'approved' ? 'default' : user.status === 'pending' ? 'outline' : 'destructive'}>
+                          {user.status === 'approved' ? 'Active' : user.status === 'pending' ? 'Pending' : user.status === 'suspended' ? 'Suspended' : 'Rejected'}
+                        </Badge>
                       </TableCell>
                       <TableCell>${(stats?.diamond_capital || 0).toLocaleString()}</TableCell>
                       <TableCell>${(stats?.gold_capital || 0).toLocaleString()}</TableCell>
@@ -884,7 +875,7 @@ const Admin = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          {user.registration_status === 'pending' && <>
+                          {user.status === 'pending' && <>
                               <Button variant="outline" size="sm" onClick={() => { setUserProcessing(user.user_id, true); approveUser(user.user_id).finally(() => setUserProcessing(user.user_id, false)); }} disabled={processingUserIds.has(user.user_id)} className="text-green-600 hover:text-green-700">
                                 <CheckCircle className="h-4 w-4 mr-1" />
                                 Approve
@@ -894,9 +885,9 @@ const Admin = () => {
                                 Reject
                               </Button>
                             </>}
-                          {user.registration_status !== 'pending' && <>
-                              <Button variant="outline" size="sm" onClick={() => toggleUserStatus(user.user_id, user.is_active)} disabled={user.role === 'super_admin'}>
-                                {user.is_active ? 'Deactivate' : 'Activate'}
+                          {user.status !== 'pending' && <>
+                              <Button variant="outline" size="sm" onClick={() => toggleUserStatus(user.user_id, user.status === 'approved')} disabled={user.role === 'super_admin'}>
+                                {user.status === 'approved' ? 'Suspend' : 'Activate'}
                               </Button>
                               <select value={user.role} onChange={e => updateUserRole(user.user_id, e.target.value)} disabled={user.role === 'super_admin'} className="px-2 py-1 border rounded text-sm bg-sky-800">
                                 <option value="user">User</option>
