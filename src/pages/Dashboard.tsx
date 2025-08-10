@@ -141,6 +141,7 @@ const Dashboard = () => {
         () => {
           if (user) {
             loadFundData(user.id, currentMode, selectedSubUser?.name);
+            loadSubUsers(user.id, currentMode);
           }
         }
       )
@@ -184,6 +185,7 @@ const Dashboard = () => {
           window.dispatchEvent(new CustomEvent('refreshFundData'));
           if (user) {
             loadFundData(user.id, currentMode, selectedSubUser?.name);
+            loadSubUsers(user.id, currentMode);
           }
         }
       )
@@ -260,6 +262,7 @@ const Dashboard = () => {
       // Try to load fund data, but don't fail if it doesn't work
       try {
         await loadFundData(userId, currentMode, selectedSubUser?.name);
+        await loadSubUsers(userId, currentMode);
       } catch (fundError) {
         console.error('Fund data loading failed:', fundError);
         // Continue without fund data
@@ -311,10 +314,38 @@ const Dashboard = () => {
     }
   };
 
+  const loadSubUsers = async (userId: string, mode: 'diamond' | 'gold') => {
+    try {
+      const { data, error } = await supabase
+        .from('fund_data')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('mode', mode);
+      if (error) throw error;
+      const subs = (data || [])
+        .filter((f: any) => f.sub_user_name !== null)
+        .map((f: any) => ({
+          id: f.id,
+          name: f.sub_user_name,
+          mode: f.mode,
+          initial_capital: f.initial_capital || 0,
+          total_capital: f.total_capital || 0,
+          active_fund: f.active_fund || 0,
+          reserve_fund: f.reserve_fund || 0,
+          profit_fund: f.profit_fund || 0,
+          created_at: f.created_at,
+        }));
+      setSubUsers(subs);
+    } catch (e) {
+      console.error('Error loading sub users:', e);
+    }
+  };
+
   const handleModeChange = (mode: 'diamond' | 'gold') => {
     setCurrentMode(mode);
     if (user) {
       loadFundData(user.id, mode, selectedSubUser?.name);
+      loadSubUsers(user.id, mode);
     }
   };
 
@@ -721,6 +752,7 @@ const Dashboard = () => {
                   <FundManagement 
                     userId={user.id}
                     fundData={fundData}
+                    subUsers={subUsers}
                     subUserName={selectedSubUser?.name}
                     onUpdate={() => loadFundData(user.id, currentMode, selectedSubUser?.name)}
                   />

@@ -283,14 +283,18 @@ const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate
 
         if (sourceFundError) throw sourceFundError;
 
-        // Update target fund
-        const newToValue = targetFundData[toField] + amount;
+        // Update target fund with split like deposit settings
+        const toActive = amount * (depositActivePct / 100);
+        const toReserve = amount * (depositReservePct / 100);
+        const newTargetActive = targetFundData.active_fund + toActive;
+        const newTargetReserve = targetFundData.reserve_fund + toReserve;
         const newTargetTotal = targetFundData.total_capital + amount;
 
         const { error: targetFundError } = await supabase
           .from('fund_data')
           .update({
-            [toField]: newToValue,
+            active_fund: newTargetActive,
+            reserve_fund: newTargetReserve,
             total_capital: newTargetTotal,
             updated_at: new Date().toISOString(),
           })
@@ -307,11 +311,11 @@ const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate
           mode: fundData.mode,
           transaction_type: 'transfer',
           from_fund: fromField.replace('_fund', ''),
-          to_fund: toField.replace('_fund', ''),
+          to_fund: 'mixed',
           amount: amount,
           balance_before: fundData.total_capital,
           balance_after: newSourceTotal,
-          description: `Transferred ${formatCurrency(amount)} from ${sourceAccountName} ${fromField.replace('_', ' ')} to ${targetAccountName} ${toField.replace('_', ' ')}`,
+          description: `Transferred ${formatCurrency(amount)} from ${sourceAccountName} ${fromField.replace('_', ' ')} to ${targetAccountName} (Split: ${depositActivePct}% Active, ${depositReservePct}% Reserve)`,
           sub_user_name: subUserName,
         });
 
@@ -322,11 +326,11 @@ const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate
           mode: fundData.mode,
           transaction_type: 'transfer',
           from_fund: fromField.replace('_fund', ''),
-          to_fund: toField.replace('_fund', ''),
+          to_fund: 'mixed',
           amount: amount,
           balance_before: targetFundData.total_capital,
           balance_after: newTargetTotal,
-          description: `Received ${formatCurrency(amount)} from ${sourceAccountName} ${fromField.replace('_', ' ')} to ${toField.replace('_', ' ')}`,
+          description: `Received ${formatCurrency(amount)} from ${sourceAccountName} (Allocated: ${formatCurrency(toActive)} to Active, ${formatCurrency(toReserve)} to Reserve)`,
           sub_user_name: data.targetUserType === 'sub' ? targetAccountName : null,
         });
 
@@ -522,14 +526,18 @@ const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate
                       <SelectTrigger>
                         <SelectValue placeholder="Select target account" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="main:">{t('mainAccount')}</SelectItem>
-                        {subUsers.map((subUser) => (
-                          <SelectItem key={subUser.id} value={`sub:${subUser.id}`}>
-                            {t('subAccount')}: {subUser.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
+                        <SelectContent>
+                          {subUserName ? (
+                            <SelectItem value="main:">{t('mainAccount')}</SelectItem>
+                          ) : null}
+                          {subUsers
+                            .filter(su => su.mode === fundData.mode && su.name !== subUserName)
+                            .map((subUser) => (
+                              <SelectItem key={subUser.id} value={`sub:${subUser.id}`}>
+                                {subUser.name} ({formatCurrency(subUser.total_capital)})
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
                     </Select>
                   </div>
                 )}
@@ -556,16 +564,22 @@ const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="transfer-to" className="text-foreground">{t('toFund')}</Label>
-                    <Select onValueChange={(value) => transferForm.setValue('to', value as any)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('to')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active_fund">{t('activeFund')}</SelectItem>
-                        <SelectItem value="reserve_fund">{t('reserveFund')}</SelectItem>
-                        <SelectItem value="profit_fund">{t('profitFund')}</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {isTransferBetweenAccounts ? (
+                      <div className="text-sm text-muted-foreground">
+                        {t('willBeSplit')}: {depositActivePct}% {t('toActiveFund')}, {depositReservePct}% {t('toReserveFund')}
+                      </div>
+                    ) : (
+                      <Select onValueChange={(value) => transferForm.setValue('to', value as any)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('to')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active_fund">{t('activeFund')}</SelectItem>
+                          <SelectItem value="reserve_fund">{t('reserveFund')}</SelectItem>
+                          <SelectItem value="profit_fund">{t('profitFund')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2">
