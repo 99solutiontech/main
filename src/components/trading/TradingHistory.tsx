@@ -47,10 +47,11 @@ const TradingHistory = ({ userId, mode, subUserName }: TradingHistoryProps) => {
         .limit(10);
 
       if (error) throw error;
-      // Map the data to include details field from notes
-      const mappedData = (data || []).map(record => ({
+      // Normalize data: prefer details, fallback to notes; map profit_loss to amount for UI
+      const mappedData = (data || []).map((record: any) => ({
         ...record,
-        details: record.notes || ''
+        details: record.details || record.notes || '',
+        amount: record.profit_loss ?? record.amount,
       }));
       setHistory(mappedData);
     } catch (error) {

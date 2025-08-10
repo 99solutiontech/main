@@ -128,8 +128,9 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
           mode: mode,
           type: pnl >= 0 ? 'Win' : 'Loss',
           details: `${t('weeklyTradingResult')}: ${formatCurrency(pnl)}`,
-          amount: pnl,
-          end_balance: updatedFundData.total_capital,
+          start_balance: currentActiveFund,
+          end_balance: newActiveFund,
+          profit_loss: pnl,
           sub_user_name: subUserName,
         });
 
@@ -222,10 +223,10 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
           user_id: userId,
           mode: mode,
           type: pnl >= 0 ? 'Win' : 'Loss',
-          details: `Daily trading result: ${formatCurrency(pnl)}`,
-          amount: pnl,
-          end_balance: updatedFundData.total_capital,
-          trade_date: data.trade_date,
+          details: `Daily trading result on ${data.trade_date}: ${formatCurrency(pnl)}`,
+          start_balance: currentActiveFund,
+          end_balance: newActiveFund,
+          profit_loss: pnl,
           sub_user_name: subUserName,
         });
 

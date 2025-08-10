@@ -460,7 +460,7 @@ const Dashboard = () => {
                 <div>
                   <h1 className="text-2xl font-bold tracking-wider">Moneyx 8.8</h1>
                   <p className="text-sm text-muted-foreground">
-                    {t('welcome')}, {profile.trader_name}
+                    {t('welcome')}, {profile?.trader_name || profile?.full_name || user.email}
                   </p>
                 </div>
               </div>

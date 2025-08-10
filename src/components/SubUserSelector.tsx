@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Settings, RotateCcw, AlertTriangle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -228,6 +228,9 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserChange
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>Manage Sub Accounts</DialogTitle>
+            </DialogHeader>
             <SubUserManager 
               userId={userId}
               currentMode={currentMode}
