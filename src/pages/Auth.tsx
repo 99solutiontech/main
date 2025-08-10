@@ -69,7 +69,7 @@ const Auth = () => {
         await supabase.auth.signOut();
         toast({
           title: "Account Pending",
-          description: "Your account is still waiting for admin approval. Please wait for confirmation.",
+          description: "Your account is waiting for super admin approval. Please contact the administrator.",
           variant: "destructive",
         });
         return;
@@ -122,7 +122,7 @@ const Auth = () => {
         }
       }
 
-      // Create user with disabled email confirmation
+      // Create user without email confirmation - super admin approval required
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -155,8 +155,8 @@ const Auth = () => {
       }
 
       toast({
-        title: "Registration Successful",
-        description: "Your account has been created and is pending admin approval. Please wait for admin confirmation before signing in.",
+        title: "Registration Submitted",
+        description: "Your account has been created and is pending super admin approval. You will be contacted once approved.",
       });
       
       setActiveTab('signin');
