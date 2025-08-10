@@ -14,13 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          title: string
+          trader_name: string | null
+          type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          title: string
+          trader_name?: string | null
+          type: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          title?: string
+          trader_name?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       fund_data: {
         Row: {
           active_fund: number | null
           created_at: string
           id: string
           initial_capital: number | null
+          lot_base_capital: number | null
+          lot_base_lot: number | null
           mode: string
+          profit_dist_active: number | null
+          profit_dist_profit: number | null
+          profit_dist_reserve: number | null
           profit_fund: number | null
           reserve_fund: number | null
           sub_user_name: string | null
@@ -34,7 +75,12 @@ export type Database = {
           created_at?: string
           id?: string
           initial_capital?: number | null
+          lot_base_capital?: number | null
+          lot_base_lot?: number | null
           mode: string
+          profit_dist_active?: number | null
+          profit_dist_profit?: number | null
+          profit_dist_reserve?: number | null
           profit_fund?: number | null
           reserve_fund?: number | null
           sub_user_name?: string | null
@@ -48,7 +94,12 @@ export type Database = {
           created_at?: string
           id?: string
           initial_capital?: number | null
+          lot_base_capital?: number | null
+          lot_base_lot?: number | null
           mode?: string
+          profit_dist_active?: number | null
+          profit_dist_profit?: number | null
+          profit_dist_reserve?: number | null
           profit_fund?: number | null
           reserve_fund?: number | null
           sub_user_name?: string | null
@@ -67,6 +118,7 @@ export type Database = {
           id: string
           role: string | null
           status: string | null
+          trader_name: string | null
           updated_at: string
           user_id: string
         }
@@ -77,6 +129,7 @@ export type Database = {
           id?: string
           role?: string | null
           status?: string | null
+          trader_name?: string | null
           updated_at?: string
           user_id: string
         }
@@ -87,6 +140,7 @@ export type Database = {
           id?: string
           role?: string | null
           status?: string | null
+          trader_name?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -95,6 +149,7 @@ export type Database = {
       trading_history: {
         Row: {
           created_at: string
+          details: string | null
           end_balance: number | null
           entry_price: number | null
           exit_price: number | null
@@ -111,6 +166,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          details?: string | null
           end_balance?: number | null
           entry_price?: number | null
           exit_price?: number | null
@@ -127,6 +183,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          details?: string | null
           end_balance?: number | null
           entry_price?: number | null
           exit_price?: number | null
