@@ -345,60 +345,46 @@ const Admin = () => {
   };
   const approveUser = async (userId: string) => {
     try {
-      // First, update the user's email confirmation status using our edge function
-      const {
-        data: {
-          session
-        }
-      } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('No active session');
-      }
+      // Directly approve user by updating profile status (no email confirmation required)
+      setUserProcessing(userId, true);
 
-      // Call edge function to confirm email and approve user
-      const response = await fetch(`https://fnnoxdrkslfuuuuyltsr.supabase.co/functions/v1/approve-user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZubm94ZHJrc2xmdXV1dXlsdHNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwMzk0MjEsImV4cCI6MjA2OTYxNTQyMX0.fp7qbkoU9PTwm227-u9tQbVhEIsldE9vPgb_NHJUpis'
-        },
-        body: JSON.stringify({
-          userId
-        })
-      });
-      if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.error || 'Failed to approve user');
-      }
+      const { error } = await (supabase as any)
+        .from('profiles')
+        .update({ status: 'approved' })
+        .eq('user_id', userId);
 
-      // Update profile status
-      const {
-        error
-        } = await (supabase as any).from('profiles').update({
-          status: 'approved'
-        }).eq('user_id', userId);
       if (error) throw error;
 
-      // Mark notification as read
+      // Optionally mark related registration notification as read
       try {
-        await (supabase as any).from('admin_notifications').update({
-          is_read: true
-        }).eq('user_id', userId).eq('type', 'registration');
+        await (supabase as any)
+          .from('admin_notifications')
+          .update({ is_read: true })
+          .eq('user_id', userId)
+          .eq('type', 'registration');
       } catch (notificationError) {
         console.log('Notification update not available yet');
       }
-      await Promise.all([loadPendingUsers(), loadRejectedUsers(), loadAllUsers(), loadNotifications()]);
+
+      await Promise.all([
+        loadPendingUsers(),
+        loadRejectedUsers(),
+        loadAllUsers(),
+        loadNotifications(),
+      ]);
+
       toast({
-        title: "Success",
-        description: "User approved successfully"
+        title: 'Success',
+        description: 'User approved successfully',
       });
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
+        title: 'Error',
+        description: error?.message || 'Failed to approve user',
+        variant: 'destructive',
       });
+    } finally {
+      setUserProcessing(userId, false);
     }
   };
   const rejectUser = async (userId: string) => {
