@@ -335,6 +335,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      run_forex_events_monitor: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
