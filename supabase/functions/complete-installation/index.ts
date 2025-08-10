@@ -38,31 +38,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Verify installation by checking if critical tables exist and have proper structure
     const verificationChecks = [
-      // Check profiles table
-      { 
-        table: 'profiles', 
-        query: await supabaseAdmin.from('profiles').select('count').limit(1)
-      },
-      // Check fund_data table
-      { 
-        table: 'fund_data', 
-        query: await supabaseAdmin.from('fund_data').select('count').limit(1)
-      },
-      // Check trading_history table
-      { 
-        table: 'trading_history', 
-        query: await supabaseAdmin.from('trading_history').select('count').limit(1)
-      },
-      // Check transaction_history table
-      { 
-        table: 'transaction_history', 
-        query: await supabaseAdmin.from('transaction_history').select('count').limit(1)
-      },
-      // Check admin_notifications table
-      { 
-        table: 'admin_notifications', 
-        query: await supabaseAdmin.from('admin_notifications').select('count').limit(1)
-      }
+      { table: 'profiles', query: await supabaseAdmin.from('profiles').select('id').limit(1) },
+      { table: 'fund_data', query: await supabaseAdmin.from('fund_data').select('id').limit(1) },
+      { table: 'trading_history', query: await supabaseAdmin.from('trading_history').select('id').limit(1) },
+      { table: 'transaction_history', query: await supabaseAdmin.from('transaction_history').select('id').limit(1) },
+      { table: 'admin_notifications', query: await supabaseAdmin.from('admin_notifications').select('id').limit(1) }
     ];
 
     const failedChecks = [];

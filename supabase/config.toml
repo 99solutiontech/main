@@ -2,3 +2,18 @@ project_id = "yxrgknvprkvtdpzmpclh"
 
 [functions.forex-events-fetcher]
 verify_jwt = false
+
+[functions.test-installation-connection]
+verify_jwt = false
+
+[functions.setup-installation-database]
+verify_jwt = false
+
+[functions.configure-installation-email]
+verify_jwt = false
+
+[functions.create-installation-admin]
+verify_jwt = false
+
+[functions.complete-installation]
+verify_jwt = false

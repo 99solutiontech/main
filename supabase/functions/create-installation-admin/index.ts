@@ -64,30 +64,55 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Update user profile to super_admin role
     if (userData.user) {
-      const { error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .update({ 
-          role: 'super_admin',
-          registration_status: 'approved',
-          is_active: true
-        })
-        .eq('user_id', userData.user.id);
+      const userId = userData.user.id;
 
-      if (profileError) {
-        console.error('Failed to update profile:', profileError);
-        // Continue anyway, as the user was created
+      // Check if profile exists
+      const { data: existingProfile, error: fetchProfileError } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (fetchProfileError) {
+        console.error('Failed to check existing profile:', fetchProfileError);
+      } else if (existingProfile) {
+        const { error: profileUpdateError } = await supabaseAdmin
+          .from('profiles')
+          .update({ 
+            role: 'super_admin',
+            status: 'approved',
+            trader_name: 'SuperAdmin',
+            email: adminEmail,
+            full_name: 'System Administrator'
+          })
+          .eq('user_id', userId);
+
+        if (profileUpdateError) {
+          console.error('Failed to update profile:', profileUpdateError);
+        }
+      } else {
+        const { error: profileInsertError } = await supabaseAdmin
+          .from('profiles')
+          .insert({ 
+            user_id: userId,
+            email: adminEmail,
+            full_name: 'System Administrator',
+            role: 'super_admin',
+            status: 'approved',
+            trader_name: 'SuperAdmin'
+          });
+
+        if (profileInsertError) {
+          console.error('Failed to create profile:', profileInsertError);
+        }
       }
     }
 
     // Send password reset email so admin can set their own password
     const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
-      email: adminEmail,
-      options: {
-        redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('/api/v1', '')}/auth/callback`
-      }
+      email: adminEmail
     });
 
     if (resetError) {

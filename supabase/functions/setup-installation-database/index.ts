@@ -35,10 +35,11 @@ const handler = async (req: Request): Promise<Response> => {
       );`,
     ];
 
-    // Try to execute a test query to verify database access
-    const { data: tableExists, error } = await supabaseAdmin
-      .rpc('sql', { query: setupQueries[0] })
-      .single();
+    // Try to execute a simple query to verify database access without raw SQL
+    const { data: test, error } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .limit(1);
 
     if (error) {
       console.error('Database setup failed:', error);
