@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Settings, RotateCcw, AlertTriangle } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -199,7 +199,7 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserChange
           <SelectTrigger className="flex-1">
             <SelectValue placeholder={t('selectAccount')} />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="z-50">
             <SelectItem value="main">
               Main Account ({formatCurrency(subUsers.find(u => u.name === null)?.totalCapital || 0)})
             </SelectItem>
@@ -208,6 +208,31 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserChange
                 {user.name} ({formatCurrency(user.totalCapital)})
               </SelectItem>
             ))}
+            <SelectSeparator />
+            <div className="p-2 flex justify-center">
+              <Dialog open={isManagerOpen} onOpenChange={setIsManagerOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                    <Settings className="h-4 w-4" />
+                    <span className="sr-only">Manage Sub Accounts</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                    <DialogTitle>Manage Sub Accounts</DialogTitle>
+                  </DialogHeader>
+                  <SubUserManager 
+                    userId={userId}
+                    currentMode={currentMode}
+                    selectedSubUser={null}
+                    onSubUserSelect={() => {}}
+                    selectedSubUserName={selectedSubUser}
+                    onResetSubUser={handleResetSubUser}
+                    onCreated={() => setIsManagerOpen(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
           </SelectContent>
         </Select>
         
@@ -220,28 +245,6 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserChange
           />
         )}
         
-        <Dialog open={isManagerOpen} onOpenChange={setIsManagerOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-              <Settings className="h-4 w-4" />
-              <span className="sr-only">Manage Sub Accounts</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl">
-            <DialogHeader>
-              <DialogTitle>Manage Sub Accounts</DialogTitle>
-            </DialogHeader>
-            <SubUserManager 
-              userId={userId}
-              currentMode={currentMode}
-              selectedSubUser={null}
-              onSubUserSelect={() => {}}
-              selectedSubUserName={selectedSubUser}
-              onResetSubUser={handleResetSubUser}
-              onCreated={() => setIsManagerOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );
