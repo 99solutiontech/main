@@ -13,7 +13,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { projectId } = await req.json();
+    const { projectId, supabaseUrl } = await req.json();
 
     console.log('Completing installation for project:', projectId);
 
@@ -83,6 +83,17 @@ const handler = async (req: Request): Promise<Response> => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
+    }
+
+    // Ensure app_settings.functions_base_url is set for this host
+    const baseUrlToSet = supabaseUrl || Deno.env.get('SUPABASE_URL') || null;
+    if (baseUrlToSet) {
+      const { error: settingsError } = await supabaseAdmin
+        .from('app_settings')
+        .upsert({ key: 'functions_base_url', value: baseUrlToSet });
+      if (settingsError) {
+        console.warn('Failed to set functions_base_url:', settingsError);
+      }
     }
 
     // Create an installation completion record (optional)
