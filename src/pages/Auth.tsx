@@ -51,11 +51,11 @@ const Auth = () => {
       // Check if user account is active
       const { data: profile } = await supabase
         .from('profiles')
-        .select('is_active, registration_status')
+        .select('status')
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
         .single();
 
-      if (profile && !profile.is_active) {
+      if (profile && profile.status === 'suspended') {
         await supabase.auth.signOut();
         toast({
           title: "Account Suspended",
@@ -65,7 +65,7 @@ const Auth = () => {
         return;
       }
 
-      if (profile && profile.registration_status === 'pending') {
+      if (profile && profile.status === 'pending') {
         await supabase.auth.signOut();
         toast({
           title: "Account Pending",
@@ -98,19 +98,21 @@ const Auth = () => {
     try {
       // First check if a profile with this email already exists
       const { data: existingProfiles, error: profileError } = await supabase
-        .rpc('get_profiles_by_email', { email_param: email });
+        .from('profiles')
+        .select('email, status')
+        .eq('email', email);
       
       if (!profileError && existingProfiles && existingProfiles.length > 0) {
         const profile = existingProfiles[0];
         
-        if (profile.registration_status === 'pending') {
+        if (profile.status === 'pending') {
           toast({
             title: "Registration Pending",
             description: "You already signed up, waiting for approval. Please contact admin.",
             variant: "destructive",
           });
           return;
-        } else if (profile.registration_status === 'approved' || profile.registration_status === 'rejected') {
+        } else if (profile.status === 'approved' || profile.status === 'rejected') {
           toast({
             title: "Account Exists",
             description: "User already exists. Please use another email or sign in to the account if you have access.",
@@ -135,27 +137,17 @@ const Auth = () => {
 
       if (error) throw error;
 
-      // Update user profile to pending status and inactive
+      // Create or update user profile
       if (data?.user) {
         await supabase
           .from('profiles')
-          .update({ 
-            is_active: false,
-            registration_status: 'pending',
-            full_name: fullName,
-            trader_name: traderName
-          })
-          .eq('user_id', data.user.id);
-
-        // Create admin notification in database
-        await supabase
-          .from('admin_notifications')
-          .insert({
-            type: 'registration',
-            title: 'New User Registration',
-            message: `New user "${traderName}" has registered and is waiting for approval.`,
-            trader_name: traderName,
+          .upsert({ 
             user_id: data.user.id,
+            email: email,
+            full_name: fullName,
+            status: 'pending'
+          }, {
+            onConflict: 'user_id'
           });
 
         // Sign out the user immediately since they need admin approval
