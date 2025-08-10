@@ -467,9 +467,6 @@ const Dashboard = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">{t('loading')}</p>
-          <Button variant="ghost" className="mt-4" onClick={handleSignOut}>
-            {t('signOut')}
-          </Button>
         </div>
       </div>
     );
