@@ -90,6 +90,13 @@ const TradingCalendar = ({ userId, mode, subUserName }: TradingCalendarProps) =>
     return () => { supabase.removeChannel(channel); };
   }, [userId, mode, subUserName, currentDate]);
 
+  // Also refresh when other parts of the app dispatch a refresh event
+  useEffect(() => {
+    const handler = () => loadTradingData();
+    window.addEventListener('refreshTradingData', handler);
+    return () => window.removeEventListener('refreshTradingData', handler);
+  }, [userId, mode, subUserName, currentDate]);
+
   const formatCurrency = (amount: number) => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };

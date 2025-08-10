@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ interface FundData {
   id: string;
   user_id: string;
   mode: 'diamond' | 'gold';
+  sub_user_name?: string | null;
   initial_capital: number;
   total_capital: number;
   active_fund: number;
@@ -31,6 +32,7 @@ interface FundData {
   profit_dist_profit: number;
   lot_base_capital: number;
   lot_base_lot: number;
+  // risk_percent is not stored in fund_data; kept optional for runtime usage
   risk_percent?: number;
 }
 
@@ -59,32 +61,92 @@ const LotSizeSettings = ({ fundData, onUpdate }: LotSizeSettingsProps) => {
     },
   });
 
+  useEffect(() => {
+    const loadRiskPercent = async () => {
+      try {
+        let query = supabase
+          .from('user_settings')
+          .select('lot_size_settings')
+          .eq('user_id', fundData.user_id)
+          .eq('mode', fundData.mode);
+        if (fundData.sub_user_name) {
+          query = query.eq('sub_user_name', fundData.sub_user_name);
+        } else {
+          query = query.is('sub_user_name', null);
+        }
+        const { data, error } = await query.maybeSingle();
+        if (!error && (data as any)?.lot_size_settings?.risk_percent != null) {
+          form.setValue('risk_percent', Number((data as any).lot_size_settings.risk_percent));
+        }
+      } catch {}
+    };
+    loadRiskPercent();
+  }, [fundData.id]);
+
   const updateSettings = async (data: SettingsForm) => {
     setLoading(true);
     try {
-      const { error } = await supabase
+      // 1) Update fund_data with supported fields only
+      const { error: fundError } = await supabase
         .from('fund_data')
         .update({
           lot_base_capital: data.lot_base_capital,
           lot_base_lot: data.lot_base_lot,
-          risk_percent: data.risk_percent,
         })
         .eq('id', fundData.id);
 
-      if (error) throw error;
+      if (fundError) throw fundError;
+
+      // 2) Persist risk_percent in user_settings.lot_size_settings JSON
+      // Check for existing settings row
+      let query = supabase
+        .from('user_settings')
+        .select('id')
+        .eq('user_id', fundData.user_id)
+        .eq('mode', fundData.mode);
+      if (fundData.sub_user_name) {
+        query = query.eq('sub_user_name', fundData.sub_user_name);
+      } else {
+        query = query.is('sub_user_name', null);
+      }
+      const { data: existing, error: fetchError } = await query.maybeSingle();
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        // PGRST116 = No rows; ignore
+        throw fetchError;
+      }
+
+      if (existing?.id) {
+        const { error: updateSettingsError } = await supabase
+          .from('user_settings')
+          .update({ lot_size_settings: { risk_percent: data.risk_percent } })
+          .eq('id', existing.id);
+        if (updateSettingsError) throw updateSettingsError;
+      } else {
+        const { error: insertSettingsError } = await supabase
+          .from('user_settings')
+          .insert({
+            user_id: fundData.user_id,
+            mode: fundData.mode,
+            sub_user_name: fundData.sub_user_name || null,
+            lot_size_settings: { risk_percent: data.risk_percent },
+          });
+        if (insertSettingsError) throw insertSettingsError;
+      }
 
       toast({
-        title: "Success",
-        description: "Lot size settings updated successfully",
+        title: 'Success',
+        description: 'Lot size settings updated successfully',
       });
 
       setOpen(false);
       onUpdate();
+      // Notify listeners that trading data/settings changed
+      window.dispatchEvent(new CustomEvent('refreshTradingData'));
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: 'Error',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);

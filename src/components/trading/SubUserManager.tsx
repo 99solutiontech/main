@@ -174,35 +174,25 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
     }
   };
 
-  const resetSubUserData = async (subUserName: string) => {
+  const resetSubUserData = async (fundId: string, mode: 'diamond' | 'gold', subUserName: string | null) => {
     try {
-      // Get the sub user's mode for proper operations
-      const { data: subUserFund, error: fundError } = await supabase
-        .from('fund_data')
-        .select('mode')
-        .eq('user_id', userId)
-        .eq('sub_user_name', subUserName)
-        .maybeSingle();
-
-      if (fundError || !subUserFund) {
-        throw new Error('Sub user fund data not found');
-      }
-
-      // 1) Delete trading history for this sub user
-      await supabase
+      // 1) Delete trading history for this sub user (handle null vs non-null names)
+      let th = supabase
         .from('trading_history')
         .delete()
         .eq('user_id', userId)
-        .eq('mode', subUserFund.mode)
-        .eq('sub_user_name', subUserName);
+        .eq('mode', mode);
+      if (subUserName) th = th.eq('sub_user_name', subUserName); else th = th.is('sub_user_name', null);
+      await th;
 
       // 2) Delete transaction history for this sub user
-      await supabase
+      let tx = supabase
         .from('transaction_history')
         .delete()
         .eq('user_id', userId)
-        .eq('mode', subUserFund.mode)
-        .eq('sub_user_name', subUserName);
+        .eq('mode', mode);
+      if (subUserName) tx = tx.eq('sub_user_name', subUserName); else tx = tx.is('sub_user_name', null);
+      await tx;
 
       // 3) Reset balances in fund_data but KEEP the sub account record
       const { error: updateError } = await supabase
@@ -215,26 +205,26 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
           profit_fund: 0,
           target_reserve_fund: 0,
         })
-        .eq('user_id', userId)
-        .eq('mode', subUserFund.mode)
-        .eq('sub_user_name', subUserName);
+        .eq('id', fundId)
+        .eq('user_id', userId);
 
       if (updateError) throw updateError;
 
       toast({
         title: t('success'),
-        description: `Sub account "${subUserName}" has been reset. Balances cleared, account kept.`,
+        description: `Sub account "${subUserName ?? 'Main'}" has been reset. Balances cleared, account kept.`,
       });
 
       // Trigger refresh of transaction history and components
       window.dispatchEvent(new Event('refreshTransactions'));
       window.dispatchEvent(new Event('refreshFundData'));
+      window.dispatchEvent(new Event('refreshTradingData'));
       loadSubUsers();
     } catch (error: any) {
       toast({
         title: t('error'),
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     }
   };
@@ -295,7 +285,7 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
                             onClick={(e) => {
                               e.stopPropagation();
                               if (confirm(`Reset all data for "${subUser.name}"? This will clear trading history, transaction history, and set all balances to 0. The sub account will be kept.`)) {
-                                resetSubUserData(subUser.name);
+                                resetSubUserData(subUser.id, subUser.mode, subUser.name || null);
                               }
                             }}
                             className="h-8 w-8 p-0"

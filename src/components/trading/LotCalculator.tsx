@@ -3,11 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Calculator, TrendingUp } from 'lucide-react';
 import LotSizeSettings from './LotSizeSettings';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FundData {
   id: string;
   user_id: string;
   mode: 'diamond' | 'gold';
+  sub_user_name?: string | null;
   initial_capital: number;
   total_capital: number;
   active_fund: number;
@@ -19,6 +22,7 @@ interface FundData {
   profit_dist_profit: number;
   lot_base_capital: number;
   lot_base_lot: number;
+  // risk_percent is stored in user_settings, optional for runtime
   risk_percent?: number;
 }
 
@@ -29,22 +33,41 @@ interface LotCalculatorProps {
 
 const LotCalculator = ({ fundData, onUpdate }: LotCalculatorProps) => {
   const { t } = useLanguage();
+  const [riskPercent, setRiskPercent] = useState<number>(fundData.risk_percent || 40);
+
+  useEffect(() => {
+    const loadRisk = async () => {
+      try {
+        let query = supabase
+          .from('user_settings')
+          .select('lot_size_settings')
+          .eq('user_id', fundData.user_id)
+          .eq('mode', fundData.mode);
+        const subName = (fundData as any).sub_user_name || null;
+        if (subName) query = query.eq('sub_user_name', subName); else query = query.is('sub_user_name', null);
+        const { data } = await query.maybeSingle();
+        const rp = (data as any)?.lot_size_settings?.risk_percent;
+        if (rp != null) setRiskPercent(Number(rp));
+        else setRiskPercent(fundData.risk_percent || 40);
+      } catch {
+        setRiskPercent(fundData.risk_percent || 40);
+      }
+    };
+    loadRisk();
+  }, [fundData.id]);
   
   const calculateRecommendedLot = () => {
     if (!fundData.lot_base_capital || fundData.lot_base_capital <= 0) return 0;
-    
     const ratio = fundData.active_fund / fundData.lot_base_capital;
     return ratio * fundData.lot_base_lot;
   };
 
   const calculateRiskAmount = () => {
-    const riskPercent = fundData.risk_percent || 40; // Default 40%
     return (fundData.active_fund * riskPercent) / 100;
   };
 
   const recommendedLot = calculateRecommendedLot();
   const riskAmount = calculateRiskAmount();
-  const riskPercent = fundData.risk_percent || 40;
 
   return (
     <Card className="relative">

@@ -88,6 +88,13 @@ const QuarterlyCalendar = ({ userId, mode, subUserName }: QuarterlyCalendarProps
     return () => { supabase.removeChannel(channel); };
   }, [userId, mode, subUserName, currentQuarter]);
 
+  // Also refresh when other parts of the app dispatch a refresh event
+  useEffect(() => {
+    const handler = () => loadTradingData();
+    window.addEventListener('refreshTradingData', handler);
+    return () => window.removeEventListener('refreshTradingData', handler);
+  }, [userId, mode, subUserName, currentQuarter]);
+
   const formatCurrency = (amount: number) => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
