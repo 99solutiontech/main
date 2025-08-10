@@ -15,7 +15,7 @@ import {
 } from 'chart.js';
 import { TrendingUp } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-
+import EconomicNewsBar from './EconomicNewsBar';
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -174,29 +174,32 @@ const CapitalGrowthChart = ({ userId, mode, subUserName }: CapitalGrowthChartPro
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="h-5 w-5" />
-          {t('capitalGrowth')}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="h-80">
-          {loading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : chartData ? (
-            <Line data={chartData} options={options} />
-          ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              No trading data available yet
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+    <>
+      <EconomicNewsBar />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            {t('capitalGrowth')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80">
+            {loading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : chartData ? (
+              <Line data={chartData} options={options} />
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                No trading data available yet
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 };
 

@@ -50,6 +50,51 @@ export type Database = {
         }
         Relationships: []
       }
+      economic_events: {
+        Row: {
+          actual: string | null
+          created_at: string
+          currency: string
+          detail_url: string | null
+          event_time: string
+          forecast: string | null
+          id: string
+          impact_level: string
+          previous: string | null
+          source: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          actual?: string | null
+          created_at?: string
+          currency: string
+          detail_url?: string | null
+          event_time: string
+          forecast?: string | null
+          id?: string
+          impact_level: string
+          previous?: string | null
+          source?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          actual?: string | null
+          created_at?: string
+          currency?: string
+          detail_url?: string | null
+          event_time?: string
+          forecast?: string | null
+          id?: string
+          impact_level?: string
+          previous?: string | null
+          source?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fund_data: {
         Row: {
           active_fund: number | null

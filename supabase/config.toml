@@ -1,1 +1,4 @@
 project_id = "yxrgknvprkvtdpzmpclh"
+
+[functions.forex-events-fetcher]
+verify_jwt = true
