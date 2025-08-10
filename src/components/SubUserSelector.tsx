@@ -212,9 +212,9 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserChange
             <div className="p-2 flex justify-center">
               <Dialog open={isManagerOpen} onOpenChange={setIsManagerOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                  <Button variant="outline" size="sm" className="h-8 px-3">
                     <Settings className="h-4 w-4" />
-                    <span className="sr-only">Manage Sub Accounts</span>
+                    <span>Manage account</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-4xl">
