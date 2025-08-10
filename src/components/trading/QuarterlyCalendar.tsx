@@ -42,7 +42,7 @@ const QuarterlyCalendar = ({ userId, mode, subUserName }: QuarterlyCalendarProps
         .select('*')
         .eq('user_id', userId)
         .eq('mode', mode)
-        .in('type', ['Win', 'Loss'])
+        .in('type', ['profit', 'loss'])
         .gte('created_at', startOfQuarter.toISOString())
         .lte('created_at', endOfQuarter.toISOString());
 
@@ -140,8 +140,8 @@ const QuarterlyCalendar = ({ userId, mode, subUserName }: QuarterlyCalendarProps
       const weekEnd = getWeekEndDate(weekStart);
       const weekTrades = getTradesForWeek(weekStart, weekEnd);
       
-      const wins = weekTrades.filter(t => t.type === 'Win');
-      const losses = weekTrades.filter(t => t.type === 'Loss');
+      const wins = weekTrades.filter(t => t.type?.toLowerCase() === 'profit');
+      const losses = weekTrades.filter(t => t.type?.toLowerCase() === 'loss');
       const totalWins = wins.reduce((sum, t) => sum + (t.amount || 0), 0);
       const totalLosses = losses.reduce((sum, t) => sum + (t.amount || 0), 0);
       const netPnL = totalWins + totalLosses;
@@ -221,8 +221,8 @@ const QuarterlyCalendar = ({ userId, mode, subUserName }: QuarterlyCalendarProps
   };
 
   const calculateQuarterlyStats = () => {
-    const wins = tradingData.filter(t => t.type === 'Win');
-    const losses = tradingData.filter(t => t.type === 'Loss');
+    const wins = tradingData.filter(t => t.type?.toLowerCase() === 'profit');
+    const losses = tradingData.filter(t => t.type?.toLowerCase() === 'loss');
     const totalWins = wins.reduce((sum, t) => sum + (t.amount || 0), 0);
     const totalLosses = losses.reduce((sum, t) => sum + (t.amount || 0), 0);
     const netPnL = totalWins + totalLosses;

@@ -44,7 +44,7 @@ const TradingCalendar = ({ userId, mode, subUserName }: TradingCalendarProps) =>
         .select('*')
         .eq('user_id', userId)
         .eq('mode', mode)
-        .in('type', ['Win', 'Loss'])
+        .in('type', ['profit', 'loss'])
         .gte('created_at', startDate)
         .lte('created_at', endDate);
 
@@ -145,7 +145,7 @@ const TradingCalendar = ({ userId, mode, subUserName }: TradingCalendarProps) =>
                 className={`
                   aspect-square border rounded-lg p-1 flex flex-col items-center justify-center text-xs relative cursor-pointer
                   ${isWeekend ? 'bg-muted opacity-60' : 'bg-background'}
-                  ${trade ? (trade.type === 'Win' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30') : ''}
+                  ${trade ? (trade.type?.toLowerCase() === 'profit' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30') : ''}
                   hover:bg-muted transition-colors
                 `}
               >
@@ -153,7 +153,7 @@ const TradingCalendar = ({ userId, mode, subUserName }: TradingCalendarProps) =>
                 {trade && (
                   <div className={`
                     text-xs font-semibold mt-1
-                    ${trade.type === 'Win' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}
+                    ${trade.type?.toLowerCase() === 'profit' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}
                   `}>
                     {trade.amount !== undefined ? formatCurrency(Math.abs(trade.amount)) : trade.type}
                   </div>
@@ -167,7 +167,7 @@ const TradingCalendar = ({ userId, mode, subUserName }: TradingCalendarProps) =>
                   <div className="space-y-1">
                     <div className="text-foreground">Start Balance: {formatCurrency(trade.end_balance - (trade.amount || 0))}</div>
                     <div className="text-foreground">End Balance: {formatCurrency(trade.end_balance)}</div>
-                    <div className={`font-medium ${trade.type === 'Win' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    <div className={`font-medium ${trade.type?.toLowerCase() === 'profit' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                       P&L: {trade.amount !== undefined ? formatCurrency(Math.abs(trade.amount)) : 'No amount'}
                     </div>
                   </div>
@@ -184,8 +184,8 @@ const TradingCalendar = ({ userId, mode, subUserName }: TradingCalendarProps) =>
   };
 
   const calculateMonthlyStats = () => {
-    const wins = tradingData.filter(t => t.type === 'Win');
-    const losses = tradingData.filter(t => t.type === 'Loss');
+    const wins = tradingData.filter(t => t.type?.toLowerCase() === 'profit');
+    const losses = tradingData.filter(t => t.type?.toLowerCase() === 'loss');
     const totalWins = wins.reduce((sum, t) => sum + (t.amount || 0), 0);
     const totalLosses = losses.reduce((sum, t) => sum + (t.amount || 0), 0);
     const netPnL = totalWins + totalLosses;

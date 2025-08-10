@@ -97,12 +97,13 @@ const TradingHistory = ({ userId, mode, subUserName }: TradingHistoryProps) => {
   };
 
   const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'Win':
-      case 'Deposit':
+    const tLower = (type || '').toLowerCase();
+    switch (tLower) {
+      case 'profit':
+      case 'deposit':
         return 'text-green-500';
-      case 'Loss':
-      case 'Withdraw':
+      case 'loss':
+      case 'withdraw':
         return 'text-red-500';
       default:
         return 'text-muted-foreground';
@@ -146,8 +147,8 @@ const TradingHistory = ({ userId, mode, subUserName }: TradingHistoryProps) => {
               <div key={record.id} className="border-b border-border pb-3 last:border-b-0">
                 <div className="flex justify-between items-start mb-1">
                   <div className="flex items-center gap-2">
-                  <Badge variant={record.type === 'Win' ? 'default' : record.type === 'Loss' ? 'destructive' : 'secondary'}>
-                      {record.type === 'Win' ? t('win') : record.type === 'Loss' ? t('loss') : record.type}
+                  <Badge variant={(record.type?.toLowerCase() === 'profit') ? 'default' : (record.type?.toLowerCase() === 'loss' ? 'destructive' : 'secondary')}>
+                      {(record.type?.toLowerCase() === 'profit') ? t('win') : (record.type?.toLowerCase() === 'loss' ? t('loss') : record.type)}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
                       {formatDate(record.created_at)}

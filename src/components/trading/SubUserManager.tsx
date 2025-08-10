@@ -118,9 +118,11 @@ const SubUserManager = ({ userId, currentMode, onSubUserSelect, selectedSubUser,
         user_id: userId,
         mode: data.mode,
         sub_user_name: data.name,
-        type: 'Initialize',
+        type: 'profit',
         details: `Initial capital set to $${data.initial_capital.toLocaleString()} for ${data.name}`,
+        start_balance: data.initial_capital,
         end_balance: data.initial_capital,
+        profit_loss: 0,
       });
 
       toast({

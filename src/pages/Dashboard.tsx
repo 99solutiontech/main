@@ -375,9 +375,11 @@ const Dashboard = () => {
         const historyPromise = (supabase as any).from('trading_history').insert({
           user_id: user.id,
           mode: currentMode,
-          type: 'Initialize',
+          type: 'profit',
           details: `Initial capital set to $${initialCapital.toLocaleString()}`,
+          start_balance: initialCapital,
           end_balance: initialCapital,
+          profit_loss: 0,
           sub_user_name: selectedSubUser?.name || null,
         });
         

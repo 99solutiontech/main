@@ -136,8 +136,8 @@ const MonthlyGrowthChart = ({ userId, mode, subUserName }: MonthlyGrowthChartPro
         const monthIndex = recordDate.getMonth();
         const monthName = months[monthIndex];
         
-        if (record.type === 'Win' || record.type === 'Loss') {
-          monthlyData[monthName].profit += record.amount || 0;
+        if (record.type?.toLowerCase() === 'profit' || record.type?.toLowerCase() === 'loss') {
+          monthlyData[monthName].profit += (record.profit_loss || 0);
           monthlyData[monthName].trades += 1;
         }
       });

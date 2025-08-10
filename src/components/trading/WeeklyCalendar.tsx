@@ -41,7 +41,7 @@ const WeeklyCalendar = ({ userId, mode, subUserName }: WeeklyCalendarProps) => {
         .select('*')
         .eq('user_id', userId)
         .eq('mode', mode)
-        .in('type', ['Win', 'Loss'])
+        .in('type', ['profit', 'loss'])
         .gte('created_at', startOfWeek.toISOString())
         .lte('created_at', endOfWeek.toISOString());
 
@@ -136,7 +136,7 @@ const WeeklyCalendar = ({ userId, mode, subUserName }: WeeklyCalendarProps) => {
                 className={`
                   h-24 border rounded-lg p-2 flex flex-col items-center justify-center text-xs relative cursor-pointer
                   ${isToday ? 'ring-2 ring-primary' : ''}
-                  ${trade ? (trade.type === 'Win' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30') : 'bg-background'}
+                  ${trade ? (trade.type?.toLowerCase() === 'profit' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30') : 'bg-background'}
                   hover:bg-muted transition-colors
                 `}
               >
@@ -150,7 +150,7 @@ const WeeklyCalendar = ({ userId, mode, subUserName }: WeeklyCalendarProps) => {
                   <>
                     <div className={`
                       text-xs font-semibold mt-1
-                      ${trade.type === 'Win' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}
+                      ${trade.type?.toLowerCase() === 'profit' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}
                     `}>
                       {trade.amount !== undefined ? formatCurrency(Math.abs(trade.amount)) : trade.type}
                     </div>
@@ -165,7 +165,7 @@ const WeeklyCalendar = ({ userId, mode, subUserName }: WeeklyCalendarProps) => {
               <TooltipContent className="bg-popover border p-3 rounded-lg shadow-lg">
                 <div className="space-y-1 text-sm">
                   <div className="font-semibold">{currentDay.toLocaleDateString()}</div>
-                  <div className={`font-medium ${trade.type === 'Win' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  <div className={`font-medium ${trade.type?.toLowerCase() === 'profit' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                     {trade.type}: {trade.amount !== undefined ? formatCurrency(Math.abs(trade.amount)) : 'No amount'}
                   </div>
                   <div>End Balance: {formatCurrency(trade.end_balance)}</div>
@@ -182,8 +182,8 @@ const WeeklyCalendar = ({ userId, mode, subUserName }: WeeklyCalendarProps) => {
   };
 
   const calculateWeeklyStats = () => {
-    const wins = tradingData.filter(t => t.type === 'Win');
-    const losses = tradingData.filter(t => t.type === 'Loss');
+    const wins = tradingData.filter(t => t.type?.toLowerCase() === 'profit');
+    const losses = tradingData.filter(t => t.type?.toLowerCase() === 'loss');
     const totalWins = wins.reduce((sum, t) => sum + (t.amount || 0), 0);
     const totalLosses = losses.reduce((sum, t) => sum + (t.amount || 0), 0);
     const netPnL = totalWins + totalLosses;
