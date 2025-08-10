@@ -6,13 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AppThemeProvider } from '@/contexts/AppThemeContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import LanguageSelector from '@/components/LanguageSelector';
-import { Gem, LogOut, Settings, TrendingUp, DollarSign, Calculator, Calendar, BarChart3, Users, Fuel } from 'lucide-react';
+import { Gem, LogOut, Settings, TrendingUp, DollarSign, Calculator, Calendar, BarChart3, Users, Fuel, Menu } from 'lucide-react';
 import FundOverview from '@/components/trading/FundOverview';
 import TradeRecorder from '@/components/trading/TradeRecorder';
 import LotCalculator from '@/components/trading/LotCalculator';
@@ -452,9 +453,103 @@ const Dashboard = () => {
       <AppThemeProvider>
         <ThemeProvider tradingMode={currentMode} onModeChange={handleModeChange}>
           <div className="min-h-screen bg-background">
-        <header className="border-b bg-card">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
+      <header className="border-b bg-card">
+          <div className="container mx-auto px-4 py-3">
+            {/* Mobile header */}
+            <div className="flex items-center justify-between md:hidden">
+              <Drawer>
+                <DrawerTrigger asChild>
+                  <Button variant="ghost" size="icon" aria-label="Open menu">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <DrawerHeader>
+                    <DrawerTitle>{t('menu') || 'Menu'}</DrawerTitle>
+                  </DrawerHeader>
+                  <div className="px-4 pb-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">{t('language')}</span>
+                      <LanguageSelector />
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium mb-2">{t('account') || 'Account'}</p>
+                      <SubUserSelector
+                        userId={user.id}
+                        currentMode={currentMode}
+                        selectedSubUser={selectedSubUser?.name || null}
+                        onSubUserChange={(subUserName) => {
+                          if (subUserName) {
+                            const subUser = { id: 'temp', name: subUserName, mode: currentMode, initial_capital: 0, total_capital: 0, active_fund: 0, reserve_fund: 0, profit_fund: 0, created_at: new Date().toISOString() };
+                            setSelectedSubUser(subUser);
+                          } else {
+                            setSelectedSubUser(null);
+                          }
+                          setFundData(null);
+                          if (user) {
+                            loadFundData(user.id, currentMode, subUserName);
+                          }
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium mb-2">{t('mode') || 'Mode'}</p>
+                      <Select value={currentMode} onValueChange={handleModeChange}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue>
+                            <div className="flex items-center gap-2">
+                              {currentMode === 'diamond' ? (
+                                <Gem className="h-4 w-4" />
+                              ) : (
+                                <Fuel className="h-4 w-4 text-yellow-500" />
+                              )}
+                              {currentMode === 'diamond' ? t('diamondMode') : t('goldMode')}
+                            </div>
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="diamond">
+                            <div className="flex items-center gap-2">
+                              <Gem className="h-4 w-4" />
+                              {t('diamondMode')}
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="gold">
+                            <div className="flex items-center gap-2">
+                              <Fuel className="h-4 w-4 text-yellow-500" />
+                              {t('goldMode')}
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Button variant="outline" className="w-full" onClick={handleSignOut}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      {t('signOut')}
+                    </Button>
+                  </div>
+                </DrawerContent>
+              </Drawer>
+
+              <div className="flex-1 text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <Gem className="h-5 w-5 text-primary" />
+                  <h1 className="text-lg font-semibold tracking-wide">Moneyx 8.8</h1>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t('welcome')}, {profile?.trader_name || profile?.full_name || user.email}
+                </p>
+              </div>
+
+              {/* Right spacer to keep title centered */}
+              <div className="w-9" />
+            </div>
+
+            {/* Desktop header */}
+            <div className="hidden md:flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                   <Gem className="h-6 w-6 text-primary" />
@@ -466,10 +561,10 @@ const Dashboard = () => {
                   </p>
                 </div>
               </div>
-              
-                <div className="flex items-center gap-4">
+
+              <div className="flex items-center gap-4">
                 <LanguageSelector />
-                
+
                 <SubUserSelector
                   userId={user.id}
                   currentMode={currentMode}
@@ -487,8 +582,8 @@ const Dashboard = () => {
                     }
                   }}
                 />
-                 
-                 <Select value={currentMode} onValueChange={handleModeChange}>
+
+                <Select value={currentMode} onValueChange={handleModeChange}>
                   <SelectTrigger className="w-40">
                     <SelectValue>
                       <div className="flex items-center gap-2">
@@ -516,7 +611,7 @@ const Dashboard = () => {
                     </SelectItem>
                   </SelectContent>
                 </Select>
-                 
+
                 <Button variant="outline" size="sm" onClick={handleSignOut}>
                   <LogOut className="h-4 w-4 mr-2" />
                   {t('signOut')}
