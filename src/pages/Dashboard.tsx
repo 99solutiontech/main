@@ -12,7 +12,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AppThemeProvider } from '@/contexts/AppThemeContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
-import LanguageSelector from '@/components/LanguageSelector';
+// LanguageSelector moved into SettingsDialog
 import { Gem, LogOut, Settings, TrendingUp, DollarSign, Calculator, Calendar, BarChart3, Users, Fuel, Menu } from 'lucide-react';
 import FundOverview from '@/components/trading/FundOverview';
 import TradeRecorder from '@/components/trading/TradeRecorder';
@@ -24,6 +24,7 @@ import CapitalGrowthChart from '@/components/trading/CapitalGrowthChart';
 import FundTransactionHistory from '@/components/trading/FundTransactionHistory';
 import SubUserManager from '@/components/trading/SubUserManager';
 import MonthlyGrowthChart from '@/components/trading/MonthlyGrowthChart';
+import UserProfileMenu from '@/components/profile/UserProfileMenu';
 
 import SubUserSelector from '@/components/SubUserSelector';
 import QuarterlyCalendar from '@/components/trading/QuarterlyCalendar';
@@ -496,10 +497,7 @@ const Dashboard = () => {
                     <DrawerTitle>{t('menu') || 'Menu'}</DrawerTitle>
                   </DrawerHeader>
                   <div className="px-4 pb-4 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">{t('language')}</span>
-                      <LanguageSelector />
-                    </div>
+                    {/* Language selection moved to Settings in user menu */}
 
                     <div>
                       <p className="text-sm font-medium mb-2">{t('account') || 'Account'}</p>
@@ -591,8 +589,6 @@ const Dashboard = () => {
               </div>
 
               <div className="flex items-center gap-4">
-                <LanguageSelector />
-
                 <SubUserSelector
                   userId={user.id}
                   currentMode={currentMode}
@@ -640,10 +636,7 @@ const Dashboard = () => {
                   </SelectContent>
                 </Select>
 
-                <Button variant="outline" size="sm" onClick={handleSignOut}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  {t('signOut')}
-                </Button>
+                <UserProfileMenu onSignOut={handleSignOut} displayName={profile?.trader_name || profile?.full_name || user.email} />
               </div>
             </div>
           </div>

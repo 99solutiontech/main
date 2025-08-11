@@ -175,10 +175,16 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           created_at: string
+          currency_unit: string | null
           email: string | null
+          first_name: string | null
           full_name: string | null
           id: string
+          language: string | null
+          last_name: string | null
+          phone_number: string | null
           role: string | null
           status: string | null
           trader_name: string | null
@@ -186,10 +192,16 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          address?: string | null
           created_at?: string
+          currency_unit?: string | null
           email?: string | null
+          first_name?: string | null
           full_name?: string | null
           id?: string
+          language?: string | null
+          last_name?: string | null
+          phone_number?: string | null
           role?: string | null
           status?: string | null
           trader_name?: string | null
@@ -197,10 +209,16 @@ export type Database = {
           user_id: string
         }
         Update: {
+          address?: string | null
           created_at?: string
+          currency_unit?: string | null
           email?: string | null
+          first_name?: string | null
           full_name?: string | null
           id?: string
+          language?: string | null
+          last_name?: string | null
+          phone_number?: string | null
           role?: string | null
           status?: string | null
           trader_name?: string | null
