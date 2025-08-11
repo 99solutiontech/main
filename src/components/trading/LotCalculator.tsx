@@ -1,10 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Calculator, TrendingUp } from 'lucide-react';
 import LotSizeSettings from './LotSizeSettings';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface FundData {
   id: string;
@@ -33,6 +33,7 @@ interface LotCalculatorProps {
 
 const LotCalculator = ({ fundData, onUpdate }: LotCalculatorProps) => {
   const { t } = useLanguage();
+  const { format } = useCurrency();
   const [riskPercent, setRiskPercent] = useState<number>(fundData.risk_percent || 40);
 
   useEffect(() => {
@@ -56,18 +57,24 @@ const LotCalculator = ({ fundData, onUpdate }: LotCalculatorProps) => {
     loadRisk();
   }, [fundData.id]);
   
-  const calculateRecommendedLot = () => {
+  const recommendedLot = useMemo(() => {
     if (!fundData.lot_base_capital || fundData.lot_base_capital <= 0) return 0;
     const ratio = fundData.active_fund / fundData.lot_base_capital;
     return ratio * fundData.lot_base_lot;
-  };
+  }, [fundData.active_fund, fundData.lot_base_capital, fundData.lot_base_lot]);
 
-  const calculateRiskAmount = () => {
-    return (fundData.active_fund * riskPercent) / 100;
-  };
+  const baseRisk = fundData.risk_percent || 40;
+  const effectiveLot = useMemo(() => recommendedLot * (riskPercent / baseRisk), [recommendedLot, riskPercent, baseRisk]);
 
-  const recommendedLot = calculateRecommendedLot();
-  const riskAmount = calculateRiskAmount();
+  const riskAmountUsd = useMemo(() => (fundData.active_fund * riskPercent) / 100, [fundData.active_fund, riskPercent]);
+
+  // TP profit rule: base lot 0.4 => $20; scale linearly by lot size
+  const tpProfitUsd = useMemo(() => {
+    const baseLot = fundData.lot_base_lot || 0.4;
+    const baseTpUsd = 20;
+    const factor = baseLot > 0 ? (effectiveLot / baseLot) : 0;
+    return factor * baseTpUsd;
+  }, [effectiveLot, fundData.lot_base_lot]);
 
   return (
     <Card className="relative">
@@ -82,43 +89,49 @@ const LotCalculator = ({ fundData, onUpdate }: LotCalculatorProps) => {
         <LotSizeSettings fundData={fundData} onUpdate={onUpdate} />
       </CardHeader>
       <CardContent className="text-center space-y-6">
-        {/* Lot Size Section */}
         <div className="space-y-2">
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Calculator className="h-4 w-4" />
             {t('recommendedLotSize')}
           </div>
           <div className="text-3xl font-bold text-primary">
-            {recommendedLot.toFixed(2)} lot
+            {effectiveLot.toFixed(2)} lot
           </div>
           <div className="text-sm text-muted-foreground">
-            Base: {fundData.lot_base_lot} lot per ${fundData.lot_base_capital.toLocaleString()}
+            Base: {fundData.lot_base_lot} lot per {format(fundData.lot_base_capital, { showLabel: true })}
           </div>
         </div>
-        
-        {/* Risk Amount Section */}
+
         <div className="space-y-2">
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <TrendingUp className="h-4 w-4" />
             {t('riskAmount')} ({riskPercent}% of Active Fund)
           </div>
           <div className="text-2xl font-bold text-destructive">
-            ${riskAmount.toFixed(2)}
+            {format(riskAmountUsd, { showLabel: true })}
           </div>
           <div className="text-sm text-muted-foreground">
             {t('maximumRecommendedRiskPerTrade')}
           </div>
         </div>
-        
+
+        {/* TP Profit */}
+        <div className="space-y-2">
+          <div className="text-sm text-muted-foreground">TP Profit (moves with risk)</div>
+          <div className="text-2xl font-bold text-green-500">
+            {format(tpProfitUsd, { showLabel: true })}
+          </div>
+        </div>
+
         <div className="pt-4 border-t">
           <div className="text-sm space-y-1">
             <div className="flex justify-between">
               <span className="text-foreground">{t('activeFundLabel')}</span>
-              <span className="text-foreground">${fundData.active_fund.toLocaleString()}</span>
+              <span className="text-foreground">{format(fundData.active_fund, { showLabel: true })}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-foreground">{t('baseCapitalLabel')}</span>
-              <span className="text-foreground">${fundData.lot_base_capital.toLocaleString()}</span>
+              <span className="text-foreground">{format(fundData.lot_base_capital, { showLabel: true })}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-foreground">{t('baseLotLabel')}</span>

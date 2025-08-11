@@ -12,7 +12,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AppThemeProvider } from '@/contexts/AppThemeContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
-// LanguageSelector moved into SettingsDialog
+import LanguageSelector from '@/components/LanguageSelector';
 import { Gem, LogOut, Settings, TrendingUp, DollarSign, Calculator, Calendar, BarChart3, Users, Fuel, Menu } from 'lucide-react';
 import FundOverview from '@/components/trading/FundOverview';
 import TradeRecorder from '@/components/trading/TradeRecorder';
