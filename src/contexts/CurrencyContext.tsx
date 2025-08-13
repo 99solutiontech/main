@@ -71,7 +71,7 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const showLabel = opts?.showLabel ?? false;
     const disp = toDisplay(usdAmount);
     const formatted = disp.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    if (unit === 'USDCENT') return showLabel ? `${formatted} cent` : formatted;
+    if (unit === 'USDCENT') return showLabel ? `${formatted} cent` : `${formatted} cent`;
     return showLabel ? `$${formatted}` : `$${formatted}`;
   }, [toDisplay, unit]);
 

@@ -58,23 +58,28 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
     }
   });
 
-  const recordTrade = async (pnlUsd: number, note: string) => {
+  const recordTrade = async (newActiveFundUsd: number, rebateUsd: number, note: string) => {
+    // Calculate actual profit: (new active fund + rebate) - current active fund
+    const currentActiveFund = Number(fundData.active_fund);
+    const actualProfitUsd = (newActiveFundUsd + rebateUsd) - currentActiveFund;
+    
     let updated = { 
-      active_fund: Number(fundData.active_fund),
+      active_fund: newActiveFundUsd, // Set to the new active fund value from user input
       reserve_fund: Number(fundData.reserve_fund),
       profit_fund: Number(fundData.profit_fund),
       total_capital: Number(fundData.total_capital),
     };
 
-    if (pnlUsd > 0) {
-      const toActive = (pnlUsd * (fundData.profit_dist_active ?? 50)) / 100;
-      const toReserve = (pnlUsd * (fundData.profit_dist_reserve ?? 25)) / 100;
-      const toProfit = (pnlUsd * (fundData.profit_dist_profit ?? 25)) / 100;
+    // Distribute the actual profit according to settings
+    if (actualProfitUsd > 0) {
+      const toActive = (actualProfitUsd * (fundData.profit_dist_active ?? 50)) / 100;
+      const toReserve = (actualProfitUsd * (fundData.profit_dist_reserve ?? 25)) / 100;
+      const toProfit = (actualProfitUsd * (fundData.profit_dist_profit ?? 25)) / 100;
       updated.active_fund += toActive;
       updated.reserve_fund += toReserve;
       updated.profit_fund += toProfit;
-    } else if (pnlUsd < 0) {
-      const loss = Math.abs(pnlUsd);
+    } else if (actualProfitUsd < 0) {
+      const loss = Math.abs(actualProfitUsd);
       const fromReserve = Math.min(loss, updated.reserve_fund);
       updated.active_fund -= (loss - fromReserve);
       updated.reserve_fund -= fromReserve;
@@ -93,11 +98,11 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
       .insert({
         user_id: userId,
         mode,
-        type: pnlUsd >= 0 ? 'profit' : 'loss',
+        type: actualProfitUsd >= 0 ? 'profit' : 'loss',
         details: note,
         start_balance: Number(fundData.total_capital),
         end_balance: updated.total_capital,
-        profit_loss: pnlUsd,
+        profit_loss: actualProfitUsd,
         sub_user_name: subUserName,
       });
     if (historyError) throw historyError;
@@ -106,11 +111,12 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
   const recordDiamondTrade = async (data: DiamondForm) => {
     setLoading(true);
     try {
-      const realUsd = fromDisplay(Number(data.real_profit || 0));
+      const newActiveFundUsd = fromDisplay(Number(data.real_profit || 0));
       const rebateUsd = fromDisplay(Number(data.rebate || 0));
-      const pnlUsd = realUsd + rebateUsd;
-      const note = `Real: ${format(realUsd, { showLabel: true })} + Rebate: ${format(rebateUsd, { showLabel: true })} = Total: ${format(pnlUsd, { showLabel: true })}`;
-      await recordTrade(pnlUsd, note);
+      const currentActiveFund = Number(fundData.active_fund);
+      const actualProfitUsd = (newActiveFundUsd + rebateUsd) - currentActiveFund;
+      const note = `New Active Fund: ${format(newActiveFundUsd, { showLabel: true })} + Rebate: ${format(rebateUsd, { showLabel: true })} = Profit: ${format(actualProfitUsd, { showLabel: true })}`;
+      await recordTrade(newActiveFundUsd, rebateUsd, note);
       toast({ title: 'Success', description: 'Trade recorded successfully' });
       diamondForm.reset();
       onUpdate();
@@ -124,11 +130,12 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
   const recordGoldTrade = async (data: GoldForm) => {
     setLoading(true);
     try {
-      const realUsd = fromDisplay(Number(data.real_profit || 0));
+      const newActiveFundUsd = fromDisplay(Number(data.real_profit || 0));
       const rebateUsd = fromDisplay(Number(data.rebate || 0));
-      const pnlUsd = realUsd + rebateUsd;
-      const note = `Daily ${data.trade_date} → Real: ${format(realUsd, { showLabel: true })} + Rebate: ${format(rebateUsd, { showLabel: true })} = Total: ${format(pnlUsd, { showLabel: true })}`;
-      await recordTrade(pnlUsd, note);
+      const currentActiveFund = Number(fundData.active_fund);
+      const actualProfitUsd = (newActiveFundUsd + rebateUsd) - currentActiveFund;
+      const note = `Daily ${data.trade_date} → New Active Fund: ${format(newActiveFundUsd, { showLabel: true })} + Rebate: ${format(rebateUsd, { showLabel: true })} = Profit: ${format(actualProfitUsd, { showLabel: true })}`;
+      await recordTrade(newActiveFundUsd, rebateUsd, note);
       toast({ title: 'Success', description: 'Trade recorded successfully' });
       goldForm.reset({ trade_date: new Date().toISOString().split('T')[0] });
       onUpdate();
@@ -149,7 +156,7 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
           <form onSubmit={diamondForm.handleSubmit(recordDiamondTrade)} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="real-profit">Real profit</Label>
+                <Label htmlFor="real-profit">New Active Fund Value</Label>
                 <Input id="real-profit" type="number" step="0.01" placeholder="0" {...diamondForm.register('real_profit')} />
               </div>
               <div className="space-y-2">
@@ -169,7 +176,7 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
                 <Input id="trade-date" type="date" {...goldForm.register('trade_date', { required: true })} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="real-profit-g">Real profit</Label>
+                <Label htmlFor="real-profit-g">New Active Fund Value</Label>
                 <Input id="real-profit-g" type="number" step="0.01" placeholder="0" {...goldForm.register('real_profit')} />
               </div>
               <div className="space-y-2">
