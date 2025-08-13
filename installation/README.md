@@ -10,18 +10,37 @@ Welcome to the Trading Fund Management System! This guide will help you install 
 - Resend API account (for email notifications)
 - Node.js installed
 
-## 🚀 Quick Installation
+## 🚀 Installation Methods
 
-### Step 1: Database Setup
+### Method 1: Automated Installation (Recommended)
+
+1. **Access the Installation Page**
+   - Navigate to `/installation` in your application
+   - Follow the step-by-step wizard
+
+2. **Configure Database Connection**
+   - Enter your Supabase URL or IP address
+   - Provide your Supabase Anon Key
+   - Enter your Project ID
+
+3. **Complete Automated Setup**
+   - The system will automatically create all tables and functions
+   - Set up the super admin account
+   - Configure email services
+   - Verify the installation
+
+### Method 2: Manual Installation
+
+#### Step 1: Database Setup
 
 1. Connect to your Supabase database
-2. Run the main installation script:
+2. Run the complete installation script:
    ```sql
-   -- Execute the contents of database-setup.sql
+   -- Execute the contents of database-setup-complete.sql
    ```
-   This will create all tables, functions, policies, and triggers.
+   This will create all tables, functions, policies, triggers, and default settings.
 
-### Step 2: Configure Environment Variables
+#### Step 2: Configure Environment Variables
 
 In your Supabase dashboard, go to Settings > Edge Functions and add these secrets:
 - `RESEND_API_KEY`: Your Resend API key for email notifications
@@ -29,7 +48,7 @@ In your Supabase dashboard, go to Settings > Edge Functions and add these secret
 - `SUPABASE_SERVICE_ROLE_KEY`: Your service role key
 - `ADMIN_NOTIFICATION_EMAIL`: Email address for admin notifications
 
-### Step 3: Deploy Edge Functions
+#### Step 3: Deploy Edge Functions
 
 ```bash
 # Make the script executable
@@ -39,7 +58,7 @@ chmod +x edge-functions-deploy.sh
 ./edge-functions-deploy.sh
 ```
 
-### Step 4: Update Application Configuration
+#### Step 4: Update Application Configuration
 
 Option A - Automatic (Recommended):
 ```bash
@@ -54,14 +73,14 @@ Option B - Manual:
 2. Edit `supabase/config.toml`:
    - Update `project_id`
 
-### Step 5: Create Super Admin User
+#### Step 5: Create Super Admin User
 
 1. First, create a user through your Supabase Auth interface
 2. Note the user's email address
 3. Edit `create-super-admin.sql` and update the email
 4. Run the script to promote the user to super admin
 
-### Step 6: Verify Installation
+#### Step 6: Verify Installation
 
 1. Start the application: `npm run dev`
 2. Test user registration and login
@@ -73,23 +92,51 @@ Option B - Manual:
 
 ### Database Tables
 - **profiles**: User profile information and roles
-- **fund_data**: Trading fund management data
+- **fund_data**: Trading fund management data with default settings
 - **trading_history**: Trading transaction records
 - **transaction_history**: Fund transfer records
 - **admin_notifications**: System notifications
+- **user_settings**: User preferences and configurations
+- **economic_events**: Economic calendar data
+- **app_settings**: System configuration
 
 ### Edge Functions
 - **security-monitor**: Handles security events and alerts
 - **send-admin-notification**: Sends email notifications
 - **approve-user**: Admin function to approve user registrations
 - **delete-user**: Admin function to delete users
+- **forex-events-fetcher**: Fetches economic calendar data
+- **setup-installation-database**: Automated database setup
+- **create-installation-admin**: Creates admin accounts
+- **configure-installation-email**: Configures email services
+- **complete-installation**: Finalizes installation
+- **test-installation-connection**: Tests system connectivity
 
 ### Key Features
-- Role-based access control (super_admin, user)
+- Role-based access control (super_admin, admin, user)
 - Real-time updates for trading data
 - Email notification system
 - Secure fund management with audit trails
 - Multi-user support with sub-user functionality
+- Economic calendar integration
+- Currency support (USD/USDCent)
+- Mobile-responsive design
+- Automated default settings for new users
+
+## 🔄 Migration Support
+
+### From Existing Installation
+1. Backup your existing database
+2. Run the new `database-setup-complete.sql` script
+3. The script will update existing tables and add new features
+4. Update your Edge Functions using the deployment script
+5. Test all functionality
+
+### Fresh Installation
+- Follow the automated installation method for the best experience
+- All tables, functions, and default settings are created automatically
+- Default values for profit distribution: Active 0%, Reserve 30%, Profit 70%
+- Default risk percentage: 40%
 
 ## 🛠️ Troubleshooting
 
@@ -115,6 +162,11 @@ Option B - Manual:
 - Check if the user profile was created properly
 - Verify the super admin user was created
 
+**Currency Display Issues**
+- Check if the currency context is properly implemented
+- Verify database default values are set correctly
+- Test with both USD and USDCent modes
+
 ### Support
 
 If you encounter issues:
@@ -122,6 +174,7 @@ If you encounter issues:
 2. Review Edge Function logs in Supabase dashboard
 3. Verify all configuration values are correct
 4. Ensure all required environment variables are set
+5. Use the installation page for guided setup
 
 ## 🔄 Updates and Maintenance
 
@@ -143,8 +196,34 @@ If you encounter issues:
 - [Edge Functions Guide](https://supabase.com/docs/guides/functions)
 - [Database Management](https://supabase.com/docs/guides/database)
 
+## 🔧 Configuration Details
+
+### Default Settings
+- **Profit Distribution**: Active Fund 0%, Reserve Fund 30%, Profit Fund 70%
+- **Risk Percentage**: 40%
+- **Currency**: USD with cent support
+- **Language**: English
+- **Storage**: Public bucket for file uploads
+
+### Security Features
+- Row Level Security (RLS) enabled on all tables
+- Role-based access control
+- Secure API endpoints
+- Authentication required for sensitive operations
+- Audit trails for all transactions
+
 ---
 
 **Installation Complete!** 🎉
 
-Your Trading Fund Management System is now ready to use. Login with your super admin account to start managing users and trading funds.
+Your Trading Fund Management System is now ready to use. The system includes:
+- ✅ Complete database schema with default values
+- ✅ All Edge Functions deployed
+- ✅ Email notification system
+- ✅ Real-time updates
+- ✅ Mobile-responsive interface
+- ✅ Economic calendar integration
+- ✅ Multi-currency support
+- ✅ Automated installation wizard
+
+Login with your super admin account to start managing users and trading funds!

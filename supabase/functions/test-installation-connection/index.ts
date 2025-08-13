@@ -6,12 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface ConnectionTestRequest {
-  supabaseUrl: string;
-  supabaseAnonKey: string;
-  projectId: string;
-}
-
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -19,11 +13,10 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { supabaseUrl, supabaseAnonKey, projectId }: ConnectionTestRequest = await req.json();
+    const { supabaseUrl, supabaseAnonKey, projectId } = await req.json();
 
-    console.log('Testing connection to:', supabaseUrl);
+    console.log('Testing connection for project:', projectId);
 
-    // Validate required fields
     if (!supabaseUrl || !supabaseAnonKey || !projectId) {
       return new Response(
         JSON.stringify({ 
@@ -37,40 +30,82 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Create a test client with provided credentials
+    // Test connection with provided credentials
     const testClient = createClient(supabaseUrl, supabaseAnonKey);
 
-    // Test the connection by trying to query the auth endpoint
-    const { data, error } = await testClient.auth.getSession();
-
-    if (error && error.message !== 'No session found') {
-      console.error('Connection test failed:', error);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: `Connection failed: ${error.message}` 
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    // Perform basic connectivity tests
+    const tests = [
+      {
+        name: 'Basic Connection',
+        test: async () => {
+          const { data, error } = await testClient.from('profiles').select('count').limit(1);
+          return { success: !error, details: error?.message || 'Connected successfully' };
         }
-      );
+      },
+      {
+        name: 'Authentication Service',
+        test: async () => {
+          const { data, error } = await testClient.auth.getSession();
+          return { success: !error, details: error?.message || 'Auth service accessible' };
+        }
+      },
+      {
+        name: 'Storage Service',
+        test: async () => {
+          const { data, error } = await testClient.storage.listBuckets();
+          return { success: !error, details: error?.message || 'Storage service accessible' };
+        }
+      }
+    ];
+
+    const testResults = [];
+    let allTestsPassed = true;
+
+    for (const test of tests) {
+      try {
+        const result = await test.test();
+        testResults.push({
+          name: test.name,
+          passed: result.success,
+          details: result.details
+        });
+        if (!result.success) {
+          allTestsPassed = false;
+        }
+      } catch (error) {
+        testResults.push({
+          name: test.name,
+          passed: false,
+          details: error.message
+        });
+        allTestsPassed = false;
+      }
     }
 
-    // Additional test: Try to query a system table to ensure database access
-    const { error: dbError } = await testClient
-      .from('profiles')
-      .select('count')
-      .limit(1);
+    // Additional environment check
+    const environmentInfo = {
+      supabaseUrl: supabaseUrl,
+      projectId: projectId,
+      timestamp: new Date().toISOString(),
+      version: '2.0'
+    };
 
-    // If profiles table doesn't exist yet, that's expected for a fresh installation
-    console.log('Database connection test completed');
+    console.log('Connection test completed:', { allTestsPassed, testResults });
 
     return new Response(
       JSON.stringify({ 
-        success: true, 
-        message: 'Connection successful',
-        projectId: projectId
+        success: allTestsPassed, 
+        message: allTestsPassed ? 'All connection tests passed successfully' : 'Some tests failed',
+        tests: testResults,
+        environment: environmentInfo,
+        recommendations: allTestsPassed ? [
+          'Connection is working properly',
+          'Ready to proceed with database setup'
+        ] : [
+          'Check your Supabase URL and keys',
+          'Ensure your Supabase instance is running',
+          'Verify network connectivity'
+        ]
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -83,7 +118,12 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: `Unexpected error: ${error.message}` 
+        error: `Unexpected error: ${error.message}`,
+        recommendations: [
+          'Verify your Supabase instance is accessible',
+          'Check your network connection',
+          'Ensure your credentials are correct'
+        ]
       }),
       { 
         status: 500, 
