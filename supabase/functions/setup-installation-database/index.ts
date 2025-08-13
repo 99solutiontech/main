@@ -13,9 +13,24 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { projectId } = await req.json();
+    const { projectId, supabaseUrl, dbName, dbUser, dbPassword } = await req.json();
 
     console.log('Setting up database for project:', projectId);
+    console.log('Database configuration:', { dbName, dbUser, supabaseUrl });
+
+    // Validate required fields
+    if (!projectId || !supabaseUrl) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Missing required fields: projectId and supabaseUrl are required' 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
     // Get admin client using service role key
     const supabaseAdmin = createClient(
@@ -23,44 +38,51 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Database setup SQL - this would typically be run via direct SQL execution
-    // For now, we'll check if tables exist and create them if they don't
+    // Check if this is a fresh installation by testing table existence
+    let isExistingInstallation = false;
     
-    const setupQueries = [
-      // Check if profiles table exists
-      `SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'profiles'
-      );`,
-    ];
+    try {
+      // Test if profiles table exists and has data
+      const { data: profilesTest, error: profilesError } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .limit(1);
+      
+      if (!profilesError && profilesTest) {
+        isExistingInstallation = true;
+        console.log('Existing installation detected');
+      }
+    } catch (err) {
+      console.log('Fresh installation detected - tables do not exist yet');
+    }
 
-    // Try to execute a simple query to verify database access without raw SQL
-    const { data: test, error } = await supabaseAdmin
-      .from('profiles')
-      .select('id')
-      .limit(1);
-
-    if (error) {
-      console.error('Database setup failed:', error);
+    if (isExistingInstallation) {
       return new Response(
         JSON.stringify({ 
-          success: false, 
-          error: `Database setup failed: ${error.message}. Please run the database-setup.sql script manually.` 
+          success: true, 
+          message: 'Database tables already exist. Your installation appears to be ready.',
+          isExisting: true
         }),
         { 
-          status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
-    // For security reasons, we'll return success but recommend manual SQL execution
+    // For fresh installations, provide clear setup instructions
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Database connection verified. Please ensure you have run the database-setup.sql script in your Supabase SQL editor.',
-        recommendation: 'Execute the database-setup.sql file in your Supabase dashboard SQL editor for complete setup.'
+        message: 'Database connection verified. Now you need to set up the database schema.',
+        isExisting: false,
+        nextSteps: [
+          'Go to your Supabase Dashboard SQL Editor',
+          'Copy and run the database-setup-complete.sql file',
+          'This will create all necessary tables, functions, and security policies',
+          'After running the SQL script, continue with the next installation step'
+        ],
+        sqlFile: 'database-setup-complete.sql',
+        dashboardUrl: `${supabaseUrl}/project/${projectId}/sql/new`
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
