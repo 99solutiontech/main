@@ -13,10 +13,10 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { projectId, supabaseUrl, dbName, dbUser, dbPassword } = await req.json();
+    const { projectId, supabaseUrl } = await req.json();
 
     console.log('Setting up database for project:', projectId);
-    console.log('Database configuration:', { dbName, dbUser, supabaseUrl });
+    console.log('Supabase configuration:', { supabaseUrl });
 
     // Validate required fields
     if (!projectId || !supabaseUrl) {

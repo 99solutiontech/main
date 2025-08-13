@@ -25,9 +25,6 @@ const Installation = () => {
     supabaseUrl: "",
     supabaseAnonKey: "",
     projectId: "",
-    dbName: "",
-    dbUser: "",
-    dbPassword: "",
     adminEmail: "",
     resendApiKey: "",
     adminNotificationEmail: ""
@@ -35,13 +32,8 @@ const Installation = () => {
 
   const steps: InstallationStep[] = [
     {
-      title: "Database Configuration",
-      description: "Configure your Supabase database connection",
-      completed: false
-    },
-    {
-      title: "Database Setup",
-      description: "Create tables, functions, and policies",
+      title: "Supabase Configuration",
+      description: "Configure your Supabase connection details",
       completed: false
     },
     {
@@ -70,17 +62,14 @@ const Installation = () => {
       const response = await supabase.functions.invoke('setup-installation-database', {
         body: { 
           projectId: config.projectId,
-          supabaseUrl: config.supabaseUrl,
-          dbName: config.dbName,
-          dbUser: config.dbUser,
-          dbPassword: config.dbPassword
+          supabaseUrl: config.supabaseUrl
         }
       });
 
       if (response.error) throw response.error;
 
       setSuccess("Database setup completed successfully!");
-      setTimeout(() => setCurrentStep(2), 1000);
+      setTimeout(() => setCurrentStep(1), 1000);
     } catch (err: any) {
       setError(err.message || "Failed to setup database");
     } finally {
@@ -102,7 +91,7 @@ const Installation = () => {
       if (response.error) throw response.error;
 
       setSuccess("Admin account created successfully! Check your email for login details.");
-      setTimeout(() => setCurrentStep(3), 1000);
+      setTimeout(() => setCurrentStep(2), 1000);
     } catch (err: any) {
       setError(err.message || "Failed to create admin account");
     } finally {
@@ -125,7 +114,7 @@ const Installation = () => {
       if (response.error) throw response.error;
 
       setSuccess("Email service configured successfully!");
-      setTimeout(() => setCurrentStep(4), 1000);
+      setTimeout(() => setCurrentStep(3), 1000);
     } catch (err: any) {
       setError(err.message || "Failed to configure email service");
     } finally {
@@ -198,55 +187,14 @@ const Installation = () => {
                 onChange={(e) => setConfig({...config, projectId: e.target.value})}
               />
             </div>
-            <Button onClick={() => setCurrentStep(1)} disabled={loading} className="w-full">
+            <Button onClick={setupDatabase} disabled={loading} className="w-full">
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Save & Continue
+              Test Connection & Continue
             </Button>
           </div>
         );
 
       case 1:
-        return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="dbName">Database Name</Label>
-              <Input
-                id="dbName"
-                placeholder="postgres"
-                value={config.dbName}
-                onChange={(e) => setConfig({...config, dbName: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dbUser">Database Username</Label>
-              <Input
-                id="dbUser"
-                placeholder="postgres"
-                value={config.dbUser}
-                onChange={(e) => setConfig({...config, dbUser: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dbPassword">Database Password</Label>
-              <Input
-                id="dbPassword"
-                type="password"
-                placeholder="********"
-                value={config.dbPassword}
-                onChange={(e) => setConfig({...config, dbPassword: e.target.value})}
-              />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              This will create all necessary tables, functions, and security policies in your database.
-            </p>
-            <Button onClick={setupDatabase} disabled={loading} className="w-full">
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Setup Database
-            </Button>
-          </div>
-        );
-
-      case 2:
         return (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -266,7 +214,7 @@ const Installation = () => {
           </div>
         );
 
-      case 3:
+      case 2:
         return (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -295,7 +243,7 @@ const Installation = () => {
           </div>
         );
 
-      case 4:
+      case 3:
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-center space-x-2 text-green-600">
