@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowUpDown } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface TransactionHistory {
   id: string;
@@ -30,6 +31,7 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
   const [transactions, setTransactions] = useState<TransactionHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
+  const { format } = useCurrency();
 
   useEffect(() => {
     loadTransactions();
@@ -95,9 +97,6 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-GB');
@@ -192,7 +191,7 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
                     </span>
                   </div>
                   <span className="font-mono text-sm text-foreground">
-                    {formatCurrency(transaction.balance_after)}
+                    {format(transaction.balance_after)}
                   </span>
                 </div>
                 <div className="text-sm text-muted-foreground mb-1">
@@ -200,7 +199,7 @@ const FundTransactionHistory = ({ userId, mode, subUserName }: FundTransactionHi
                 </div>
                 <div className={`text-sm font-semibold ${getTransactionColor(transaction.transaction_type)}`}>
                   {getAmountPrefix(transaction.transaction_type)}
-                  {formatCurrency(transaction.amount)}
+                  {format(transaction.amount)}
                 </div>
               </div>
             ))

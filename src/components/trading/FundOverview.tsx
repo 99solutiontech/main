@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
 interface FundData {
@@ -25,10 +26,7 @@ interface FundOverviewProps {
 
 const FundOverview = ({ fundData }: FundOverviewProps) => {
   const { t } = useLanguage();
-  
-  const formatCurrency = (amount: number) => {
-    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
+  const { format } = useCurrency();
 
 
   // Calculate actual total capital from individual funds
@@ -48,7 +46,7 @@ const FundOverview = ({ fundData }: FundOverviewProps) => {
           <CardTitle className="text-center">{t('totalCapital')}</CardTitle>
         </CardHeader>
         <CardContent className="text-center">
-          <div className="text-4xl font-bold mb-2">{formatCurrency(actualTotalCapital)}</div>
+          <div className="text-4xl font-bold mb-2">{format(actualTotalCapital)}</div>
           <div className="flex items-center justify-center gap-2">
             {pnl > 0 ? (
               <TrendingUp className="h-4 w-4 text-green-500" />
@@ -56,7 +54,7 @@ const FundOverview = ({ fundData }: FundOverviewProps) => {
               <TrendingDown className="h-4 w-4 text-red-500" />
             ) : null}
             <span className={`font-semibold ${pnl > 0 ? 'text-green-500' : pnl < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
-              {pnl > 0 ? '+' : ''}{formatCurrency(pnl)} ({pnlPercent.toFixed(2)}%)
+              {pnl > 0 ? '+' : ''}{format(pnl)} ({pnlPercent.toFixed(2)}%)
             </span>
           </div>
         </CardContent>
@@ -70,7 +68,7 @@ const FundOverview = ({ fundData }: FundOverviewProps) => {
             <CardDescription>{t('tradingCapital')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(fundData.active_fund)}</div>
+            <div className="text-2xl font-bold">{format(fundData.active_fund)}</div>
             {(() => {
               // Calculate the initial active fund allocation based on profit distribution settings
               const initialActiveFundAllocation = (fundData.initial_capital * (fundData.profit_dist_active || 40)) / 100;
@@ -93,7 +91,7 @@ const FundOverview = ({ fundData }: FundOverviewProps) => {
             <CardDescription>{t('safetyCapital')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(fundData.reserve_fund)}</div>
+            <div className="text-2xl font-bold">{format(fundData.reserve_fund)}</div>
           </CardContent>
         </Card>
 
@@ -103,7 +101,7 @@ const FundOverview = ({ fundData }: FundOverviewProps) => {
             <CardDescription>{t('earnedProfits')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(fundData.profit_fund)}</div>
+            <div className="text-2xl font-bold">{format(fundData.profit_fund)}</div>
           </CardContent>
         </Card>
       </div>

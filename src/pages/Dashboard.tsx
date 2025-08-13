@@ -12,6 +12,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AppThemeProvider } from '@/contexts/AppThemeContext';
 import { Gem, LogOut, Settings, TrendingUp, DollarSign, Calculator, Calendar, BarChart3, Users, Fuel, Menu } from 'lucide-react';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import FundOverview from '@/components/trading/FundOverview';
 import TradeRecorder from '@/components/trading/TradeRecorder';
 import LotCalculator from '@/components/trading/LotCalculator';
@@ -476,9 +477,10 @@ const Dashboard = () => {
   }
 
   return (
-    <AppThemeProvider>
-      <ThemeProvider tradingMode={currentMode} onModeChange={handleModeChange}>
-          <div className="min-h-screen bg-background">
+    <ErrorBoundary>
+      <AppThemeProvider>
+        <ThemeProvider tradingMode={currentMode} onModeChange={handleModeChange}>
+            <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
           <div className="container mx-auto px-4 py-3">
             {/* Mobile header */}
@@ -763,8 +765,9 @@ const Dashboard = () => {
         )}
         </main>
       </div>
-      </ThemeProvider>
-    </AppThemeProvider>
+        </ThemeProvider>
+      </AppThemeProvider>
+    </ErrorBoundary>
   );
 };
 

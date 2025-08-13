@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { History } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface TradingRecord {
   id: string;
@@ -27,6 +28,7 @@ const TradingHistory = ({ userId, mode, subUserName }: TradingHistoryProps) => {
   const [history, setHistory] = useState<TradingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
+  const { format } = useCurrency();
 
   const loadHistory = async () => {
     try {
@@ -88,9 +90,6 @@ const TradingHistory = ({ userId, mode, subUserName }: TradingHistoryProps) => {
     };
   }, [userId]);
 
-  const formatCurrency = (amount: number) => {
-    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-GB');
@@ -155,7 +154,7 @@ const TradingHistory = ({ userId, mode, subUserName }: TradingHistoryProps) => {
                     </span>
                   </div>
                   <span className="font-mono text-sm">
-                    {formatCurrency(record.end_balance)}
+                    {format(record.end_balance)}
                   </span>
                 </div>
                 <div className="text-sm text-muted-foreground">
@@ -163,7 +162,7 @@ const TradingHistory = ({ userId, mode, subUserName }: TradingHistoryProps) => {
                 </div>
                 {record.amount && (
                   <div className={`text-sm font-semibold ${getTypeColor(record.type)}`}>
-                    {record.amount > 0 ? '+' : ''}{formatCurrency(record.amount)}
+                    {record.amount > 0 ? '+' : ''}{format(record.amount)}
                   </div>
                 )}
               </div>
