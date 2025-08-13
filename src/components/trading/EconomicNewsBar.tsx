@@ -115,9 +115,11 @@ export default function EconomicNewsBar() {
   }, [selectedCurrencies.join(",")]);
 
   const toggleCurrency = (c: string) => {
-    setSelectedCurrencies((prev) =>
-      prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]
-    );
+    setSelectedCurrencies((prev) => {
+      const newSelection = prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c];
+      // Ensure at least one currency is always selected
+      return newSelection.length === 0 ? ["USD"] : newSelection;
+    });
   };
 
   const changeDay = (delta: number) => {

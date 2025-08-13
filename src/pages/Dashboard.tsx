@@ -378,6 +378,9 @@ const Dashboard = () => {
       reserve_fund: initialCapital * 0.6,
       profit_fund: 0,
       target_reserve_fund: initialCapital * 0.6,
+      profit_dist_active: 0,
+      profit_dist_reserve: 30,
+      profit_dist_profit: 70,
       sub_user_name: selectedSubUser?.name || null,
     };
 
@@ -491,12 +494,15 @@ const Dashboard = () => {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </DrawerTrigger>
-                <DrawerContent>
-                  <DrawerHeader>
-                    <DrawerTitle>{t('menu') || 'Menu'}</DrawerTitle>
+                <DrawerContent className="h-[90vh]">
+                  <DrawerHeader className="text-center border-b">
+                    <DrawerTitle className="text-xl font-bold">{t('menu') || 'Menu'}</DrawerTitle>
                   </DrawerHeader>
                   <div className="px-4 pb-4 space-y-4">
-                    {/* Language selection moved to Settings in user menu */}
+                    {/* Profile and Settings Menu */}
+                    <div className="border-b pb-4">
+                      <UserProfileMenu onSignOut={handleSignOut} displayName={profile?.trader_name || profile?.full_name || user.email} />
+                    </div>
 
                     <div>
                       <p className="text-sm font-medium mb-2">{t('account') || 'Account'}</p>
