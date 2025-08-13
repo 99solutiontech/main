@@ -2,6 +2,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FundData {
   id: string;
@@ -18,6 +20,7 @@ interface FundData {
   profit_dist_profit: number;
   lot_base_capital: number;
   lot_base_lot: number;
+  sub_user_name?: string;
 }
 
 interface FundOverviewProps {
@@ -27,16 +30,38 @@ interface FundOverviewProps {
 const FundOverview = ({ fundData }: FundOverviewProps) => {
   const { t } = useLanguage();
   const { format } = useCurrency();
-
+  const [totalDeposits, setTotalDeposits] = useState(0);
 
   // Calculate actual total capital from individual funds
   const actualTotalCapital = fundData.active_fund + fundData.reserve_fund + fundData.profit_fund;
   
-  // Calculate P&L only from trading results (excludes deposits/transfers)
-  // This represents the actual profit/loss from trading activities
-  const tradingOnlyTotal = fundData.initial_capital + fundData.profit_fund;
-  const pnl = tradingOnlyTotal - fundData.initial_capital;
-  const pnlPercent = fundData.initial_capital > 0 ? (pnl / fundData.initial_capital) * 100 : 0;
+  // Calculate P&L based on deposits/transfers in vs current capital
+  useEffect(() => {
+    const calculateTotalDeposits = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('transaction_history')
+          .select('amount')
+          .eq('user_id', fundData.user_id)
+          .eq('mode', fundData.mode)
+          .eq('sub_user_name', fundData.sub_user_name || null)
+          .in('transaction_type', ['deposit', 'transfer_in']);
+        
+        if (error) throw error;
+        
+        const total = data?.reduce((sum, transaction) => sum + Number(transaction.amount), 0) || 0;
+        setTotalDeposits(total);
+      } catch (error) {
+        console.error('Error calculating total deposits:', error);
+        setTotalDeposits(Number(fundData.initial_capital));
+      }
+    };
+    
+    calculateTotalDeposits();
+  }, [fundData.user_id, fundData.mode, fundData.sub_user_name, fundData.initial_capital]);
+  
+  const pnl = actualTotalCapital - totalDeposits;
+  const pnlPercent = totalDeposits > 0 ? (pnl / totalDeposits) * 100 : 0;
 
   return (
     <div className="space-y-6">

@@ -64,7 +64,7 @@ const TradeRecorder = ({ userId, mode, fundData, subUserName, onUpdate }: TradeR
     const actualProfitUsd = (newActiveFundUsd + rebateUsd) - currentActiveFund;
     
     let updated = { 
-      active_fund: newActiveFundUsd, // Set to the new active fund value from user input
+      active_fund: currentActiveFund, // Start with current active fund
       reserve_fund: Number(fundData.reserve_fund),
       profit_fund: Number(fundData.profit_fund),
       total_capital: Number(fundData.total_capital),
