@@ -13,22 +13,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { projectId, supabaseUrl } = await req.json();
-
-    console.log('Completing installation for project:', projectId);
-
-    if (!projectId) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Missing required field: projectId' 
-        }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
+    console.log('Completing installation...');
 
     // Get admin client using service role key
     const supabaseAdmin = createClient(
@@ -86,7 +71,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Ensure app_settings.functions_base_url is set for this host
-    const baseUrlToSet = supabaseUrl || Deno.env.get('SUPABASE_URL') || null;
+    const baseUrlToSet = Deno.env.get('SUPABASE_URL') || null;
     if (baseUrlToSet) {
       const { error: settingsError } = await supabaseAdmin
         .from('app_settings')
@@ -102,7 +87,7 @@ const handler = async (req: Request): Promise<Response> => {
       .insert({
         type: 'system',
         title: 'Installation Completed',
-        message: `Trading Fund Management System installation completed successfully for project ${projectId}`,
+        message: 'Trading Fund Management System installation completed successfully',
         trader_name: 'System'
       });
 
@@ -116,7 +101,6 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({ 
         success: true, 
         message: 'Installation completed successfully! Your Trading Fund Management System is ready to use.',
-        projectId: projectId,
         nextSteps: [
           'Login with your admin account',
           'Configure user registration settings',

@@ -22,28 +22,13 @@ const Installation = () => {
   const { toast } = useToast();
 
   const [config, setConfig] = useState({
-    supabaseUrl: "",
-    supabaseAnonKey: "",
-    projectId: "",
-    adminEmail: "",
-    resendApiKey: "",
-    adminNotificationEmail: ""
+    adminEmail: ""
   });
 
   const steps: InstallationStep[] = [
     {
-      title: "Supabase Configuration",
-      description: "Configure your Supabase connection details",
-      completed: false
-    },
-    {
       title: "Admin Account",
       description: "Create the first super admin account",
-      completed: false
-    },
-    {
-      title: "Email Service",
-      description: "Configure email notifications",
       completed: false
     },
     {
@@ -53,70 +38,22 @@ const Installation = () => {
     }
   ];
 
-  // Test connection removed; proceed directly to setup during installation.
-
-  const setupDatabase = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const response = await supabase.functions.invoke('setup-installation-database', {
-        body: { 
-          projectId: config.projectId,
-          supabaseUrl: config.supabaseUrl
-        }
-      });
-
-      if (response.error) throw response.error;
-
-      setSuccess("Database setup completed successfully!");
-      setTimeout(() => setCurrentStep(1), 1000);
-    } catch (err: any) {
-      setError(err.message || "Failed to setup database");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const createAdminAccount = async () => {
     setLoading(true);
     setError("");
     try {
       const response = await supabase.functions.invoke('create-installation-admin', {
         body: { 
-          adminEmail: config.adminEmail,
-          projectId: config.projectId
+          adminEmail: config.adminEmail
         }
       });
 
       if (response.error) throw response.error;
 
       setSuccess("Admin account created successfully! Check your email for login details.");
-      setTimeout(() => setCurrentStep(2), 1000);
+      setTimeout(() => setCurrentStep(1), 1000);
     } catch (err: any) {
       setError(err.message || "Failed to create admin account");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const configureEmailService = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const response = await supabase.functions.invoke('configure-installation-email', {
-        body: {
-          resendApiKey: config.resendApiKey,
-          adminNotificationEmail: config.adminNotificationEmail,
-          projectId: config.projectId
-        }
-      });
-
-      if (response.error) throw response.error;
-
-      setSuccess("Email service configured successfully!");
-      setTimeout(() => setCurrentStep(3), 1000);
-    } catch (err: any) {
-      setError(err.message || "Failed to configure email service");
     } finally {
       setLoading(false);
     }
@@ -127,7 +64,7 @@ const Installation = () => {
     setError("");
     try {
       const response = await supabase.functions.invoke('complete-installation', {
-        body: { projectId: config.projectId }
+        body: {}
       });
 
       if (response.error) throw response.error;
@@ -136,13 +73,6 @@ const Installation = () => {
         title: "Installation Complete!",
         description: "Your Trading Fund Management System is ready to use.",
       });
-
-      // Persist configuration for runtime client
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('CUSTOM_SUPABASE_URL', config.supabaseUrl);
-        localStorage.setItem('CUSTOM_SUPABASE_ANON_KEY', config.supabaseAnonKey);
-        localStorage.setItem('CUSTOM_SUPABASE_PROJECT_ID', config.projectId);
-      }
 
       // Redirect to main app after successful installation
       setTimeout(() => {
@@ -158,43 +88,6 @@ const Installation = () => {
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
-        return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="supabaseUrl">Supabase URL or IP</Label>
-              <Input
-                id="supabaseUrl"
-                placeholder="http://192.168.1.100:8000"
-                value={config.supabaseUrl}
-                onChange={(e) => setConfig({...config, supabaseUrl: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="supabaseAnonKey">Supabase Anon Key</Label>
-              <Input
-                id="supabaseAnonKey"
-                placeholder="Your anon key"
-                value={config.supabaseAnonKey}
-                onChange={(e) => setConfig({...config, supabaseAnonKey: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="projectId">Project ID</Label>
-              <Input
-                id="projectId"
-                placeholder="your-project-id"
-                value={config.projectId}
-                onChange={(e) => setConfig({...config, projectId: e.target.value})}
-              />
-            </div>
-            <Button onClick={setupDatabase} disabled={loading} className="w-full">
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Test Connection & Continue
-            </Button>
-          </div>
-        );
-
-      case 1:
         return (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -214,36 +107,7 @@ const Installation = () => {
           </div>
         );
 
-      case 2:
-        return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="resendApiKey">Resend API Key</Label>
-              <Input
-                id="resendApiKey"
-                placeholder="re_your_api_key"
-                value={config.resendApiKey}
-                onChange={(e) => setConfig({...config, resendApiKey: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="adminNotificationEmail">Admin Notification Email</Label>
-              <Input
-                id="adminNotificationEmail"
-                type="email"
-                placeholder="notifications@yourdomain.com"
-                value={config.adminNotificationEmail}
-                onChange={(e) => setConfig({...config, adminNotificationEmail: e.target.value})}
-              />
-            </div>
-            <Button onClick={configureEmailService} disabled={loading} className="w-full">
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Configure Email Service
-            </Button>
-          </div>
-        );
-
-      case 3:
+      case 1:
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-center space-x-2 text-green-600">

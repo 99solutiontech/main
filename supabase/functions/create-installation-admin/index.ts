@@ -13,15 +13,15 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { adminEmail, projectId } = await req.json();
+    const { adminEmail } = await req.json();
 
     console.log('Creating admin account for:', adminEmail);
 
-    if (!adminEmail || !projectId) {
+    if (!adminEmail) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Missing required fields: adminEmail or projectId' 
+          error: 'Missing required field: adminEmail' 
         }),
         { 
           status: 400, 
