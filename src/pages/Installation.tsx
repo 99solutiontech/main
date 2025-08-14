@@ -22,10 +22,17 @@ const Installation = () => {
   const { toast } = useToast();
 
   const [config, setConfig] = useState({
+    supabaseUrl: "",
+    anonKey: "",
     adminEmail: ""
   });
 
   const steps: InstallationStep[] = [
+    {
+      title: "Supabase Configuration",
+      description: "Configure your self-hosted Supabase connection",
+      completed: false
+    },
     {
       title: "Admin Account",
       description: "Create the first super admin account",
@@ -37,6 +44,31 @@ const Installation = () => {
       completed: false
     }
   ];
+
+  const configureSupabase = () => {
+    setLoading(true);
+    setError("");
+    try {
+      // Validate URLs
+      if (!config.supabaseUrl || !config.anonKey) {
+        throw new Error("Please fill in all required fields");
+      }
+
+      // Store configuration in localStorage
+      localStorage.setItem('SUPABASE_URL', config.supabaseUrl);
+      localStorage.setItem('SUPABASE_ANON_KEY', config.anonKey);
+
+      // Reload the page to reinitialize Supabase client
+      setSuccess("Configuration saved! Proceeding to admin account creation...");
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (err: any) {
+      setError(err.message || "Failed to configure Supabase");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const createAdminAccount = async () => {
     setLoading(true);
@@ -51,7 +83,7 @@ const Installation = () => {
       if (response.error) throw response.error;
 
       setSuccess("Admin account created successfully! Check your email for login details.");
-      setTimeout(() => setCurrentStep(1), 1000);
+      setTimeout(() => setCurrentStep(2), 1000);
     } catch (err: any) {
       setError(err.message || "Failed to create admin account");
     } finally {
@@ -91,6 +123,36 @@ const Installation = () => {
         return (
           <div className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="supabaseUrl">Supabase URL</Label>
+              <Input
+                id="supabaseUrl"
+                type="url"
+                placeholder="https://your-project-id.supabase.co"
+                value={config.supabaseUrl}
+                onChange={(e) => setConfig({...config, supabaseUrl: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="anonKey">Anon Key</Label>
+              <Input
+                id="anonKey"
+                type="text"
+                placeholder="your-anon-key"
+                value={config.anonKey}
+                onChange={(e) => setConfig({...config, anonKey: e.target.value})}
+              />
+            </div>
+            <Button onClick={configureSupabase} disabled={loading} className="w-full">
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Configure Supabase
+            </Button>
+          </div>
+        );
+
+      case 1:
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
               <Label htmlFor="adminEmail">Admin Email</Label>
               <Input
                 id="adminEmail"
@@ -107,7 +169,7 @@ const Installation = () => {
           </div>
         );
 
-      case 1:
+      case 2:
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-center space-x-2 text-green-600">
