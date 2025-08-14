@@ -13,15 +13,16 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { adminEmail } = await req.json();
+    const { adminEmail, supabaseUrl, serviceRoleKey } = await req.json();
 
     console.log('Creating admin account for:', adminEmail);
+    console.log('Using Supabase URL:', supabaseUrl);
 
-    if (!adminEmail) {
+    if (!adminEmail || !supabaseUrl || !serviceRoleKey) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Missing required field: adminEmail' 
+          error: 'Missing required fields: adminEmail, supabaseUrl, and serviceRoleKey are required' 
         }),
         { 
           status: 400, 
@@ -30,11 +31,8 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get admin client using service role key
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Get admin client using the provided configuration
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     // Generate a temporary password
     const tempPassword = Math.random().toString(36).slice(-12) + 'A1!';

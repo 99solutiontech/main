@@ -28,6 +28,7 @@ const Installation = () => {
   const [config, setConfig] = useState({
     supabaseUrl: "",
     anonKey: "",
+    serviceRoleKey: "",
     adminEmail: ""
   });
 
@@ -54,13 +55,14 @@ const Installation = () => {
     setError("");
     try {
       // Validate URLs
-      if (!config.supabaseUrl || !config.anonKey) {
+      if (!config.supabaseUrl || !config.anonKey || !config.serviceRoleKey) {
         throw new Error("Please fill in all required fields");
       }
 
       // Store configuration in localStorage
       localStorage.setItem('SUPABASE_URL', config.supabaseUrl);
       localStorage.setItem('SUPABASE_ANON_KEY', config.anonKey);
+      localStorage.setItem('SUPABASE_SERVICE_ROLE_KEY', config.serviceRoleKey);
 
       // Mark that installation is in progress and move to next step
       localStorage.setItem('INSTALLATION_IN_PROGRESS', 'true');
@@ -81,9 +83,14 @@ const Installation = () => {
     setLoading(true);
     setError("");
     try {
+      const supabaseUrl = localStorage.getItem('SUPABASE_URL');
+      const serviceRoleKey = localStorage.getItem('SUPABASE_SERVICE_ROLE_KEY');
+      
       const response = await supabase.functions.invoke('create-installation-admin', {
         body: { 
-          adminEmail: config.adminEmail
+          adminEmail: config.adminEmail,
+          supabaseUrl: supabaseUrl,
+          serviceRoleKey: serviceRoleKey
         }
       });
 
@@ -148,6 +155,16 @@ const Installation = () => {
                 placeholder="your-anon-key"
                 value={config.anonKey}
                 onChange={(e) => setConfig({...config, anonKey: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="serviceRoleKey">Service Role Key</Label>
+              <Input
+                id="serviceRoleKey"
+                type="password"
+                placeholder="your-service-role-key"
+                value={config.serviceRoleKey}
+                onChange={(e) => setConfig({...config, serviceRoleKey: e.target.value})}
               />
             </div>
             <Button onClick={configureSupabase} disabled={loading} className="w-full">
