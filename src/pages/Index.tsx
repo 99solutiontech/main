@@ -11,6 +11,14 @@ const Index = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Check if installation is in progress
+        const installationInProgress = localStorage.getItem('INSTALLATION_IN_PROGRESS');
+        if (installationInProgress) {
+          console.log('Installation in progress, redirecting to installation page');
+          navigate('/installation');
+          return;
+        }
+
         console.log('Checking authentication...');
         
         // Try to get session with a shorter timeout

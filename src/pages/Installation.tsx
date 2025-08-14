@@ -15,7 +15,11 @@ interface InstallationStep {
 }
 
 const Installation = () => {
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(() => {
+    // Check if Supabase has been configured to start from step 1
+    const hasSupabaseConfig = localStorage.getItem('SUPABASE_URL') && localStorage.getItem('SUPABASE_ANON_KEY');
+    return hasSupabaseConfig ? 1 : 0;
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -58,9 +62,12 @@ const Installation = () => {
       localStorage.setItem('SUPABASE_URL', config.supabaseUrl);
       localStorage.setItem('SUPABASE_ANON_KEY', config.anonKey);
 
-      // Reload the page to reinitialize Supabase client
+      // Mark that installation is in progress and move to next step
+      localStorage.setItem('INSTALLATION_IN_PROGRESS', 'true');
       setSuccess("Configuration saved! Proceeding to admin account creation...");
       setTimeout(() => {
+        setCurrentStep(1);
+        // Reload to reinitialize Supabase client with new config
         window.location.reload();
       }, 1000);
     } catch (err: any) {
@@ -106,7 +113,8 @@ const Installation = () => {
         description: "Your Trading Fund Management System is ready to use.",
       });
 
-      // Redirect to main app after successful installation
+      // Clear installation flag and redirect to main app
+      localStorage.removeItem('INSTALLATION_IN_PROGRESS');
       setTimeout(() => {
         window.location.href = "/";
       }, 2000);
