@@ -10,7 +10,7 @@ interface AppThemeContextType {
 const AppThemeContext = createContext<AppThemeContextType | undefined>(undefined);
 
 export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+  const [themeMode, setThemeMode] = React.useState<ThemeMode>(() => {
     const saved = localStorage.getItem('app-theme');
     return (saved as ThemeMode) || 'dark';
   });
