@@ -23,8 +23,17 @@ const Auth = () => {
   const { trackFailedLogin } = useSecurityMonitor();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const checkInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
+        navigate('/dashboard');
+      }
+    };
+
+    checkInitialSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
         navigate('/dashboard');
       }
     });

@@ -9,6 +9,8 @@ const Index = () => {
   const { t } = useLanguage();
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
     const checkAuth = async () => {
       try {
         // Check if installation is in progress
@@ -21,17 +23,11 @@ const Index = () => {
 
         console.log('Checking authentication...');
         
-        // Try to get session with a shorter timeout
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Auth timeout')), 5000)
-        );
-        
-        const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]) as any;
+        // Get session without timeout - let it complete naturally
+        const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Session error:', error);
-          // On any error, redirect to auth
           navigate('/auth');
           return;
         }
@@ -47,15 +43,19 @@ const Index = () => {
         
       } catch (error) {
         console.error('Auth check error:', error);
-        // If there's any error (including timeout), redirect to auth
         navigate('/auth');
       } finally {
-        setLoading(false);
+        // Small delay to prevent rapid redirects
+        timeoutId = setTimeout(() => setLoading(false), 100);
       }
     };
 
     checkAuth();
-  }, [navigate]);
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [navigate, t]);
 
   if (loading) {
     return (
