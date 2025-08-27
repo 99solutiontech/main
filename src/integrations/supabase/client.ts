@@ -2,7 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const defaultUrl = "https://yxrgknvprkvtdpzmpclh.supabase.co";
+const defaultUrl = "https://supabase.moneyxmpm.com";
 const defaultAnon = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4cmdrbnZwcmt2dGRwem1wY2xoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxOTczMjQsImV4cCI6MjA2OTc3MzMyNH0.CxqJVEg1z6GYJeWqzcU_Ab1uV0Kvbg-CzzkDLJSwOiE";
 const getLocal = (k: string) => { try { return typeof localStorage !== 'undefined' ? localStorage.getItem(k) : null } catch { return null } };
 const SUPABASE_URL = getLocal('SUPABASE_URL') || defaultUrl;
