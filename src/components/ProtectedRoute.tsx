@@ -20,12 +20,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     const checkAuth = async () => {
       try {
         setLoading(true);
-        // Avoid hanging on getSession by adding a timeout
-        const sessionResult = await Promise.race([
-          supabase.auth.getSession(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout')), 5000))
-        ]) as any;
-        const { data: { session } } = sessionResult;
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (!session?.user) {
           setUser(null);
@@ -45,24 +40,15 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
           return;
         }
 
-        // Check user profile and status with timeout to avoid hanging
-        const profilePromise = supabase
+        // Check user profile and status
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('status, role')
           .eq('user_id', session.user.id)
           .maybeSingle();
 
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
-        );
-
-        const { data: profile, error } = await Promise.race([
-          profilePromise as any,
-          timeoutPromise
-        ]) as any;
-
-        if (error || !profile) {
-          console.error('Profile error:', error);
+        if (profileError || !profile) {
+          console.error('Profile error:', profileError);
           await supabase.auth.signOut();
           setUser(null);
           setSession(null);

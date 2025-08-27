@@ -204,18 +204,11 @@ const Dashboard = () => {
     try {
       console.log('Loading profile for user:', userId);
       
-      // Add timeout to prevent hanging
-      const profilePromise = (supabase as any)
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
-      
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 15000)
-      );
-
-      const { data, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
 
       if (error) {
         console.error('Profile query error:', error);
@@ -251,7 +244,7 @@ const Dashboard = () => {
         return;
       }
       
-      setProfile(data);
+      setProfile({ ...data, is_active: true });
       
       if (data?.role === 'super_admin') {
         console.log('Super admin detected, redirecting to /admin');
@@ -385,29 +378,22 @@ const Dashboard = () => {
     };
 
     try {
-      // Add timeout to prevent hanging
-      const insertPromise = (supabase as any)
+      const { data, error } = await supabase
         .from('fund_data')
         .insert(newFundData)
         .select()
         .single();
-      
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 15000)
-      );
-
-      const { data, error } = await Promise.race([insertPromise, timeoutPromise]) as any;
 
       if (error) {
         console.error('Fund insert error:', error);
         throw error;
       }
       
-      setFundData(data);
+      setFundData(data as FundData);
 
       // Try to add initial history record, but don't fail if it doesn't work
       try {
-        const historyPromise = (supabase as any).from('trading_history').insert({
+        await supabase.from('trading_history').insert({
           user_id: user.id,
           mode: currentMode,
           type: 'profit',
@@ -417,12 +403,6 @@ const Dashboard = () => {
           profit_loss: 0,
           sub_user_name: selectedSubUser?.name || null,
         });
-        
-        const historyTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('History timeout')), 10000)
-        );
-
-        await Promise.race([historyPromise, historyTimeoutPromise]);
       } catch (historyError) {
         console.error('History insert failed:', historyError);
         // Continue anyway - fund was created successfully
