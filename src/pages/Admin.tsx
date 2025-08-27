@@ -497,7 +497,7 @@ const Admin = () => {
       if (!session?.access_token) {
         throw new Error('No active session');
       }
-      const response = await fetch(`https://fnnoxdrkslfuuuuyltsr.supabase.co/functions/v1/delete-user`, {
+      const response = await fetch(`https://supabase.moneyxmpm.com/functions/v1/delete-user`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -572,14 +572,20 @@ const Admin = () => {
   };
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.warn('Admin sign out error (ignoring):', error.message);
-      }
+      // Clear all state first
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+      
+      // Force navigation to auth page
+      window.location.href = '/auth';
     } catch (err: any) {
-      console.warn('Admin sign out exception (ignoring):', err?.message);
-    } finally {
-      navigate('/auth', { replace: true });
+      console.warn('Sign out error:', err?.message);
+      // Force navigation even if sign out fails
+      window.location.href = '/auth';
     }
   };
   if (loading) {
