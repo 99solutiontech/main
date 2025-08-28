@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AppThemeProvider } from '@/contexts/AppThemeContext';
-import { Gem, LogOut, Settings, TrendingUp, DollarSign, Calculator, Calendar, BarChart3, Users, Fuel, Menu } from 'lucide-react';
+import { Gem, LogOut, Settings, TrendingUp, DollarSign, Calculator, Calendar, BarChart3, Users, Fuel, Menu, ArrowLeft } from 'lucide-react';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import FundOverview from '@/components/trading/FundOverview';
 import TradeRecorder from '@/components/trading/TradeRecorder';
@@ -77,8 +77,13 @@ const Dashboard = () => {
   const [selectedSubUser, setSelectedSubUser] = useState<SubUser | null>(null);
   const [subUsers, setSubUsers] = useState<SubUser[]>([]);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { t } = useLanguage();
+
+  // Get initial values from URL parameters
+  const urlMode = searchParams.get('mode') as 'diamond' | 'gold' | null;
+  const urlSubUser = searchParams.get('subUser');
 
   useEffect(() => {
     const initializeDashboard = async () => {
@@ -95,8 +100,33 @@ const Dashboard = () => {
         setSession(session);
         setUser(session.user);
         
+        // Set mode from URL parameter if provided
+        if (urlMode) {
+          setCurrentMode(urlMode);
+        }
+        
         console.log('Dashboard: Loading profile for user:', session.user.id);
         await loadUserProfile(session.user.id);
+        
+        // Load fund data with URL parameters
+        const modeToUse = urlMode || currentMode;
+        await loadFundData(session.user.id, modeToUse, urlSubUser);
+        
+        // Set selected sub user if provided in URL
+        if (urlSubUser) {
+          const tempSubUser: SubUser = {
+            id: 'temp',
+            name: urlSubUser,
+            mode: modeToUse,
+            initial_capital: 0,
+            total_capital: 0,
+            active_fund: 0,
+            reserve_fund: 0,
+            profit_fund: 0,
+            created_at: new Date().toISOString()
+          };
+          setSelectedSubUser(tempSubUser);
+        }
       } catch (error) {
         console.error('Dashboard initialization error:', error);
         navigate('/auth');
@@ -574,6 +604,14 @@ const Dashboard = () => {
               </div>
 
               <div className="flex items-center gap-4">
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/')}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  {t('backToOverview')}
+                </Button>
                 <SubUserSelector
                   userId={user.id}
                   currentMode={currentMode}

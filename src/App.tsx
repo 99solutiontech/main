@@ -8,6 +8,7 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import MultiAccountOverview from "./pages/MultiAccountOverview";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import Installation from "./pages/Installation";
@@ -24,12 +25,6 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={
               <ProtectedRoute requiredRole="super_admin">
@@ -37,6 +32,16 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/installation" element={<Installation />} />
+            <Route path="/" element={
+              <ProtectedRoute>
+                <MultiAccountOverview />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
