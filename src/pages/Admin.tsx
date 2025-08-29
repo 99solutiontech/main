@@ -10,8 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Users, DollarSign, TrendingUp, LogOut, User as UserIcon, Search, Filter, Bell, AlertTriangle, CheckCircle, XCircle, Clock, Settings, Edit, Trash2, ChevronDown } from 'lucide-react';
+import { Shield, Users, DollarSign, TrendingUp, LogOut, User as UserIcon, Search, Filter, Bell, AlertTriangle, CheckCircle, XCircle, Clock, Settings, Edit, Trash2, ChevronDown, Key, Eye, EyeOff } from 'lucide-react';
 import { User, Session } from '@supabase/supabase-js';
 import { UserRegistrationPieChart } from '@/components/admin/UserRegistrationPieChart';
 import { MonthlyFundChart } from '@/components/admin/MonthlyFundChart';
@@ -69,6 +71,10 @@ const Admin = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
+  const [passwordResetUser, setPasswordResetUser] = useState<Profile | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   // Track in-flight actions to prevent double clicks
   const [processingUserIds, setProcessingUserIds] = useState<Set<string>>(new Set());
   const [processingNotifIds, setProcessingNotifIds] = useState<Set<string>>(new Set());
@@ -588,6 +594,68 @@ const Admin = () => {
       window.location.href = '/auth';
     }
   };
+
+  const resetUserPassword = async () => {
+    if (!passwordResetUser || !newPassword) {
+      toast({
+        title: "Error",
+        description: "Please enter a new password",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Error", 
+        description: "Password must be at least 6 characters",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsResettingPassword(true);
+
+      // Call edge function to reset password with service role key
+      const response = await fetch(`https://supabase.moneyxmpm.com/functions/v1/admin-reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4cmdrbnZwcmt2dGRwem1wY2xoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxOTczMjQsImV4cCI6MjA2OTc3MzMyNH0.CxqJVEg1z6GYJeWqzcU_Ab1uV0Kvbg-CzzkDLJSwOiE'
+        },
+        body: JSON.stringify({
+          userId: passwordResetUser.user_id,
+          newPassword: newPassword
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to reset password');
+      }
+
+      toast({
+        title: "Success",
+        description: "Password reset successfully"
+      });
+
+      setPasswordResetUser(null);
+      setNewPassword('');
+      setShowPassword(false);
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reset password",
+        variant: "destructive"
+      });
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -898,6 +966,10 @@ const Admin = () => {
                                 <Edit className="h-4 w-4 mr-2" />
                                 Edit Profile
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setPasswordResetUser(user)}>
+                                <Key className="h-4 w-4 mr-2" />
+                                Reset Password
+                              </DropdownMenuItem>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <DropdownMenuItem onSelect={e => e.preventDefault()}>
@@ -1087,6 +1159,67 @@ const Admin = () => {
         </Card>
       </TabsContent>
     </Tabs>
+
+    {/* Password Reset Dialog */}
+    <Dialog open={!!passwordResetUser} onOpenChange={() => {
+      setPasswordResetUser(null);
+      setNewPassword('');
+      setShowPassword(false);
+    }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Reset User Password</DialogTitle>
+          <DialogDescription>
+            Reset password for {passwordResetUser?.trader_name || passwordResetUser?.full_name}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="newPassword">New Password</Label>
+            <div className="relative">
+              <Input
+                id="newPassword"
+                type={showPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password (min 6 characters)"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="flex-1" 
+              onClick={() => {
+                setPasswordResetUser(null);
+                setNewPassword('');
+                setShowPassword(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              className="flex-1" 
+              disabled={isResettingPassword || !newPassword}
+              onClick={resetUserPassword}
+            >
+              {isResettingPassword ? 'Resetting...' : 'Reset Password'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
       </main>
     </div>;
 };

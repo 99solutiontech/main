@@ -110,8 +110,42 @@ export default function EconomicNewsBar() {
 
   useEffect(() => {
     fetchEvents();
-    const id = setInterval(fetchEvents, 60_000); // refresh every 60s
-    return () => clearInterval(id);
+    
+    // Smart refresh: more frequent during active trading hours
+    const getRefreshInterval = () => {
+      const now = new Date();
+      const bangkokTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Bangkok" }));
+      const hour = bangkokTime.getHours();
+      
+      // During major trading session overlaps (London+NY: 21:00-02:00 Bangkok time)
+      if ((hour >= 21) || (hour <= 2)) {
+        return 30_000; // 30 seconds during high activity
+      }
+      // During regular trading hours
+      if ((hour >= 8 && hour <= 18)) {
+        return 45_000; // 45 seconds
+      }
+      // During low activity hours
+      return 90_000; // 1.5 minutes
+    };
+    
+    let intervalId: NodeJS.Timeout;
+    
+    const setupInterval = () => {
+      const interval = getRefreshInterval();
+      intervalId = setInterval(() => {
+        fetchEvents();
+        // Reschedule with potentially different interval
+        clearInterval(intervalId);
+        setupInterval();
+      }, interval);
+    };
+    
+    setupInterval();
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [selectedCurrencies.join(",")]);
 
   const toggleCurrency = (c: string) => {

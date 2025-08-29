@@ -132,62 +132,154 @@ serve(async (req) => {
       ["USD", "EUR", "JPY", "GBP", "CAD"].includes(String(c).toUpperCase())
     ).map((c) => String(c).toUpperCase());
 
-    const xmlResp = await fetch(FEED_URL);
-    if (!xmlResp.ok) throw new Error(`Feed error: ${xmlResp.status}`);
-    const xmlText = await xmlResp.text();
-
-    const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "" });
-    const parsed = parser.parse(xmlText);
-    const rawEvents = extractEvents(parsed);
-
-    const filtered = rawEvents.map((ev) => {
-      const title: string = ev.title || ev.event || ev.name || "";
-      const currency: string = (ev.currency || ev.country || "").toString().toUpperCase();
-      const impact_level = normalizeImpact(ev.impact || ev.importance || ev.impact_level || ev.folder || ev.icon || ev.color);
-      const event_time = toIsoFromEvent(ev);
-      const forecast = ev.forecast ?? ev.fcst ?? null;
-      const previous = ev.previous ?? ev.prev ?? null;
-      const actual = ev.actual ?? null;
-      const detail_url = ev.link || ev.url || null;
-      return { title, currency, impact_level, event_time, forecast, previous, actual, detail_url };
-    })
-    .filter((e) => e.title && e.currency && e.event_time)
-    .filter((e) => selected.includes(e.currency))
-    .filter((e) => e.impact_level === "high" || KEYWORDS.some((k) => e.title.toLowerCase().includes(k.toLowerCase())));
-
-    // Optional: store to DB when running with service role
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    let supabaseAdmin = null;
     if (serviceKey) {
-      const supabaseAdmin = createClient(
+      supabaseAdmin = createClient(
         Deno.env.get("SUPABASE_URL") ?? "",
         serviceKey,
         { auth: { autoRefreshToken: false, persistSession: false } }
       );
-      const upsertPayload = filtered.map((e) => ({
-        source: "forexfactory",
-        title: e.title,
-        currency: e.currency,
-        impact_level: e.impact_level,
-        event_time: e.event_time,
-        forecast: e.forecast,
-        previous: e.previous,
-        actual: e.actual,
-        detail_url: e.detail_url,
-      }));
-      const { error: upsertError } = await supabaseAdmin
+    }
+
+    // First, try to get recent events from database to reduce API calls
+    let cachedEvents: any[] = [];
+    if (supabaseAdmin) {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { data: dbEvents } = await supabaseAdmin
         .from("economic_events")
-        .upsert(upsertPayload, { onConflict: "source,currency,title,event_time" });
-      if (upsertError) {
-        console.error("Upsert error:", upsertError);
+        .select("*")
+        .gte("event_time", oneHourAgo)
+        .in("currency", selected);
+      
+      if (dbEvents && dbEvents.length > 0) {
+        console.log(`Found ${dbEvents.length} cached events from database`);
+        cachedEvents = dbEvents;
       }
     }
 
-    return new Response(JSON.stringify({ events: filtered }), {
+    let filtered = [];
+    
+    try {
+      // Attempt to fetch fresh data with retry logic
+      let xmlResp;
+      let retries = 3;
+      
+      while (retries > 0) {
+        try {
+          xmlResp = await fetch(FEED_URL, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+              'Accept': 'application/xml, text/xml, */*',
+              'Cache-Control': 'no-cache'
+            }
+          });
+          
+          if (xmlResp.ok) break;
+          
+          if (xmlResp.status === 429) {
+            console.warn(`Rate limited (429), waiting before retry... ${retries} retries left`);
+            await new Promise(resolve => setTimeout(resolve, 2000 * (4 - retries))); // Exponential backoff
+            retries--;
+            continue;
+          }
+          
+          throw new Error(`Feed error: ${xmlResp.status}`);
+        } catch (fetchError) {
+          retries--;
+          if (retries === 0) throw fetchError;
+          console.warn(`Fetch failed, retrying... ${retries} retries left`, fetchError);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      if (!xmlResp || !xmlResp.ok) {
+        throw new Error(`Feed not available after retries`);
+      }
+
+      const xmlText = await xmlResp.text();
+      const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "" });
+      const parsed = parser.parse(xmlText);
+      const rawEvents = extractEvents(parsed);
+
+      filtered = rawEvents.map((ev) => {
+        const title: string = ev.title || ev.event || ev.name || "";
+        const currency: string = (ev.currency || ev.country || "").toString().toUpperCase();
+        const impact_level = normalizeImpact(ev.impact || ev.importance || ev.impact_level || ev.folder || ev.icon || ev.color);
+        const event_time = toIsoFromEvent(ev);
+        const forecast = ev.forecast ?? ev.fcst ?? null;
+        const previous = ev.previous ?? ev.prev ?? null;
+        const actual = ev.actual ?? null;
+        const detail_url = ev.link || ev.url || null;
+        return { title, currency, impact_level, event_time, forecast, previous, actual, detail_url };
+      })
+      .filter((e) => e.title && e.currency && e.event_time)
+      .filter((e) => selected.includes(e.currency))
+      .filter((e) => e.impact_level === "high" || KEYWORDS.some((k) => e.title.toLowerCase().includes(k.toLowerCase())));
+
+      console.log(`Fetched ${filtered.length} fresh events from XML feed`);
+      
+      // Store fresh data to database
+      if (supabaseAdmin && filtered.length > 0) {
+        const upsertPayload = filtered.map((e) => ({
+          source: "forexfactory",
+          title: e.title,
+          currency: e.currency,
+          impact_level: e.impact_level,
+          event_time: e.event_time,
+          forecast: e.forecast,
+          previous: e.previous,
+          actual: e.actual,
+          detail_url: e.detail_url,
+        }));
+        
+        const { error: upsertError } = await supabaseAdmin
+          .from("economic_events")
+          .upsert(upsertPayload, { onConflict: "source,currency,title,event_time" });
+        
+        if (upsertError) {
+          console.error("Upsert error:", upsertError);
+        } else {
+          console.log(`Successfully updated ${upsertPayload.length} events in database`);
+        }
+      }
+
+    } catch (xmlError) {
+      console.warn("XML feed failed, using cached data:", xmlError);
+      
+      // Fallback to cached events if XML feed fails
+      if (cachedEvents.length > 0) {
+        filtered = cachedEvents.map(e => ({
+          title: e.title,
+          currency: e.currency,
+          impact_level: e.impact_level,
+          event_time: e.event_time,
+          forecast: e.forecast,
+          previous: e.previous,
+          actual: e.actual,
+          detail_url: e.detail_url,
+        }));
+        console.log(`Using ${filtered.length} cached events as fallback`);
+      } else {
+        // If no cached data, return the error
+        throw xmlError;
+      }
+    }
+
+    return new Response(JSON.stringify({ 
+      events: filtered,
+      source: cachedEvents.length > 0 && filtered.length === cachedEvents.length ? 'cache' : 'live',
+      timestamp: new Date().toISOString()
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+    
   } catch (e: any) {
     console.error("forex-events-fetcher error:", e);
-    return new Response(JSON.stringify({ error: e?.message || "Unknown error" }), {
+    return new Response(JSON.stringify({ 
+      error: e?.message || "Unknown error",
+      timestamp: new Date().toISOString()
+    }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
