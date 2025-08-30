@@ -776,6 +776,7 @@ const Dashboard = () => {
                 <TradingHistory 
                   userId={user.id} 
                   mode={currentMode} 
+                  fundData={fundData}
                   subUserName={selectedSubUser?.name}
                 />
                 <FundTransactionHistory 
