@@ -69,11 +69,21 @@ const EditTradingRecord = ({ record, fundData, onUpdate }: EditTradingRecordProp
   });
 
   const updateRecord = async (data: EditFormData) => {
+    // Additional safety check
+    if (!fundData || fundData.active_fund === undefined) {
+      toast({
+        title: 'Error',
+        description: 'Fund data is not available. Please try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const newActiveFundUsd = fromDisplay(Number(data.new_active_fund || 0));
       const rebateUsd = fromDisplay(Number(data.rebate || 0));
-      const currentActiveFund = Number(fundData.active_fund);
+      const currentActiveFund = Number(fundData.active_fund || 0);
       
       // Calculate actual profit: (new active fund + rebate) - current active fund
       const actualProfitUsd = (newActiveFundUsd + rebateUsd) - currentActiveFund;
@@ -81,9 +91,9 @@ const EditTradingRecord = ({ record, fundData, onUpdate }: EditTradingRecordProp
       // Calculate fund distribution
       let updated = { 
         active_fund: currentActiveFund,
-        reserve_fund: Number(fundData.reserve_fund),
-        profit_fund: Number(fundData.profit_fund),
-        total_capital: Number(fundData.total_capital),
+        reserve_fund: Number(fundData.reserve_fund || 0),
+        profit_fund: Number(fundData.profit_fund || 0),
+        total_capital: Number(fundData.total_capital || 0),
       };
 
       // Distribute the actual profit according to settings
