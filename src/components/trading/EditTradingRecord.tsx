@@ -56,6 +56,11 @@ const EditTradingRecord = ({ record, fundData, onUpdate }: EditTradingRecordProp
   const { toast } = useToast();
   const { fromDisplay, format } = useCurrency();
 
+  // Don't render if fundData is not available
+  if (!fundData) {
+    return null;
+  }
+
   const form = useForm<EditFormData>({
     defaultValues: {
       new_active_fund: 0,
