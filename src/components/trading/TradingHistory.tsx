@@ -94,8 +94,8 @@ const EditTradingRecord = ({ record, onUpdate }: EditTradingRecordProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-          <Edit className="h-3 w-3" />
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted">
+          <Edit className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

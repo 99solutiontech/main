@@ -99,6 +99,12 @@ export default function EconomicNewsBar() {
         },
       });
       if (error) throw error;
+      
+      // Check if the response contains an error
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+      
       setEvents((data?.events as EconomicEvent[]) || []);
     } catch (err: any) {
       console.error("Failed to fetch economic events:", err);

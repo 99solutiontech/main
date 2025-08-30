@@ -276,11 +276,14 @@ serve(async (req) => {
     
   } catch (e: any) {
     console.error("forex-events-fetcher error:", e);
+    // Return 200 with error info instead of 500 to avoid "non-2xx" errors in UI
     return new Response(JSON.stringify({ 
-      error: e?.message || "Unknown error",
-      timestamp: new Date().toISOString()
+      events: [],
+      error: e?.message || "Unable to fetch economic events",
+      timestamp: new Date().toISOString(),
+      source: 'error'
     }), {
-      status: 500,
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
