@@ -55,7 +55,35 @@ const LotCalculator = ({ fundData, onUpdate }: LotCalculatorProps) => {
       }
     };
     loadRisk();
-  }, [fundData.id]);
+  }, [fundData.id, fundData.user_id, fundData.mode, fundData.sub_user_name]);
+
+  // Listen for settings updates from other components
+  useEffect(() => {
+    const handleRefresh = () => {
+      const loadRisk = async () => {
+        try {
+          let query = supabase
+            .from('user_settings')
+            .select('lot_size_settings')
+            .eq('user_id', fundData.user_id)
+            .eq('mode', fundData.mode);
+          const subName = (fundData as any).sub_user_name || null;
+          if (subName) query = query.eq('sub_user_name', subName); else query = query.is('sub_user_name', null);
+          const { data } = await query.maybeSingle();
+          const rp = (data as any)?.lot_size_settings?.risk_percent;
+          if (rp != null) setRiskPercent(Number(rp));
+        } catch {
+          // Keep existing value on error
+        }
+      };
+      loadRisk();
+    };
+
+    window.addEventListener('refreshTradingData', handleRefresh);
+    return () => {
+      window.removeEventListener('refreshTradingData', handleRefresh);
+    };
+  }, [fundData.user_id, fundData.mode, fundData.sub_user_name]);
   
   const recommendedLot = useMemo(() => {
     if (!fundData.lot_base_capital || fundData.lot_base_capital <= 0) return 0;
