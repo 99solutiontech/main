@@ -61,10 +61,28 @@ const EditTradingRecord = ({ record, fundData, onUpdate }: EditTradingRecordProp
     return null;
   }
 
+  // Parse existing values from record details
+  const parseExistingValues = () => {
+    try {
+      const details = record.details || '';
+      const activeFundMatch = details.match(/New Active Fund:\s*([0-9,]+(?:\.[0-9]+)?)/);
+      const rebateMatch = details.match(/Rebate:\s*([0-9,]+(?:\.[0-9]+)?)/);
+      
+      const activeFund = activeFundMatch ? parseFloat(activeFundMatch[1].replace(/,/g, '')) : 0;
+      const rebate = rebateMatch ? parseFloat(rebateMatch[1].replace(/,/g, '')) : 0;
+      
+      return { activeFund, rebate };
+    } catch (error) {
+      return { activeFund: 0, rebate: 0 };
+    }
+  };
+
+  const existingValues = parseExistingValues();
+
   const form = useForm<EditFormData>({
     defaultValues: {
-      new_active_fund: 0,
-      rebate: 0,
+      new_active_fund: existingValues.activeFund,
+      rebate: existingValues.rebate,
     },
   });
 
@@ -83,66 +101,27 @@ const EditTradingRecord = ({ record, fundData, onUpdate }: EditTradingRecordProp
     try {
       const newActiveFundUsd = fromDisplay(Number(data.new_active_fund || 0));
       const rebateUsd = fromDisplay(Number(data.rebate || 0));
-      const currentActiveFund = Number(fundData.active_fund || 0);
       
-      // Calculate actual profit: (new active fund + rebate) - current active fund
-      const actualProfitUsd = (newActiveFundUsd + rebateUsd) - currentActiveFund;
+      // Simple calculation: new active fund + rebate = total profit
+      const totalProfitUsd = newActiveFundUsd + rebateUsd;
       
-      // Calculate fund distribution
-      let updated = { 
-        active_fund: currentActiveFund,
-        reserve_fund: Number(fundData.reserve_fund || 0),
-        profit_fund: Number(fundData.profit_fund || 0),
-        total_capital: Number(fundData.total_capital || 0),
-      };
-
-      // Distribute the actual profit according to settings
-      if (actualProfitUsd > 0) {
-        const toActive = (actualProfitUsd * (fundData.profit_dist_active ?? 50)) / 100;
-        const toReserve = (actualProfitUsd * (fundData.profit_dist_reserve ?? 25)) / 100;
-        const toProfit = (actualProfitUsd * (fundData.profit_dist_profit ?? 25)) / 100;
-        updated.active_fund += toActive;
-        updated.reserve_fund += toReserve;
-        updated.profit_fund += toProfit;
-      } else if (actualProfitUsd < 0) {
-        const loss = Math.abs(actualProfitUsd);
-        const fromReserve = Math.min(loss, updated.reserve_fund);
-        updated.active_fund -= (loss - fromReserve);
-        updated.reserve_fund -= fromReserve;
-      }
-
-      updated.total_capital = updated.active_fund + updated.reserve_fund + updated.profit_fund;
-
-      // Create the note with the same format as TradeRecorder
+      // Create the note with the simple format
       const note = record.mode === 'diamond' 
-        ? `New Active Fund: ${format(newActiveFundUsd, { showLabel: true })} + Rebate: ${format(rebateUsd, { showLabel: true })} = Profit: ${format(actualProfitUsd, { showLabel: true })}`
-        : `Daily ${record.trade_date || new Date().toISOString().split('T')[0]} → New Active Fund: ${format(newActiveFundUsd, { showLabel: true })} + Rebate: ${format(rebateUsd, { showLabel: true })} = Profit: ${format(actualProfitUsd, { showLabel: true })}`;
+        ? `New Active Fund: ${format(newActiveFundUsd, { showLabel: true })} + Rebate: ${format(rebateUsd, { showLabel: true })} = Profit: ${format(totalProfitUsd, { showLabel: true })}`
+        : `Daily ${record.trade_date || new Date().toISOString().split('T')[0]} → New Active Fund: ${format(newActiveFundUsd, { showLabel: true })} + Rebate: ${format(rebateUsd, { showLabel: true })} = Profit: ${format(totalProfitUsd, { showLabel: true })}`;
 
-      // Update the trading record
+      // Update the trading record with the simple profit calculation
       const { error: recordError } = await supabase
         .from('trading_history')
         .update({
           details: note,
-          profit_loss: actualProfitUsd,
-          end_balance: updated.total_capital,
-          type: actualProfitUsd >= 0 ? 'profit' : 'loss',
+          profit_loss: totalProfitUsd,
+          end_balance: fundData.total_capital, // Keep existing end balance or update if needed
+          type: totalProfitUsd >= 0 ? 'profit' : 'loss',
         })
         .eq('id', record.id);
 
       if (recordError) throw recordError;
-
-      // Update the fund data
-      const { error: fundError } = await supabase
-        .from('fund_data')
-        .update({
-          active_fund: updated.active_fund,
-          reserve_fund: updated.reserve_fund,
-          profit_fund: updated.profit_fund,
-          total_capital: updated.total_capital
-        })
-        .eq('id', fundData.id);
-
-      if (fundError) throw fundError;
 
       toast({
         title: 'Success',
