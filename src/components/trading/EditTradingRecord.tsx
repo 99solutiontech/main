@@ -18,6 +18,8 @@ interface TradingRecord {
   details: string;
   amount?: number;
   end_balance: number;
+  start_balance?: number;
+  profit_loss?: number;
   trade_date?: string;
   created_at: string;
 }
@@ -102,22 +104,28 @@ const EditTradingRecord = ({ record, fundData, onUpdate }: EditTradingRecordProp
       const newActiveFundUsd = fromDisplay(Number(data.new_active_fund || 0));
       const rebateUsd = fromDisplay(Number(data.rebate || 0));
       
-      // Simple calculation: new active fund + rebate = total profit
-      const totalProfitUsd = newActiveFundUsd + rebateUsd;
+      // Calculate the original active fund before this trade was recorded
+      // If start_balance is available, use it; otherwise calculate from current fund and existing profit
+      const originalActiveFund = record.start_balance !== null && record.start_balance !== undefined 
+        ? Number(record.start_balance)
+        : Number(fundData.active_fund) - Number(record.profit_loss || 0);
       
-      // Create the note with the simple format
+      // Correct calculation: (new active fund + rebate) - original active fund = actual profit
+      const actualProfitUsd = (newActiveFundUsd + rebateUsd) - originalActiveFund;
+      
+      // Create the note with the correct profit calculation
       const note = record.mode === 'diamond' 
-        ? `New Active Fund: ${format(newActiveFundUsd, { showLabel: true })} + Rebate: ${format(rebateUsd, { showLabel: true })} = Profit: ${format(totalProfitUsd, { showLabel: true })}`
-        : `Daily ${record.trade_date || new Date().toISOString().split('T')[0]} → New Active Fund: ${format(newActiveFundUsd, { showLabel: true })} + Rebate: ${format(rebateUsd, { showLabel: true })} = Profit: ${format(totalProfitUsd, { showLabel: true })}`;
+        ? `New Active Fund: ${format(newActiveFundUsd, { showLabel: true })} + Rebate: ${format(rebateUsd, { showLabel: true })} = Profit: ${format(actualProfitUsd, { showLabel: true })}`
+        : `Daily ${record.trade_date || new Date().toISOString().split('T')[0]} → New Active Fund: ${format(newActiveFundUsd, { showLabel: true })} + Rebate: ${format(rebateUsd, { showLabel: true })} = Profit: ${format(actualProfitUsd, { showLabel: true })}`;
 
-      // Update the trading record with the simple profit calculation
+      // Update the trading record with the correct profit calculation
       const { error: recordError } = await supabase
         .from('trading_history')
         .update({
           details: note,
-          profit_loss: totalProfitUsd,
+          profit_loss: actualProfitUsd,
           end_balance: fundData.total_capital, // Keep existing end balance or update if needed
-          type: totalProfitUsd >= 0 ? 'profit' : 'loss',
+          type: actualProfitUsd >= 0 ? 'profit' : 'loss',
         })
         .eq('id', record.id);
 
