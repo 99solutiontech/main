@@ -134,7 +134,12 @@ const EditTradingRecord = ({ record, fundData, onUpdate }: EditTradingRecordProp
       // Update the fund data
       const { error: fundError } = await supabase
         .from('fund_data')
-        .update(updated)
+        .update({
+          active_fund: updated.active_fund,
+          reserve_fund: updated.reserve_fund,
+          profit_fund: updated.profit_fund,
+          total_capital: updated.total_capital
+        })
         .eq('id', fundData.id);
 
       if (fundError) throw fundError;
