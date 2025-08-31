@@ -243,6 +243,7 @@ export type Database = {
           sub_user_name: string | null
           symbol: string | null
           type: string
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -260,6 +261,7 @@ export type Database = {
           sub_user_name?: string | null
           symbol?: string | null
           type: string
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -277,6 +279,7 @@ export type Database = {
           sub_user_name?: string | null
           symbol?: string | null
           type?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
