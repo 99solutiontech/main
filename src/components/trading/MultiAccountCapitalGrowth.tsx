@@ -94,7 +94,7 @@ const MultiAccountCapitalGrowth = ({ userId, mode, subUsers }: MultiAccountCapit
     try {
       setLoading(true);
       const datasets: any[] = [];
-      const allDates = new Set<string>();
+      const today = new Date().toLocaleDateString();
 
       // Process each account
       for (let i = 0; i < subUsers.length; i++) {
@@ -120,63 +120,68 @@ const MultiAccountCapitalGrowth = ({ userId, mode, subUsers }: MultiAccountCapit
           continue;
         }
 
+        const accountData: { x: string; y: number }[] = [];
+
         if (data && data.length > 0) {
-          // Add dates to the set
+          // Add initial capital as starting point
+          const firstDate = new Date(data[0].created_at);
+          firstDate.setDate(firstDate.getDate() - 1);
+          accountData.push({
+            x: firstDate.toLocaleDateString(),
+            y: account.initial_capital
+          });
+
+          // Add all trading data points
           data.forEach(record => {
-            const date = new Date(record.created_at).toLocaleDateString();
-            allDates.add(date);
-          });
-
-          // Prepare data for this account
-          const accountData = data.map(record => ({
-            x: new Date(record.created_at).toLocaleDateString(),
-            y: record.end_balance
-          }));
-
-          // Add initial capital as starting point if we have data
-          if (accountData.length > 0) {
-            const firstDate = new Date(data[0].created_at);
-            firstDate.setDate(firstDate.getDate() - 1);
-            accountData.unshift({
-              x: firstDate.toLocaleDateString(),
-              y: account.initial_capital
+            accountData.push({
+              x: new Date(record.created_at).toLocaleDateString(),
+              y: record.end_balance
             });
-            allDates.add(firstDate.toLocaleDateString());
-          }
+          });
 
-          datasets.push({
-            label: account.name,
-            data: accountData,
-            borderColor: colors[i % colors.length],
-            backgroundColor: colors[i % colors.length] + '20',
-            tension: 0.1,
-            pointRadius: 3,
-            pointHoverRadius: 6,
-            borderWidth: 2,
-          });
-        } else {
-          // Add a single point for accounts with no trading history
-          const currentDate = new Date().toLocaleDateString();
-          allDates.add(currentDate);
+          // Extend line to current day with last known balance
+          const lastBalance = data[data.length - 1].end_balance;
+          const lastDate = new Date(data[data.length - 1].created_at).toLocaleDateString();
           
-          datasets.push({
-            label: account.name,
-            data: [{ x: currentDate, y: account.total_capital }],
-            borderColor: colors[i % colors.length],
-            backgroundColor: colors[i % colors.length] + '20',
-            tension: 0.1,
-            pointRadius: 3,
-            pointHoverRadius: 6,
-            borderWidth: 2,
+          if (lastDate !== today) {
+            accountData.push({
+              x: today,
+              y: lastBalance
+            });
+          }
+        } else {
+          // For accounts with no trading history, show line from account creation to today
+          const accountCreationDate = new Date(account.created_at).toLocaleDateString();
+          
+          // Add starting point
+          accountData.push({
+            x: accountCreationDate,
+            y: account.total_capital
           });
+
+          // Add current day point if different from creation date
+          if (accountCreationDate !== today) {
+            accountData.push({
+              x: today,
+              y: account.total_capital
+            });
+          }
         }
+
+        datasets.push({
+          label: account.name,
+          data: accountData,
+          borderColor: colors[i % colors.length],
+          backgroundColor: colors[i % colors.length] + '20',
+          tension: 0.1,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          borderWidth: 2,
+        });
       }
 
-      // Sort dates and create labels
-      const sortedDates = Array.from(allDates).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
-
       setChartData({
-        labels: sortedDates,
+        labels: [], // Let Chart.js handle the x-axis labels automatically
         datasets: datasets
       });
     } catch (error) {
