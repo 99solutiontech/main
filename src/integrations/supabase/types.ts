@@ -284,6 +284,36 @@ export type Database = {
         }
         Relationships: []
       }
+      trading_record_snapshots: {
+        Row: {
+          created_at: string
+          id: string
+          mode: string
+          original_fund_data: Json
+          sub_user_name: string | null
+          trading_record_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mode: string
+          original_fund_data: Json
+          sub_user_name?: string | null
+          trading_record_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mode?: string
+          original_fund_data?: Json
+          sub_user_name?: string | null
+          trading_record_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       transaction_history: {
         Row: {
           amount: number

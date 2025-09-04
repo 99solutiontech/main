@@ -104,14 +104,45 @@ const EditTradingRecord = ({ record, fundData, onUpdate }: EditTradingRecordProp
       const newActiveFundUsd = fromDisplay(Number(data.new_active_fund || 0));
       const rebateUsd = fromDisplay(Number(data.rebate || 0));
       
+      // Check if this is the first edit - create snapshot if needed
+      const { data: existingSnapshot } = await supabase
+        .from('trading_record_snapshots')
+        .select('*')
+        .eq('trading_record_id', record.id)
+        .single();
+
+      let originalFundState;
+      if (!existingSnapshot) {
+        // First edit - create snapshot of current fund state
+        originalFundState = {
+          active_fund: fundData.active_fund,
+          reserve_fund: fundData.reserve_fund,
+          profit_fund: fundData.profit_fund,
+          total_capital: fundData.total_capital,
+          profit_dist_active: fundData.profit_dist_active,
+          profit_dist_reserve: fundData.profit_dist_reserve,
+          profit_dist_profit: fundData.profit_dist_profit
+        };
+
+        await supabase
+          .from('trading_record_snapshots')
+          .insert({
+            trading_record_id: record.id,
+            user_id: record.user_id,
+            mode: record.mode,
+            sub_user_name: null, // Will be set from the fund data query
+            original_fund_data: originalFundState
+          });
+      } else {
+        originalFundState = existingSnapshot.original_fund_data;
+      }
+
       // Parse the original values from the existing record to maintain consistent baseline
       const existingValues = parseExistingValues();
       const originalNewActiveFund = fromDisplay(existingValues.activeFund);
       const originalRebate = fromDisplay(existingValues.rebate);
       
       // Calculate what the active fund was before this trade was recorded
-      // Original profit = (original_new_active_fund + original_rebate) - original_active_fund_before_trade
-      // So: original_active_fund_before_trade = (original_new_active_fund + original_rebate) - original_profit
       const originalProfitUsd = Number(record.profit_loss || 0);
       const originalActiveFundBeforeTrade = (originalNewActiveFund + originalRebate) - originalProfitUsd;
       
@@ -121,27 +152,82 @@ const EditTradingRecord = ({ record, fundData, onUpdate }: EditTradingRecordProp
       // Calculate the new end balance after this trade
       const newEndBalance = originalActiveFundBeforeTrade + actualProfitUsd;
       
+      // Calculate fund updates based on the change in profit
+      const profitDifference = actualProfitUsd - originalProfitUsd;
+      
+      // Apply fund redistribution logic
+      let newActiveFund = originalFundState.active_fund;
+      let newReserveFund = originalFundState.reserve_fund;
+      let newProfitFund = originalFundState.profit_fund;
+      
+      if (profitDifference >= 0) {
+        // Positive change - distribute the additional profit
+        const activeShare = profitDifference * (originalFundState.profit_dist_active / 100);
+        const reserveShare = profitDifference * (originalFundState.profit_dist_reserve / 100);
+        const profitShare = profitDifference * (originalFundState.profit_dist_profit / 100);
+        
+        newActiveFund += activeShare;
+        newReserveFund += reserveShare;
+        newProfitFund += profitShare;
+      } else {
+        // Negative change - reduce funds in reverse order (profit -> reserve -> active)
+        let remainingLoss = Math.abs(profitDifference);
+        
+        // First, reduce profit fund
+        const profitReduction = Math.min(remainingLoss, newProfitFund);
+        newProfitFund -= profitReduction;
+        remainingLoss -= profitReduction;
+        
+        // Then reduce reserve fund if needed
+        if (remainingLoss > 0) {
+          const reserveReduction = Math.min(remainingLoss, newReserveFund);
+          newReserveFund -= reserveReduction;
+          remainingLoss -= reserveReduction;
+        }
+        
+        // Finally reduce active fund if needed
+        if (remainingLoss > 0) {
+          newActiveFund -= remainingLoss;
+        }
+      }
+      
+      const newTotalCapital = newActiveFund + newReserveFund + newProfitFund;
+      
       // Create the note with the correct profit calculation
       const note = record.mode === 'diamond' 
         ? `New Active Fund: ${format(newActiveFundUsd, { showLabel: true })} + Rebate: ${format(rebateUsd, { showLabel: true })} = Profit: ${format(actualProfitUsd, { showLabel: true })}`
         : `Daily ${record.trade_date || new Date().toISOString().split('T')[0]} → New Active Fund: ${format(newActiveFundUsd, { showLabel: true })} + Rebate: ${format(rebateUsd, { showLabel: true })} = Profit: ${format(actualProfitUsd, { showLabel: true })}`;
 
-      // Update the trading record with the correct profit calculation
-      const { error: recordError } = await supabase
-        .from('trading_history')
-        .update({
-          details: note,
-          profit_loss: actualProfitUsd,
-          end_balance: newEndBalance, // Use calculated end balance for this specific trade
-          type: actualProfitUsd >= 0 ? 'profit' : 'loss',
-        })
-        .eq('id', record.id);
+      // Update both trading record and fund data in parallel
+      const [recordResult, fundResult] = await Promise.all([
+        supabase
+          .from('trading_history')
+          .update({
+            details: note,
+            profit_loss: actualProfitUsd,
+            end_balance: newEndBalance,
+            type: actualProfitUsd >= 0 ? 'profit' : 'loss',
+          })
+          .eq('id', record.id),
+        
+        supabase
+          .from('fund_data')
+          .update({
+            active_fund: newActiveFund,
+            reserve_fund: newReserveFund,
+            profit_fund: newProfitFund,
+            total_capital: newTotalCapital,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', fundData.id)
+      ]);
 
-      if (recordError) throw recordError;
+      if (recordResult.error) throw recordResult.error;
+      if (fundResult.error) throw fundResult.error;
 
       toast({
         title: 'Success',
-        description: 'Trading record updated successfully',
+        description: 'Trading record and fund balances updated successfully',
       });
 
       setOpen(false);
