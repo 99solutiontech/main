@@ -93,53 +93,55 @@ const MultiAccountFundOverview = ({ userId, mode, subUsers, onAccountClick }: Mu
     <div className="space-y-6">
       {/* Aggregated Overview */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl md:text-2xl font-bold text-center">
             {t('totalPortfolio')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center space-y-4">
-            <div className="text-4xl font-bold">
+          <div className="text-center space-y-3 md:space-y-4">
+            <div className="text-2xl md:text-4xl font-bold break-all">
               {format(aggregatedTotals.totalCapital)}
             </div>
-            <div className={`flex items-center justify-center gap-2 text-lg font-semibold ${
+            <div className={`flex items-center justify-center gap-2 text-base md:text-lg font-semibold ${
               pnl >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             }`}>
-              {pnl >= 0 ? <TrendingUp className="h-5 w-5" /> : <TrendingDown className="h-5 w-5" />}
-              {format(Math.abs(pnl))} ({pnlPercent.toFixed(2)}%)
+              {pnl >= 0 ? <TrendingUp className="h-4 w-4 md:h-5 md:w-5" /> : <TrendingDown className="h-4 w-4 md:h-5 md:w-5" />}
+              <span className="break-all">
+                {format(Math.abs(pnl))} ({pnlPercent.toFixed(2)}%)
+              </span>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mt-4 md:mt-6">
             <Card className="bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800">
-              <CardContent className="p-4 text-center">
-                <div className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+              <CardContent className="p-3 md:p-4 text-center">
+                <div className="text-xs md:text-sm text-blue-600 dark:text-blue-400 font-medium mb-1">
                   {t('activeFund')}
                 </div>
-                <div className="text-xl font-bold text-blue-700 dark:text-blue-300">
+                <div className="text-sm md:text-xl font-bold text-blue-700 dark:text-blue-300 break-all">
                   {format(aggregatedTotals.activeFund)}
                 </div>
               </CardContent>
             </Card>
 
             <Card className="bg-green-50 dark:bg-green-950/50 border-green-200 dark:border-green-800">
-              <CardContent className="p-4 text-center">
-                <div className="text-sm text-green-600 dark:text-green-400 font-medium">
+              <CardContent className="p-3 md:p-4 text-center">
+                <div className="text-xs md:text-sm text-green-600 dark:text-green-400 font-medium mb-1">
                   {t('reserveFund')}
                 </div>
-                <div className="text-xl font-bold text-green-700 dark:text-green-300">
+                <div className="text-sm md:text-xl font-bold text-green-700 dark:text-green-300 break-all">
                   {format(aggregatedTotals.reserveFund)}
                 </div>
               </CardContent>
             </Card>
 
             <Card className="bg-purple-50 dark:bg-purple-950/50 border-purple-200 dark:border-purple-800">
-              <CardContent className="p-4 text-center">
-                <div className="text-sm text-purple-600 dark:text-purple-400 font-medium">
+              <CardContent className="p-3 md:p-4 text-center">
+                <div className="text-xs md:text-sm text-purple-600 dark:text-purple-400 font-medium mb-1">
                   {t('profitFund')}
                 </div>
-                <div className="text-xl font-bold text-purple-700 dark:text-purple-300">
+                <div className="text-sm md:text-xl font-bold text-purple-700 dark:text-purple-300 break-all">
                   {format(aggregatedTotals.profitFund)}
                 </div>
               </CardContent>
