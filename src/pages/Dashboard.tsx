@@ -521,9 +521,12 @@ const Dashboard = () => {
                        {t('backToOverview')}
                      </Button>
 
-                     {/* Profile and Settings Menu */}
                      <div className="border-b pb-4">
-                       <UserProfileMenu onSignOut={handleSignOut} displayName={profile?.trader_name || profile?.full_name || user.email} />
+                       <UserProfileMenu 
+                         onSignOut={handleSignOut} 
+                         displayName={profile?.trader_name || profile?.full_name || user.email}
+                         showFullName={true}
+                       />
                      </div>
 
                     <div>
