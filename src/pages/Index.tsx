@@ -38,8 +38,8 @@ const Index = () => {
           return;
         }
 
-        console.log('Session found, redirecting to dashboard');
-        navigate('/dashboard');
+        console.log('Session found, redirecting to overview');
+        navigate('/overview');
         
       } catch (error) {
         console.error('Auth check error:', error);

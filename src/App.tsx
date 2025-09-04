@@ -32,7 +32,8 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/installation" element={<Installation />} />
-            <Route path="/" element={
+            <Route path="/" element={<Index />} />
+            <Route path="/overview" element={
               <ProtectedRoute>
                 <MultiAccountOverview />
               </ProtectedRoute>
