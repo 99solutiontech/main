@@ -170,23 +170,49 @@ export default function EconomicNewsBar() {
 
   return (
     <Card className="mb-4">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <Bell className="h-5 w-5" /> Economic Calendar (GMT+07:00)
-        </CardTitle>
-        <div className="flex items-center gap-2">
-          <Button size="icon" variant="outline" onClick={() => changeDay(-1)} aria-label="Previous day">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div className="text-sm">
-            {selectedDate.toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short", timeZone: "Asia/Bangkok" })}
+      <CardHeader className="pb-3">
+        {/* Mobile Layout */}
+        <div className="flex flex-col space-y-3 md:hidden">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Bell className="h-4 w-4" /> Economic Calendar (GMT+07:00)
+          </CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <Button size="sm" variant="outline" onClick={() => changeDay(-1)} aria-label="Previous day">
+                <ChevronLeft className="h-3 w-3" />
+              </Button>
+              <div className="text-xs px-2 py-1 min-w-[80px] text-center">
+                {selectedDate.toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short", timeZone: "Asia/Bangkok" })}
+              </div>
+              <Button size="sm" variant="outline" onClick={() => changeDay(1)} aria-label="Next day">
+                <ChevronRight className="h-3 w-3" />
+              </Button>
+            </div>
+            <Button size="sm" variant="outline" onClick={fetchEvents} disabled={loading} aria-label="Refresh">
+              <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
+            </Button>
           </div>
-          <Button size="icon" variant="outline" onClick={() => changeDay(1)} aria-label="Next day">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button size="icon" variant="outline" onClick={fetchEvents} disabled={loading} aria-label="Refresh">
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          </Button>
+        </div>
+
+        {/* Desktop Layout */}
+        <div className="hidden md:flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" /> Economic Calendar (GMT+07:00)
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <Button size="icon" variant="outline" onClick={() => changeDay(-1)} aria-label="Previous day">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div className="text-sm">
+              {selectedDate.toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short", timeZone: "Asia/Bangkok" })}
+            </div>
+            <Button size="icon" variant="outline" onClick={() => changeDay(1)} aria-label="Next day">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button size="icon" variant="outline" onClick={fetchEvents} disabled={loading} aria-label="Refresh">
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -210,29 +236,60 @@ export default function EconomicNewsBar() {
         ) : (
           <ul className="space-y-2">
             {filteredForDay.map((ev, idx) => (
-              <li key={`${ev.currency}-${ev.event_time}-${idx}`} className="flex items-center justify-between rounded-md border p-3">
-                <div className="flex items-center gap-3">
-                  <Badge variant={ev.impact_level === "high" ? "destructive" : "secondary"}>
-                    {ev.currency}
-                  </Badge>
-                  <div className="text-sm">
-                    <div className="font-medium">{ev.title}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {formatBangkokTime(ev.event_time)} · {ev.impact_level.toUpperCase()}
+              <li key={`${ev.currency}-${ev.event_time}-${idx}`} className="rounded-md border p-3">
+                {/* Mobile Event Layout */}
+                <div className="flex flex-col space-y-2 md:hidden">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Badge variant={ev.impact_level === "high" ? "destructive" : "secondary"} className="text-xs">
+                        {ev.currency}
+                      </Badge>
+                      <div className="text-xs text-muted-foreground">
+                        {formatBangkokTime(ev.event_time)} · {ev.impact_level.toUpperCase()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-sm font-medium">{ev.title}</div>
+                  <div className="flex justify-between text-xs">
+                    <div>
+                      {ev.previous && <div className="text-muted-foreground">Prev: {ev.previous}</div>}
+                      {ev.forecast && (
+                        <div className={clsForTrend(trend(ev.forecast ?? null, ev.previous ?? null))}>
+                          Forecast: {ev.forecast}
+                        </div>
+                      )}
+                    </div>
+                    <div className={clsForTrend(trend(ev.actual ?? null, (ev.forecast ?? ev.previous) ?? null))}>
+                      Actual: {ev.actual ?? "-"}
                     </div>
                   </div>
                 </div>
-<div className="text-right text-xs">
-  {ev.previous && <div className="text-muted-foreground">Prev: {ev.previous}</div>}
-  {ev.forecast && (
-    <div className={clsForTrend(trend(ev.forecast ?? null, ev.previous ?? null))}>
-      Forecast: {ev.forecast}
-    </div>
-  )}
-  <div className={clsForTrend(trend(ev.actual ?? null, (ev.forecast ?? ev.previous) ?? null))}>
-    Actual: {ev.actual ?? "-"}
-  </div>
-</div>
+
+                {/* Desktop Event Layout */}
+                <div className="hidden md:flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Badge variant={ev.impact_level === "high" ? "destructive" : "secondary"}>
+                      {ev.currency}
+                    </Badge>
+                    <div className="text-sm">
+                      <div className="font-medium">{ev.title}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {formatBangkokTime(ev.event_time)} · {ev.impact_level.toUpperCase()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right text-xs">
+                    {ev.previous && <div className="text-muted-foreground">Prev: {ev.previous}</div>}
+                    {ev.forecast && (
+                      <div className={clsForTrend(trend(ev.forecast ?? null, ev.previous ?? null))}>
+                        Forecast: {ev.forecast}
+                      </div>
+                    )}
+                    <div className={clsForTrend(trend(ev.actual ?? null, (ev.forecast ?? ev.previous) ?? null))}>
+                      Actual: {ev.actual ?? "-"}
+                    </div>
+                  </div>
+                </div>
               </li>
             ))}
           </ul>

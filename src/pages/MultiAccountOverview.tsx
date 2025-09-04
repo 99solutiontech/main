@@ -204,7 +204,32 @@ const MultiAccountOverview = () => {
           <div className="min-h-screen bg-background">
             <header className="border-b bg-card">
               <div className="container mx-auto px-4 py-3">
-                <div className="flex items-center justify-between">
+                {/* Mobile Layout */}
+                <div className="flex flex-col space-y-3 md:hidden">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Gem className="h-5 w-5 text-primary" />
+                      <div>
+                        <h1 className="text-lg font-bold tracking-wide">Moneyx 8.8</h1>
+                        <p className="text-xs text-muted-foreground">
+                          {t('multiAccountOverview')} - {profile?.trader_name || profile?.full_name || user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <UserProfileMenu onSignOut={handleSignOut} displayName={profile?.trader_name || profile?.full_name || user.email} />
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/dashboard')}
+                    className="w-full flex items-center justify-center gap-2"
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                    {t('viewIndividualAccounts')}
+                  </Button>
+                </div>
+
+                {/* Desktop Layout */}
+                <div className="hidden md:flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                       <Gem className="h-6 w-6 text-primary" />
