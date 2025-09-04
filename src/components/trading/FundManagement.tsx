@@ -78,8 +78,8 @@ const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate
   const transferForm = useForm<TransferForm>();
 
   // New Deposit Settings (persisted per user/mode)
-  const [depositActivePct, setDepositActivePct] = useState<number>(50);
-  const [depositReservePct, setDepositReservePct] = useState<number>(50);
+  const [depositActivePct, setDepositActivePct] = useState<number>(40);
+  const [depositReservePct, setDepositReservePct] = useState<number>(60);
 
   const loadDepositSettings = () => {
     const key = `depositSettings_${fundData.user_id}_${fundData.mode}`;
@@ -94,8 +94,8 @@ const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate
         }
       } catch {}
     }
-    setDepositActivePct(50);
-    setDepositReservePct(50);
+    setDepositActivePct(40);
+    setDepositReservePct(60);
   };
 
   useEffect(() => {
