@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -46,14 +46,26 @@ const ProfitManagementSettings = ({ fundData, subUserName, onUpdate }: ProfitMan
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<SettingsForm>({
     defaultValues: {
-      profit_dist_active: fundData.profit_dist_active || 50,
-      profit_dist_reserve: fundData.profit_dist_reserve || 25,
-      profit_dist_profit: fundData.profit_dist_profit || 25,
+      profit_dist_active: fundData.profit_dist_active || 0,
+      profit_dist_reserve: fundData.profit_dist_reserve || 0,
+      profit_dist_profit: fundData.profit_dist_profit || 100,
     }
   });
 
   const watchedValues = watch();
   const total = Number(watchedValues.profit_dist_active || 0) + Number(watchedValues.profit_dist_reserve || 0) + Number(watchedValues.profit_dist_profit || 0);
+
+  // Auto-adjust profit percentage when active or reserve changes
+  useEffect(() => {
+    const activePercent = Number(watchedValues.profit_dist_active || 0);
+    const reservePercent = Number(watchedValues.profit_dist_reserve || 0);
+    const calculatedProfit = 100 - activePercent - reservePercent;
+    
+    // Only update if the calculated profit is different and within valid range
+    if (calculatedProfit >= 0 && calculatedProfit <= 100 && calculatedProfit !== Number(watchedValues.profit_dist_profit || 0)) {
+      setValue('profit_dist_profit', calculatedProfit);
+    }
+  }, [watchedValues.profit_dist_active, watchedValues.profit_dist_reserve, setValue]);
 
   const updateSettings = async (data: SettingsForm) => {
     const activePercent = Number(data.profit_dist_active) || 0;
@@ -167,13 +179,15 @@ const ProfitManagementSettings = ({ fundData, subUserName, onUpdate }: ProfitMan
 
             <div className="space-y-2">
               <Label htmlFor="profit_dist_profit">
-                {t('profitFundDistribution')}
+                {t('profitFundDistribution')} (Auto-calculated)
               </Label>
               <Input
                 id="profit_dist_profit"
                 type="number"
                 min="0"
                 max="100"
+                readOnly
+                className="bg-muted"
                 {...register('profit_dist_profit', { 
                   required: true, 
                   min: 0, 
