@@ -404,6 +404,8 @@ const Dashboard = () => {
       profit_dist_active: 0,
       profit_dist_reserve: 30,
       profit_dist_profit: 70,
+      lot_base_capital: 1000,
+      lot_base_lot: 0.4,
       sub_user_name: selectedSubUser?.name || null,
     };
 
