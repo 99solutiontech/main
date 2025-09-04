@@ -16,7 +16,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import SubUserManager from '@/components/trading/SubUserManager';
-import UserManagement from '@/components/UserManagement';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -236,14 +235,7 @@ const SubUserSelector = ({ userId, currentMode, selectedSubUser, onSubUserChange
           </SelectContent>
         </Select>
         
-        {/* Main account reset button */}
-        {(!selectedSubUser || selectedSubUser === 'main') && (
-          <UserManagement 
-            userId={userId} 
-            currentMode={currentMode}
-            onReset={loadSubUsers}
-          />
-        )}
+        {/* Main account reset button removed - now available in account management */}
         
       </div>
     </div>
