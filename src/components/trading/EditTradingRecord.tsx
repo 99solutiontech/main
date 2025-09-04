@@ -104,17 +104,22 @@ const EditTradingRecord = ({ record, fundData, onUpdate }: EditTradingRecordProp
       const newActiveFundUsd = fromDisplay(Number(data.new_active_fund || 0));
       const rebateUsd = fromDisplay(Number(data.rebate || 0));
       
-      // Use start_balance as the baseline for calculation - this represents the fund state BEFORE this specific trade
-      // This ensures consistent calculation regardless of how many times we edit
-      const originalActiveFund = record.start_balance !== null && record.start_balance !== undefined 
-        ? Number(record.start_balance)
-        : Number(fundData.active_fund); // Fallback to current if start_balance is missing
+      // Parse the original values from the existing record to maintain consistent baseline
+      const existingValues = parseExistingValues();
+      const originalNewActiveFund = fromDisplay(existingValues.activeFund);
+      const originalRebate = fromDisplay(existingValues.rebate);
       
-      // Calculate profit based on the difference from the original start balance
-      const actualProfitUsd = (newActiveFundUsd + rebateUsd) - originalActiveFund;
+      // Calculate what the active fund was before this trade was recorded
+      // Original profit = (original_new_active_fund + original_rebate) - original_active_fund_before_trade
+      // So: original_active_fund_before_trade = (original_new_active_fund + original_rebate) - original_profit
+      const originalProfitUsd = Number(record.profit_loss || 0);
+      const originalActiveFundBeforeTrade = (originalNewActiveFund + originalRebate) - originalProfitUsd;
+      
+      // Now calculate new profit using the same baseline
+      const actualProfitUsd = (newActiveFundUsd + rebateUsd) - originalActiveFundBeforeTrade;
       
       // Calculate the new end balance after this trade
-      const newEndBalance = originalActiveFund + actualProfitUsd;
+      const newEndBalance = originalActiveFundBeforeTrade + actualProfitUsd;
       
       // Create the note with the correct profit calculation
       const note = record.mode === 'diamond' 
