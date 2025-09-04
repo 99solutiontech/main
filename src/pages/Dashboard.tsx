@@ -510,11 +510,21 @@ const Dashboard = () => {
                   <DrawerHeader className="text-center border-b">
                     <DrawerTitle className="text-xl font-bold">{t('menu') || 'Menu'}</DrawerTitle>
                   </DrawerHeader>
-                  <div className="px-4 pb-4 space-y-4">
-                    {/* Profile and Settings Menu */}
-                    <div className="border-b pb-4">
-                      <UserProfileMenu onSignOut={handleSignOut} displayName={profile?.trader_name || profile?.full_name || user.email} />
-                    </div>
+                   <div className="px-4 pb-4 space-y-4">
+                     {/* Overview Button */}
+                     <Button
+                       variant="outline"
+                       onClick={() => navigate('/')}
+                       className="w-full flex items-center gap-2"
+                     >
+                       <ArrowLeft className="h-4 w-4" />
+                       {t('backToOverview')}
+                     </Button>
+
+                     {/* Profile and Settings Menu */}
+                     <div className="border-b pb-4">
+                       <UserProfileMenu onSignOut={handleSignOut} displayName={profile?.trader_name || profile?.full_name || user.email} />
+                     </div>
 
                     <div>
                       <p className="text-sm font-medium mb-2">{t('account') || 'Account'}</p>
