@@ -17,23 +17,38 @@ const LanguageSelector = () => {
     { code: 'th', name: 'Thai', nativeName: 'ไทย' },
   ];
 
+  const currentLanguage = languages.find(lang => lang.code === language) || languages[1];
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-          <Globe className="h-4 w-4" />
-          <span className="sr-only">{t('language')}</span>
+        <Button 
+          variant="outline" 
+          className="h-10 px-4 py-2 w-full justify-between bg-background border-input hover:bg-accent hover:text-accent-foreground"
+        >
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            <span className="font-medium">{currentLanguage.nativeName}</span>
+            <span className="text-muted-foreground text-sm">({currentLanguage.name})</span>
+          </div>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent 
+        align="end" 
+        className="w-56 bg-popover border border-border shadow-md z-50"
+      >
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
             onClick={() => setLanguage(lang.code)}
-            className={language === lang.code ? 'bg-accent' : ''}
+            className={`cursor-pointer hover:bg-accent hover:text-accent-foreground ${
+              language === lang.code ? 'bg-accent text-accent-foreground' : ''
+            }`}
           >
-            <span className="font-medium">{lang.nativeName}</span>
-            <span className="ml-2 text-muted-foreground">({lang.name})</span>
+            <div className="flex items-center justify-between w-full">
+              <span className="font-medium">{lang.nativeName}</span>
+              <span className="text-muted-foreground text-sm">({lang.name})</span>
+            </div>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
