@@ -104,14 +104,17 @@ const EditTradingRecord = ({ record, fundData, onUpdate }: EditTradingRecordProp
       const newActiveFundUsd = fromDisplay(Number(data.new_active_fund || 0));
       const rebateUsd = fromDisplay(Number(data.rebate || 0));
       
-      // Calculate the original active fund before this trade was recorded
-      // If start_balance is available, use it; otherwise calculate from current fund and existing profit
+      // Use start_balance as the baseline for calculation - this represents the fund state BEFORE this specific trade
+      // This ensures consistent calculation regardless of how many times we edit
       const originalActiveFund = record.start_balance !== null && record.start_balance !== undefined 
         ? Number(record.start_balance)
-        : Number(fundData.active_fund) - Number(record.profit_loss || 0);
+        : Number(fundData.active_fund); // Fallback to current if start_balance is missing
       
-      // Correct calculation: (new active fund + rebate) - original active fund = actual profit
+      // Calculate profit based on the difference from the original start balance
       const actualProfitUsd = (newActiveFundUsd + rebateUsd) - originalActiveFund;
+      
+      // Calculate the new end balance after this trade
+      const newEndBalance = originalActiveFund + actualProfitUsd;
       
       // Create the note with the correct profit calculation
       const note = record.mode === 'diamond' 
@@ -124,7 +127,7 @@ const EditTradingRecord = ({ record, fundData, onUpdate }: EditTradingRecordProp
         .update({
           details: note,
           profit_loss: actualProfitUsd,
-          end_balance: fundData.total_capital, // Keep existing end balance or update if needed
+          end_balance: newEndBalance, // Use calculated end balance for this specific trade
           type: actualProfitUsd >= 0 ? 'profit' : 'loss',
         })
         .eq('id', record.id);
