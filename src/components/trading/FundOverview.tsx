@@ -5,6 +5,7 @@ import { TrendingUp, TrendingDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import ProfitManagementSettings from './ProfitManagementSettings';
+import FundRebalancingSettings from './FundRebalancingSettings';
 
 interface FundData {
   id: string;
@@ -91,8 +92,19 @@ const FundOverview = ({ fundData, onUpdate }: FundOverviewProps) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{t('activeFund')}</CardTitle>
-            <CardDescription>{t('tradingCapital')}</CardDescription>
+            <CardTitle className="flex items-center justify-between text-base">
+              <div>
+                <div>{t('activeFund')}</div>
+                <CardDescription>{t('tradingCapital')}</CardDescription>
+              </div>
+              {onUpdate && (
+                <FundRebalancingSettings 
+                  fundData={fundData}
+                  subUserName={fundData.sub_user_name}
+                  onUpdate={onUpdate}
+                />
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{format(fundData.active_fund)}</div>
