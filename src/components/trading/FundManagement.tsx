@@ -402,18 +402,9 @@ const FundManagement = ({ userId, fundData, subUsers = [], subUserName, onUpdate
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between text-foreground">
-          <div className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
-            {t('fundManagement')}
-          </div>
-          <div className="flex items-center gap-2">
-            <ProfitManagementSettings 
-              fundData={fundData}
-              subUserName={subUserName}
-              onUpdate={onUpdate}
-            />
-          </div>
+        <CardTitle className="flex items-center gap-2 text-foreground">
+          <DollarSign className="h-5 w-5" />
+          {t('fundManagement')}
         </CardTitle>
       </CardHeader>
       <CardContent>

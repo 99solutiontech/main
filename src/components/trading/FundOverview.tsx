@@ -4,6 +4,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import ProfitManagementSettings from './ProfitManagementSettings';
 
 interface FundData {
   id: string;
@@ -25,9 +26,10 @@ interface FundData {
 
 interface FundOverviewProps {
   fundData: FundData;
+  onUpdate?: () => void;
 }
 
-const FundOverview = ({ fundData }: FundOverviewProps) => {
+const FundOverview = ({ fundData, onUpdate }: FundOverviewProps) => {
   const { t } = useLanguage();
   const { format } = useCurrency();
   const [totalDeposits, setTotalDeposits] = useState(0);
@@ -122,8 +124,19 @@ const FundOverview = ({ fundData }: FundOverviewProps) => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">{t('profitFund')}</CardTitle>
-            <CardDescription>{t('earnedProfits')}</CardDescription>
+            <CardTitle className="flex items-center justify-between text-base">
+              <div>
+                <div>{t('profitFund')}</div>
+                <CardDescription>{t('earnedProfits')}</CardDescription>
+              </div>
+              {onUpdate && (
+                <ProfitManagementSettings 
+                  fundData={fundData}
+                  subUserName={fundData.sub_user_name}
+                  onUpdate={onUpdate}
+                />
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{format(fundData.profit_fund)}</div>
